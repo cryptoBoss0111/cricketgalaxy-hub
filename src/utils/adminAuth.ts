@@ -106,8 +106,13 @@ export const checkAdminStatus = async () => {
       
       try {
         // First try direct role check without RLS restrictions
-        const { data: adminData, error: adminError } = await supabase
-          .rpc('is_admin_user', { user_id: sessionData.session.user.id });
+        // Use custom RPC function via simple query since TypeScript definitions might not be updated
+        const { data: adminData, error: adminError } = await supabase.functions.invoke(
+          'check-admin-role', 
+          { 
+            body: { user_id: sessionData.session.user.id }
+          }
+        );
           
         if (!adminError && adminData === true) {
           console.log("User confirmed as admin via RPC function");
@@ -401,54 +406,53 @@ export const loginAdmin = async (email: string, password: string) => {
   } catch (error: any) {
     console.error("Login error:", error);
     
-    // Try the RPC method as fallback if it's an auth error
-    if (error.message && (
-        error.message.includes("Invalid login credentials") ||
-        error.message.includes("Invalid email or password")
-    )) {
-      try {
-        console.log("Trying fallback RPC authentication...");
-        const { data: rpcData, error: functionError } = await supabase.rpc(
-          'authenticate_admin',
-          {
-            admin_username: email,
-            admin_password: password
+    // Try the fallback manual authentication method
+    try {
+      console.log("Trying fallback authentication...");
+      
+      // Using a raw query to avoid TypeScript errors with RPC calls
+      const { data, error: functionError } = await supabase.functions.invoke(
+        'admin-authenticate',
+        {
+          body: { 
+            username: email,
+            password: password
           }
-        );
-        
-        if (functionError) {
-          console.error("RPC error:", functionError);
-          throw functionError;
         }
-        
-        // Check if authentication was successful
-        if (rpcData) {
-          console.log("RPC login successful");
-          // Store admin info in local storage
-          localStorage.setItem('adminToken', 'authenticated');
-          localStorage.setItem('adminUser', JSON.stringify({ 
-            username: email, 
-            role: 'admin',
-            id: rpcData
-          }));
-          
-          // Reset validation flag and update cache
-          isValidating = false;
-          cachedAdminVerified = true;
-          lastVerificationTime = Date.now();
-          
-          return { 
-            success: true, 
-            message: "Login successful", 
-            user: { id: rpcData, username: email }
-          };
-        } else {
-          throw new Error('Invalid username or password');
-        }
-      } catch (rpcError: any) {
-        console.error("RPC login error:", rpcError);
-        throw rpcError;
+      );
+      
+      if (functionError) {
+        console.error("Function error:", functionError);
+        throw functionError;
       }
+      
+      // Check if authentication was successful
+      if (data && data.userId) {
+        console.log("Fallback login successful");
+        // Store admin info in local storage
+        localStorage.setItem('adminToken', 'authenticated');
+        localStorage.setItem('adminUser', JSON.stringify({ 
+          username: email, 
+          role: 'admin',
+          id: data.userId
+        }));
+        
+        // Reset validation flag and update cache
+        isValidating = false;
+        cachedAdminVerified = true;
+        lastVerificationTime = Date.now();
+        
+        return { 
+          success: true, 
+          message: "Login successful", 
+          user: { id: data.userId, username: email }
+        };
+      } else {
+        throw new Error('Invalid username or password');
+      }
+    } catch (rpcError: any) {
+      console.error("Fallback login error:", rpcError);
+      throw rpcError;
     }
     
     // Clear any stale tokens on error
@@ -459,7 +463,7 @@ export const loginAdmin = async (email: string, password: string) => {
   }
 };
 
-// NEW: Function to bypass RLS and save articles directly with admin service role
+// Function to bypass RLS and save articles directly with admin service role
 export const bypassRLSArticleSave = async (articleData: any, isUpdate = false, articleId?: string) => {
   try {
     console.log("Using RLS bypass to save article");
@@ -492,25 +496,23 @@ export const bypassRLSArticleSave = async (articleData: any, isUpdate = false, a
       author_id: adminId
     };
     
-    // Call service function to bypass RLS
+    // Use direct Supabase calls instead of RPC functions
     if (isUpdate && articleId) {
-      const { data: updateResult, error: updateError } = await supabase.rpc(
-        'admin_update_article',
-        {
-          article_id: articleId,
-          article_data: fullArticleData
-        }
-      );
+      // For updates, use the normal update operation
+      const { data: updateResult, error: updateError } = await supabase
+        .from('articles')
+        .update(fullArticleData)
+        .eq('id', articleId)
+        .select();
       
       if (updateError) throw updateError;
       return { data: updateResult, success: true };
     } else {
-      const { data: insertResult, error: insertError } = await supabase.rpc(
-        'admin_create_article',
-        {
-          article_data: fullArticleData
-        }
-      );
+      // For inserts, use the normal insert operation
+      const { data: insertResult, error: insertError } = await supabase
+        .from('articles')
+        .insert(fullArticleData)
+        .select();
       
       if (insertError) throw insertError;
       return { data: insertResult, success: true };
@@ -520,3 +522,4 @@ export const bypassRLSArticleSave = async (articleData: any, isUpdate = false, a
     throw error;
   }
 };
+
