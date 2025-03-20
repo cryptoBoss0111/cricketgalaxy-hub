@@ -130,7 +130,7 @@ const AdminLogin = () => {
           <div className="mt-2 p-2 bg-blue-50 text-blue-700 rounded-md text-sm">
             <p><strong>Demo Credentials:</strong></p>
             <p>Email: admin@cricketexpress.com</p>
-            <p>Password: admin@2589$</p>
+            <p>Password: admin123</p>
           </div>
         </div>
         
