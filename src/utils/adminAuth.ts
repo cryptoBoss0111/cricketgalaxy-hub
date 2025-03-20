@@ -106,7 +106,7 @@ export const checkAdminStatus = async () => {
       
       try {
         // First try direct role check without RLS restrictions
-        // Use custom RPC function via simple query since TypeScript definitions might not be updated
+        // Use custom Edge Function to check admin role
         const { data: adminData, error: adminError } = await supabase.functions.invoke(
           'check-admin-role', 
           { 
@@ -115,7 +115,7 @@ export const checkAdminStatus = async () => {
         );
           
         if (!adminError && adminData === true) {
-          console.log("User confirmed as admin via RPC function");
+          console.log("User confirmed as admin via Edge Function");
           cachedAdminVerified = true;
           lastVerificationTime = now;
           
@@ -130,11 +130,11 @@ export const checkAdminStatus = async () => {
           return { 
             isAdmin: true, 
             session: sessionData.session,
-            message: "Admin authenticated via RPC"
+            message: "Admin authenticated via Edge Function"
           };
         }
       } catch (rpcError) {
-        console.error("RPC admin check error:", rpcError);
+        console.error("Edge Function admin check error:", rpcError);
         // Continue with standard check
       }
       
@@ -410,7 +410,7 @@ export const loginAdmin = async (email: string, password: string) => {
     try {
       console.log("Trying fallback authentication...");
       
-      // Using a raw query to avoid TypeScript errors with RPC calls
+      // Using a function invoke to access Edge Functions
       const { data, error: functionError } = await supabase.functions.invoke(
         'admin-authenticate',
         {
@@ -476,6 +476,7 @@ export const bypassRLSArticleSave = async (articleData: any, isUpdate = false, a
       try {
         const adminUser = JSON.parse(adminUserStr);
         adminId = adminUser.id;
+        console.log("Found admin ID in localStorage:", adminId);
       } catch (error) {
         console.error("Error parsing admin user from localStorage:", error);
       }
@@ -484,6 +485,7 @@ export const bypassRLSArticleSave = async (articleData: any, isUpdate = false, a
     if (!adminId) {
       const { data } = await supabase.auth.getSession();
       adminId = data.session?.user?.id;
+      console.log("Found admin ID in session:", adminId);
     }
     
     if (!adminId) {
@@ -496,8 +498,12 @@ export const bypassRLSArticleSave = async (articleData: any, isUpdate = false, a
       author_id: adminId
     };
     
-    // Use direct Supabase calls instead of RPC functions
+    console.log("Saving article with admin ID:", adminId);
+    
+    // Direct database operations instead of RPC calls
     if (isUpdate && articleId) {
+      console.log("Updating existing article:", articleId);
+      
       // For updates, use the normal update operation
       const { data: updateResult, error: updateError } = await supabase
         .from('articles')
@@ -505,16 +511,28 @@ export const bypassRLSArticleSave = async (articleData: any, isUpdate = false, a
         .eq('id', articleId)
         .select();
       
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Error updating article:", updateError);
+        throw updateError;
+      }
+      
+      console.log("Article updated successfully:", updateResult);
       return { data: updateResult, success: true };
     } else {
+      console.log("Creating new article");
+      
       // For inserts, use the normal insert operation
       const { data: insertResult, error: insertError } = await supabase
         .from('articles')
         .insert(fullArticleData)
         .select();
       
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Error inserting article:", insertError);
+        throw insertError;
+      }
+      
+      console.log("Article created successfully:", insertResult);
       return { data: insertResult, success: true };
     }
   } catch (error) {
@@ -522,4 +540,3 @@ export const bypassRLSArticleSave = async (articleData: any, isUpdate = false, a
     throw error;
   }
 };
-
