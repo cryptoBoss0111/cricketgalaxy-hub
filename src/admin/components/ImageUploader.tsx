@@ -55,7 +55,27 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     try {
       console.log("Starting image upload process...");
       
-      // Try to upload without checking auth first
+      // Try to ensure the bucket exists
+      try {
+        const { data: bucketExists } = await supabase
+          .storage
+          .getBucket('article_images');
+        
+        if (!bucketExists) {
+          console.log("Bucket doesn't exist, attempting to create it...");
+          
+          // This might fail if the user doesn't have permission, but it's worth trying
+          await supabase.storage.createBucket('article_images', {
+            public: true,
+            fileSizeLimit: 5242880 // 5MB
+          });
+        }
+      } catch (bucketError) {
+        console.warn("Unable to check/create bucket, continuing anyway:", bucketError);
+        // Continue anyway - the bucket likely exists but the user might not have permission to check
+      }
+      
+      // Try to upload
       const imageUrl = await uploadImageToStorage(file);
       
       if (imageUrl) {
