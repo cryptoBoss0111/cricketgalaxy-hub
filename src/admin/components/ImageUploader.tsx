@@ -53,6 +53,18 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     // Upload to Supabase
     setIsUploading(true);
     try {
+      // Check if user is authenticated before upload
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to upload images",
+          variant: "destructive",
+        });
+        setIsUploading(false);
+        return;
+      }
+      
       const imageUrl = await uploadImageToStorage(file);
       onImageUploaded(imageUrl);
       

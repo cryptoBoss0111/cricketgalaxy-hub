@@ -15,7 +15,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   },
   global: {
-    fetch: (...args: Parameters<typeof fetch>) => fetch(...args),
+    fetch: (...args) => fetch(...args),
   },
 });
 
@@ -76,4 +76,43 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
     console.error("Error uploading image:", error);
     throw error;
   }
+};
+
+// Get published articles for the public site
+export const getPublishedArticles = async (category?: string, limit = 10) => {
+  let query = supabase
+    .from('articles')
+    .select('*')
+    .eq('published', true)
+    .order('published_at', { ascending: false })
+    .limit(limit);
+  
+  if (category && category !== 'all') {
+    query = query.eq('category', category);
+  }
+  
+  const { data, error } = await query;
+  
+  if (error) {
+    console.error("Error fetching published articles:", error);
+    throw error;
+  }
+  
+  return data || [];
+};
+
+// Get a specific article by ID (for public viewing)
+export const getArticleById = async (id: string) => {
+  const { data, error } = await supabase
+    .from('articles')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) {
+    console.error("Error fetching article:", error);
+    throw error;
+  }
+  
+  return data;
 };
