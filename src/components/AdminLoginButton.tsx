@@ -11,18 +11,26 @@ const AdminLoginButton = () => {
   
   useEffect(() => {
     // Check if admin is logged in
-    const checkAdminStatus = () => {
+    const checkAdminStatus = async () => {
+      // Check session with supabase
+      const { data } = await supabase.auth.getSession();
       const adminToken = localStorage.getItem('adminToken');
-      setIsLoggedIn(adminToken === 'authenticated');
+      setIsLoggedIn(!!data.session || adminToken === 'authenticated');
     };
     
     // Check initially
     checkAdminStatus();
     
+    // Set up supabase auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session || localStorage.getItem('adminToken') === 'authenticated');
+    });
+    
     // Set up window event listener for storage changes
     window.addEventListener('storage', checkAdminStatus);
     
     return () => {
+      subscription.unsubscribe();
       window.removeEventListener('storage', checkAdminStatus);
     };
   }, []);
@@ -35,8 +43,12 @@ const AdminLoginButton = () => {
     }
   };
   
-  const handleLogout = (e: React.MouseEvent) => {
+  const handleLogout = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Sign out from Supabase
+    await supabase.auth.signOut();
+    
     // Clear admin data from local storage
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');

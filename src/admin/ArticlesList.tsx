@@ -34,19 +34,43 @@ const ArticlesList = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
   
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is authenticated
-    const adminToken = localStorage.getItem('adminToken');
-    if (!adminToken) {
-      navigate('/admin/login');
-    } else {
-      fetchArticles();
-    }
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      const adminToken = localStorage.getItem('adminToken');
+      
+      if (!data.session && adminToken !== 'authenticated') {
+        navigate('/admin/login');
+      } else {
+        fetchArticles();
+      }
+    };
+    
+    checkAuth();
   }, [navigate]);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('category')
+        .order('category');
+      
+      if (error) throw error;
+      
+      // Extract unique categories
+      const uniqueCategories = Array.from(new Set(data?.map(item => item.category)));
+      setCategories(uniqueCategories);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   const fetchArticles = async () => {
     setIsLoading(true);
@@ -80,6 +104,9 @@ const ArticlesList = () => {
       }
       
       setArticles(filteredData);
+      
+      // Fetch categories for the filter dropdown
+      await fetchCategories();
     } catch (error) {
       console.error('Error fetching articles:', error);
       toast({
@@ -175,14 +202,9 @@ const ArticlesList = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All Categories</SelectItem>
-                  <SelectItem value="IPL 2025">IPL 2025</SelectItem>
-                  <SelectItem value="Analysis">Analysis</SelectItem>
-                  <SelectItem value="Match Preview">Match Preview</SelectItem>
-                  <SelectItem value="Match Review">Match Review</SelectItem>
-                  <SelectItem value="Women's Cricket">Women's Cricket</SelectItem>
-                  <SelectItem value="Player Profile">Player Profile</SelectItem>
-                  <SelectItem value="Fantasy Tips">Fantasy Tips</SelectItem>
-                  <SelectItem value="World Cup">World Cup</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               

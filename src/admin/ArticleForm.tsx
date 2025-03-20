@@ -38,6 +38,7 @@ const ArticleForm = () => {
   const { id } = useParams<{ id: string }>();
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -55,82 +56,133 @@ const ArticleForm = () => {
     }
   });
 
-  // Fetch article data if editing an existing article
+  // Check authentication
   useEffect(() => {
-    const fetchArticle = async () => {
-      if (!id) return;
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      const adminToken = localStorage.getItem('adminToken');
       
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('articles')
-          .select('*')
-          .eq('id', id)
-          .single();
-        
-        if (error) throw error;
-        
-        if (data) {
-          form.reset({
-            title: data.title,
-            content: data.content,
-            excerpt: data.excerpt || '',
-            category: data.category,
-            published: data.published,
-            cover_image: data.cover_image || '',
-            tags: data.tags ? data.tags.join(', ') : ''
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching article:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load article data",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
+      if (!data.session && adminToken !== 'authenticated') {
+        navigate('/admin/login');
+        return false;
       }
+      return true;
     };
     
-    fetchArticle();
-  }, [id, form, toast]);
+    checkAuth().then(isAuth => {
+      if (isAuth) {
+        // Fetch categories for dropdown
+        fetchCategories();
+        // If editing, fetch article data
+        if (id) {
+          fetchArticle(id);
+        }
+      }
+    });
+  }, [id, navigate]);
+
+  // Fetch existing categories
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('category')
+        .order('category');
+      
+      if (error) throw error;
+      
+      // Extract unique categories
+      const uniqueCategories = Array.from(new Set(data?.map(item => item.category)));
+      setCategories(uniqueCategories);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  // Fetch article data if editing
+  const fetchArticle = async (articleId: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('id', articleId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        form.reset({
+          title: data.title,
+          content: data.content,
+          excerpt: data.excerpt || '',
+          category: data.category,
+          published: data.published || false,
+          cover_image: data.cover_image || '',
+          tags: data.tags ? data.tags.join(', ') : ''
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching article:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load article data",
+        variant: "destructive",
+      });
+      navigate('/admin/articles');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Handle form submission
   const onSubmit = async (values: ArticleFormValues) => {
     setIsSubmitting(true);
     
-    // Get admin info from localStorage
-    const adminUserString = localStorage.getItem('adminUser');
-    if (!adminUserString) {
-      toast({
-        title: "Authentication Error",
-        description: "You must be logged in to publish articles",
-        variant: "destructive",
-      });
-      navigate('/admin/login');
-      return;
-    }
-    
-    const adminUser = JSON.parse(adminUserString);
-    const tagsArray = values.tags ? values.tags.split(',').map(tag => tag.trim()) : [];
-    
     try {
+      // Get current user info
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user?.id;
+      
+      // If no supabase auth, try localStorage
+      const adminUserString = localStorage.getItem('adminUser');
+      let adminId = userId;
+      
+      if (!adminId && adminUserString) {
+        const adminUser = JSON.parse(adminUserString);
+        adminId = adminUser.id;
+      }
+      
+      if (!adminId) {
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to publish articles",
+          variant: "destructive",
+        });
+        navigate('/admin/login');
+        return;
+      }
+      
+      // Prepare tags array
+      const tagsArray = values.tags ? values.tags.split(',').map(tag => tag.trim()) : [];
+      
+      const articleData = {
+        title: values.title,
+        content: values.content,
+        excerpt: values.excerpt || null,
+        category: values.category,
+        published: values.published,
+        cover_image: values.cover_image || null,
+        tags: tagsArray.length > 0 ? tagsArray : null,
+        updated_at: new Date().toISOString(),
+        published_at: values.published ? new Date().toISOString() : null
+      };
+      
       if (id) {
         // Update existing article
         const { error } = await supabase
           .from('articles')
-          .update({
-            title: values.title,
-            content: values.content,
-            excerpt: values.excerpt || null,
-            category: values.category,
-            published: values.published,
-            cover_image: values.cover_image || null,
-            tags: tagsArray.length > 0 ? tagsArray : null,
-            updated_at: new Date().toISOString(),
-            published_at: values.published ? new Date().toISOString() : null
-          })
+          .update(articleData)
           .eq('id', id);
         
         if (error) throw error;
@@ -144,15 +196,8 @@ const ArticleForm = () => {
         const { error } = await supabase
           .from('articles')
           .insert({
-            title: values.title,
-            content: values.content,
-            excerpt: values.excerpt || null,
-            category: values.category,
-            published: values.published,
-            cover_image: values.cover_image || null,
-            tags: tagsArray.length > 0 ? tagsArray : null,
-            author_id: adminUser.id,
-            published_at: values.published ? new Date().toISOString() : null
+            ...articleData,
+            author_id: adminId
           });
         
         if (error) throw error;
@@ -234,6 +279,7 @@ const ArticleForm = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          {/* Include standard categories */}
                           <SelectItem value="IPL 2025">IPL 2025</SelectItem>
                           <SelectItem value="Analysis">Analysis</SelectItem>
                           <SelectItem value="Match Preview">Match Preview</SelectItem>
@@ -242,6 +288,16 @@ const ArticleForm = () => {
                           <SelectItem value="Player Profile">Player Profile</SelectItem>
                           <SelectItem value="Fantasy Tips">Fantasy Tips</SelectItem>
                           <SelectItem value="World Cup">World Cup</SelectItem>
+                          
+                          {/* Include any additional categories from the database */}
+                          {categories
+                            .filter(category => !["IPL 2025", "Analysis", "Match Preview", "Match Review", 
+                                                "Women's Cricket", "Player Profile", "Fantasy Tips", "World Cup"]
+                                                .includes(category))
+                            .map(category => (
+                              <SelectItem key={category} value={category}>{category}</SelectItem>
+                            ))
+                          }
                         </SelectContent>
                       </Select>
                       <FormMessage />

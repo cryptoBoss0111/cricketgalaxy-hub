@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { BarChart2, TrendingUp, FileText, Users, Calendar, Award, Eye, Edit, Trash2, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import AdminLayout from './AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,20 +29,38 @@ const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStat[]>([]);
   const [recentArticles, setRecentArticles] = useState<Article[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const adminToken = localStorage.getItem('adminToken');
-    if (!adminToken) {
-      navigate('/admin/login');
-    } else {
-      fetchDashboardData();
-    }
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      const adminToken = localStorage.getItem('adminToken');
+      
+      if (!data.session && adminToken !== 'authenticated') {
+        navigate('/admin/login');
+      } else {
+        fetchDashboardData();
+      }
+    };
+    
+    checkAuth();
   }, [navigate]);
 
   const fetchDashboardData = async () => {
     try {
+      setIsLoading(true);
+      
+      // Fetch total articles count
+      const { count: totalArticles, error: countError } = await supabase
+        .from('articles')
+        .select('*', { count: 'exact', head: true });
+      
+      if (countError) throw countError;
+      
+      // Fetch recent articles
       const { data: articlesData, error: articlesError } = await supabase
         .from('articles')
         .select('*')
@@ -62,52 +81,42 @@ const AdminDashboard = () => {
         status: article.published ? 'published' : 'draft' as 'published' | 'draft'
       })) : [];
       
-      const sampleArticles: Article[] = [
-        {
-          id: '1',
-          title: 'IPL: Bumrah\'s early absence \'a challenge\', says Jayawardene',
-          category: 'IPL 2025',
-          date: 'Mar 19, 2025',
-          status: 'published'
-        },
-        {
-          id: '2',
-          title: 'India\'s white-ball wizards need a new cheat code for sustained excellence',
-          category: 'Analysis',
-          date: 'Mar 19, 2025',
-          status: 'published'
-        },
-        {
-          id: '3',
-          title: 'IPL: SKY to lead MI in opener with Hardik suspended',
-          category: 'IPL 2025',
-          date: 'Mar 19, 2025',
-          status: 'published'
-        },
-        {
-          id: '4',
-          title: 'Complete tactical breakdown of CSK vs MI opening match',
-          category: 'Match Preview',
-          date: 'Mar 18, 2025',
-          status: 'draft'
-        },
-        {
-          id: '5',
-          title: 'Women\'s T20 World Cup: Team-by-team guide',
-          category: 'Women\'s Cricket',
-          date: 'Mar 18, 2025',
-          status: 'draft'
-        }
-      ];
+      setRecentArticles(formattedArticles);
 
-      setRecentArticles(formattedArticles.length > 0 ? formattedArticles : sampleArticles);
+      // Count published vs draft articles
+      const publishedArticles = articlesData?.filter(article => article.published).length || 0;
+      const draftArticles = (articlesData?.length || 0) - publishedArticles;
+      
+      // Category analytics
+      const categories = articlesData?.map(article => article.category) || [];
+      const categoryCounts: Record<string, number> = {};
+      
+      categories.forEach(category => {
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      });
+      
+      // Find top category
+      let topCategory = 'None';
+      let topCategoryCount = 0;
+      
+      Object.entries(categoryCounts).forEach(([category, count]) => {
+        if (count > topCategoryCount) {
+          topCategory = category;
+          topCategoryCount = count;
+        }
+      });
+      
+      // Calculate percentage of top category
+      const topCategoryPercentage = articlesData?.length 
+        ? Math.round((topCategoryCount / articlesData.length) * 100) 
+        : 0;
 
       setStats([
         {
           label: 'Total Articles',
-          value: articlesData ? articlesData.length.toString() : '5',
+          value: totalArticles || 0,
           icon: <FileText className="h-8 w-8 text-cricket-accent" />,
-          change: '+12%',
+          change: `${publishedArticles} published, ${draftArticles} drafts`,
           isPositive: true
         },
         {
@@ -126,9 +135,9 @@ const AdminDashboard = () => {
         },
         {
           label: 'Top Category',
-          value: 'IPL 2025',
+          value: topCategory,
           icon: <TrendingUp className="h-8 w-8 text-purple-500" />,
-          change: '42% of traffic',
+          change: `${topCategoryPercentage}% of content`,
           isPositive: true
         }
       ]);
@@ -145,20 +154,21 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleEdit = (id: string) => {
-    navigate(`/admin/articles/edit/${id}`);
+  const confirmDelete = (id: string) => {
+    setArticleToDelete(id);
+    setDeleteDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async () => {
+    if (!articleToDelete) return;
+    
     try {
-      if (id.length === 36) {
-        const { error } = await supabase
-          .from('articles')
-          .delete()
-          .eq('id', id);
-        
-        if (error) throw error;
-      }
+      const { error } = await supabase
+        .from('articles')
+        .delete()
+        .eq('id', articleToDelete);
+      
+      if (error) throw error;
       
       toast({
         title: "Article deleted",
@@ -166,7 +176,7 @@ const AdminDashboard = () => {
         duration: 3000,
       });
       
-      setRecentArticles(recentArticles.filter(article => article.id !== id));
+      setRecentArticles(recentArticles.filter(article => article.id !== articleToDelete));
     } catch (error) {
       console.error('Error deleting article:', error);
       toast({
@@ -174,7 +184,14 @@ const AdminDashboard = () => {
         description: "Failed to delete article",
         variant: "destructive",
       });
+    } finally {
+      setDeleteDialogOpen(false);
+      setArticleToDelete(null);
     }
+  };
+
+  const handleEdit = (id: string) => {
+    navigate(`/admin/articles/edit/${id}`);
   };
 
   const handleCreateArticle = () => {
@@ -237,69 +254,77 @@ const AdminDashboard = () => {
               </Button>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-gray-500 text-sm border-b">
-                    <th className="pb-3 font-medium">Title</th>
-                    <th className="pb-3 font-medium">Category</th>
-                    <th className="pb-3 font-medium">Date</th>
-                    <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3 font-medium text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentArticles.map((article, index) => (
-                    <tr 
-                      key={article.id} 
-                      className="border-b last:border-0 hover:bg-gray-50 animate-fade-in"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <td className="py-4 pr-4">
-                        <p className="font-medium text-gray-900 truncate max-w-[250px]">
-                          {article.title}
-                        </p>
-                      </td>
-                      <td className="py-4 pr-4">
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100">
-                          {article.category}
-                        </span>
-                      </td>
-                      <td className="py-4 pr-4 text-gray-500 text-sm">
-                        {article.date}
-                      </td>
-                      <td className="py-4 pr-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          article.status === 'published' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {article.status === 'published' ? 'Published' : 'Draft'}
-                        </span>
-                      </td>
-                      <td className="py-4 text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleEdit(article.id)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleDelete(article.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </td>
+            {recentArticles.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-medium text-gray-500">No articles found</h3>
+                <p className="text-gray-400 mt-2">Create your first article to get started.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-gray-500 text-sm border-b">
+                      <th className="pb-3 font-medium">Title</th>
+                      <th className="pb-3 font-medium">Category</th>
+                      <th className="pb-3 font-medium">Date</th>
+                      <th className="pb-3 font-medium">Status</th>
+                      <th className="pb-3 font-medium text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {recentArticles.map((article, index) => (
+                      <tr 
+                        key={article.id} 
+                        className="border-b last:border-0 hover:bg-gray-50 animate-fade-in"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <td className="py-4 pr-4">
+                          <p className="font-medium text-gray-900 truncate max-w-[250px]">
+                            {article.title}
+                          </p>
+                        </td>
+                        <td className="py-4 pr-4">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100">
+                            {article.category}
+                          </span>
+                        </td>
+                        <td className="py-4 pr-4 text-gray-500 text-sm">
+                          {article.date}
+                        </td>
+                        <td className="py-4 pr-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            article.status === 'published' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {article.status === 'published' ? 'Published' : 'Draft'}
+                          </span>
+                        </td>
+                        <td className="py-4 text-right">
+                          <div className="flex items-center justify-end space-x-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleEdit(article.id)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => confirmDelete(article.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             <div className="mt-4 text-center">
               <Link to="/admin/articles">
@@ -370,6 +395,25 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Article</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this article? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

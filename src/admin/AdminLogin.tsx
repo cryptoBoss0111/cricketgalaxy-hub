@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 const AdminLogin = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,33 +19,37 @@ const AdminLogin = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
+  // Check if already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session || localStorage.getItem('adminToken') === 'authenticated') {
+        navigate('/admin/dashboard');
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
     
     try {
-      // Call the Supabase function to authenticate admin
-      const { data, error: functionError } = await supabase.rpc(
-        'authenticate_admin',
-        {
-          admin_username: username,
-          admin_password: password
-        }
-      );
+      // First try Supabase authentication
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      if (functionError) {
-        throw functionError;
-      }
-      
-      // Check if authentication was successful (data will be the admin ID if successful)
-      if (data) {
-        // Store admin info in local storage for session management
+      if (data?.session) {
+        // Supabase auth successful
         localStorage.setItem('adminToken', 'authenticated');
         localStorage.setItem('adminUser', JSON.stringify({ 
-          username, 
+          email, 
           role: 'admin',
-          id: data
+          id: data.user?.id
         }));
         
         toast({
@@ -55,14 +59,51 @@ const AdminLogin = () => {
         });
         
         navigate('/admin/dashboard');
-      } else {
-        setError('Invalid username or password');
-        toast({
-          title: "Login failed",
-          description: "Invalid username or password",
-          variant: "destructive",
-          duration: 3000,
-        });
+        return;
+      }
+      
+      // If Supabase auth fails, try the RPC method as fallback
+      if (authError) {
+        console.log("Trying fallback authentication method");
+        
+        const { data: rpcData, error: functionError } = await supabase.rpc(
+          'authenticate_admin',
+          {
+            admin_username: email,
+            admin_password: password
+          }
+        );
+        
+        if (functionError) {
+          throw functionError;
+        }
+        
+        // Check if authentication was successful
+        if (rpcData) {
+          // Store admin info in local storage for session management
+          localStorage.setItem('adminToken', 'authenticated');
+          localStorage.setItem('adminUser', JSON.stringify({ 
+            username: email, 
+            role: 'admin',
+            id: rpcData
+          }));
+          
+          toast({
+            title: "Login successful",
+            description: "Welcome to the admin dashboard",
+            duration: 3000,
+          });
+          
+          navigate('/admin/dashboard');
+        } else {
+          setError('Invalid username or password');
+          toast({
+            title: "Login failed",
+            description: "Invalid username or password",
+            variant: "destructive",
+            duration: 3000,
+          });
+        }
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -95,23 +136,23 @@ const AdminLogin = () => {
           <p className="text-gray-500 mt-1">Enter your credentials to access the admin panel</p>
           <div className="mt-2 p-2 bg-blue-50 text-blue-700 rounded-md text-sm">
             <p><strong>Demo Credentials:</strong></p>
-            <p>Username: admin@12569</p>
+            <p>Email: admin@cricketexpress.com</p>
             <p>Password: admin@2589$</p>
           </div>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="email">Email</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <Input
-                id="username"
-                type="text"
-                placeholder="Enter your username"
+                id="email"
+                type="email"
+                placeholder="Enter your email"
                 className="pl-10"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
                 required
               />
