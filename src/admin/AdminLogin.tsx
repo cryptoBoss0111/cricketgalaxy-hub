@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -23,13 +22,61 @@ const AdminLogin = () => {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      if (data.session || localStorage.getItem('adminToken') === 'authenticated') {
-        navigate('/admin/dashboard');
+      if (data.session) {
+        // Verify if user is an admin
+        const { data: adminData, error: adminError } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('id', data.session.user.id)
+          .maybeSingle();
+          
+        if (adminData) {
+          console.log("User is already logged in as admin, redirecting to dashboard");
+          navigate('/admin/dashboard');
+        } else {
+          // User is logged in but not an admin, sign them out
+          await supabase.auth.signOut();
+          toast({
+            title: "Permission Denied",
+            description: "Your account does not have admin privileges",
+            variant: "destructive",
+          });
+        }
+      } else if (localStorage.getItem('adminToken') === 'authenticated') {
+        // Legacy auth check
+        console.log("Legacy admin token found, validating...");
+        try {
+          const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
+          if (adminUser.id) {
+            const { data: adminCheck } = await supabase
+              .from('admins')
+              .select('id')
+              .eq('id', adminUser.id)
+              .maybeSingle();
+              
+            if (adminCheck) {
+              navigate('/admin/dashboard');
+            } else {
+              // Clear invalid legacy tokens
+              localStorage.removeItem('adminToken');
+              localStorage.removeItem('adminUser');
+              toast({
+                title: "Session Expired",
+                description: "Please log in again",
+                variant: "destructive",
+              });
+            }
+          }
+        } catch (e) {
+          console.error('Error validating legacy admin token:', e);
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+        }
       }
     };
     
     checkSession();
-  }, [navigate]);
+  }, [navigate, toast]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +91,7 @@ const AdminLogin = () => {
       });
       
       if (data?.session) {
+        console.log("Authentication successful, checking admin status");
         // Now verify if this user is an admin
         const { data: adminData, error: adminError } = await supabase
           .from('admins')
@@ -53,6 +101,7 @@ const AdminLogin = () => {
         
         if (adminData) {
           // User is an admin in our admins table
+          console.log("Admin validation successful");
           localStorage.setItem('adminToken', 'authenticated');
           localStorage.setItem('adminUser', JSON.stringify({ 
             email, 
@@ -70,15 +119,15 @@ const AdminLogin = () => {
           return;
         } else {
           // User exists but is not an admin
+          console.log("User authenticated but not an admin");
           await supabase.auth.signOut(); // Sign them out
           throw new Error("You don't have admin privileges");
         }
-      }
-      
-      // If Supabase auth fails, try the RPC method as fallback
-      if (authError) {
+      } else if (authError) {
+        console.log("Supabase auth failed, error:", authError.message);
         console.log("Trying fallback authentication method");
         
+        // If Supabase auth fails, try the RPC method as fallback
         const { data: rpcData, error: functionError } = await supabase.rpc(
           'authenticate_admin',
           {
@@ -88,11 +137,13 @@ const AdminLogin = () => {
         );
         
         if (functionError) {
+          console.error("RPC authentication error:", functionError);
           throw functionError;
         }
         
         // Check if authentication was successful
         if (rpcData) {
+          console.log("RPC authentication successful, admin ID:", rpcData);
           // Store admin info in local storage for session management
           localStorage.setItem('adminToken', 'authenticated');
           localStorage.setItem('adminUser', JSON.stringify({ 

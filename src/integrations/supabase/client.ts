@@ -23,27 +23,98 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
 export const isAdminUser = async (): Promise<boolean> => {
   try {
     // First check if we have a session
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
-      // Check for legacy admin token
-      const adminToken = localStorage.getItem('adminToken');
-      return adminToken === 'authenticated';
-    }
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    // If we have a session, check if the user ID is in the admins table
-    const currentUserId = sessionData.session.user.id;
-    const { data: adminData, error } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', currentUserId)
-      .single();
-      
-    if (error || !adminData) {
-      console.warn("User is not an admin:", error?.message);
+    if (sessionError) {
+      console.error("Session error:", sessionError.message);
       return false;
     }
     
-    return true;
+    if (sessionData.session) {
+      console.log("Found active session, checking admin status for user:", sessionData.session.user.id);
+      
+      // If we have a session, check if the user ID is in the admins table
+      const currentUserId = sessionData.session.user.id;
+      const { data: adminData, error: adminError } = await supabase
+        .from('admins')
+        .select('id')
+        .eq('id', currentUserId)
+        .maybeSingle();
+        
+      if (adminError) {
+        console.error("Admin query error:", adminError.message);
+        return false;
+      }
+      
+      if (adminData) {
+        console.log("User confirmed as admin in database");
+        // Store admin info for faster checks
+        localStorage.setItem('adminToken', 'authenticated');
+        localStorage.setItem('adminUser', JSON.stringify({ 
+          id: currentUserId,
+          role: 'admin'
+        }));
+        return true;
+      } else {
+        console.log("User is not an admin");
+        // Clear any stale admin tokens
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        return false;
+      }
+    }
+    
+    // No session, check for legacy admin token
+    console.log("No active session, checking for legacy admin token");
+    const adminToken = localStorage.getItem('adminToken');
+    if (adminToken === 'authenticated') {
+      try {
+        const adminUserStr = localStorage.getItem('adminUser');
+        if (!adminUserStr) {
+          console.log("Admin token found but no admin user data");
+          localStorage.removeItem('adminToken');
+          return false;
+        }
+        
+        const adminUser = JSON.parse(adminUserStr);
+        if (!adminUser.id) {
+          console.log("Admin user data invalid, missing ID");
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          return false;
+        }
+        
+        // Verify the admin ID is still valid
+        const { data: adminCheck, error: verifyError } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('id', adminUser.id)
+          .maybeSingle();
+          
+        if (verifyError) {
+          console.error("Error verifying admin ID:", verifyError);
+          return false;
+        }
+        
+        if (adminCheck) {
+          console.log("Legacy admin token verified");
+          return true;
+        } else {
+          console.log("Legacy admin token invalid, clearing");
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          return false;
+        }
+      } catch (error) {
+        console.error("Error parsing admin user data:", error);
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        return false;
+      }
+    }
+    
+    console.log("No admin token found");
+    return false;
   } catch (error) {
     console.error("Error checking admin status:", error);
     return false;

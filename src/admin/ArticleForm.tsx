@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, isAdminUser } from '@/integrations/supabase/client';
 import AdminLayout from './AdminLayout';
 import ImageUploader from './components/ImageUploader';
 import ContentBlockManager, { ContentBlock } from './components/ContentBlockManager';
@@ -50,6 +50,7 @@ const ArticleForm = () => {
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([]);
   const [activeTab, setActiveTab] = useState('content');
   const [adminId, setAdminId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -72,33 +73,40 @@ const ArticleForm = () => {
   // Check authentication and setup admin ID
   useEffect(() => {
     const checkAuth = async () => {
-      // Try to get session from Supabase auth
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      // Also check localStorage for adminToken (legacy method)
-      const adminToken = localStorage.getItem('adminToken');
-      const adminUserString = localStorage.getItem('adminUser');
-      let userId = sessionData.session?.user?.id;
-      
-      // If no Supabase auth but have adminToken, use that
-      if (!userId && adminToken === 'authenticated' && adminUserString) {
-        try {
-          const adminUser = JSON.parse(adminUserString);
-          userId = adminUser.id;
-        } catch (e) {
-          console.error('Error parsing adminUser from localStorage:', e);
+      try {
+        // Get current session
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        // Check if user is an admin
+        const adminCheck = await isAdminUser();
+        setIsAdmin(adminCheck);
+        
+        let userId = sessionData.session?.user?.id;
+        
+        // If not authenticated or not admin, redirect to login
+        if (!userId || !adminCheck) {
+          toast({
+            title: "Authentication Required",
+            description: "You must be logged in as an admin to access this page",
+            variant: "destructive",
+          });
+          navigate('/admin/login');
+          return false;
         }
-      }
-      
-      // If still no userId, redirect to login
-      if (!userId && adminToken !== 'authenticated') {
+        
+        console.log("Admin authenticated:", userId);
+        setAdminId(userId);
+        return true;
+      } catch (error) {
+        console.error("Authentication error:", error);
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again",
+          variant: "destructive",
+        });
         navigate('/admin/login');
         return false;
       }
-      
-      // Set the admin ID for later use
-      setAdminId(userId || null);
-      return true;
     };
     
     checkAuth().then(isAuth => {
@@ -111,7 +119,7 @@ const ArticleForm = () => {
         }
       }
     });
-  }, [id, navigate]);
+  }, [id, navigate, toast]);
 
   // Fetch existing categories
   const fetchCategories = async () => {
@@ -181,11 +189,26 @@ const ArticleForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Make sure we have an admin ID
-      if (!adminId) {
+      // Double-check admin status before saving
+      if (!adminId || !isAdmin) {
+        const adminCheck = await isAdminUser();
+        if (!adminCheck) {
+          toast({
+            title: "Permission Denied",
+            description: "You must be logged in as an admin to publish articles",
+            variant: "destructive",
+          });
+          navigate('/admin/login');
+          return;
+        }
+      }
+      
+      // Get current session to ensure we have fresh tokens
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
         toast({
-          title: "Authentication Error",
-          description: "You must be logged in to publish articles",
+          title: "Session Expired",
+          description: "Your session has expired. Please log in again.",
           variant: "destructive",
         });
         navigate('/admin/login');
@@ -211,7 +234,7 @@ const ArticleForm = () => {
         author_id: adminId
       };
       
-      console.log("Saving article with data:", { ...articleData, content: "..." });
+      console.log("Saving article with data:", { ...articleData, content: "[content truncated]" });
       
       if (id) {
         // Update existing article
@@ -285,6 +308,25 @@ const ArticleForm = () => {
           </h1>
           <Button onClick={() => navigate('/admin/articles')}>Back to Articles</Button>
         </div>
+        
+        {/* Show admin status */}
+        {isAdmin ? (
+          <Alert className="bg-green-50 border-green-200">
+            <Info className="h-4 w-4 text-green-600" />
+            <AlertTitle className="text-green-700">Admin Authenticated</AlertTitle>
+            <AlertDescription className="text-green-600">
+              You have admin permissions to create and edit articles.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert variant="destructive">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Authentication Required</AlertTitle>
+            <AlertDescription>
+              Admin permissions are required to save articles. Please log in.
+            </AlertDescription>
+          </Alert>
+        )}
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
