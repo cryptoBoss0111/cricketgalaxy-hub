@@ -38,10 +38,13 @@ export type Database = {
           author_id: string | null
           category: string
           content: string
+          content_blocks: Json | null
           cover_image: string | null
           created_at: string
           excerpt: string | null
+          featured_image: string | null
           id: string
+          meta_description: string | null
           published: boolean | null
           published_at: string | null
           tags: string[] | null
@@ -52,10 +55,13 @@ export type Database = {
           author_id?: string | null
           category: string
           content: string
+          content_blocks?: Json | null
           cover_image?: string | null
           created_at?: string
           excerpt?: string | null
+          featured_image?: string | null
           id?: string
+          meta_description?: string | null
           published?: boolean | null
           published_at?: string | null
           tags?: string[] | null
@@ -66,10 +72,13 @@ export type Database = {
           author_id?: string | null
           category?: string
           content?: string
+          content_blocks?: Json | null
           cover_image?: string | null
           created_at?: string
           excerpt?: string | null
+          featured_image?: string | null
           id?: string
+          meta_description?: string | null
           published?: boolean | null
           published_at?: string | null
           tags?: string[] | null

@@ -15,20 +15,28 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from './AdminLayout';
+import ImageUploader from './components/ImageUploader';
+import ContentBlockManager, { ContentBlock } from './components/ContentBlockManager';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Info } from 'lucide-react';
 
 // Define the schema for article form validation
 const articleSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100, "Title is too long"),
   content: z.string().min(50, "Content must be at least 50 characters"),
   excerpt: z.string().max(200, "Excerpt must be less than 200 characters").optional(),
+  meta_description: z.string().max(160, "Meta description must be less than 160 characters").optional(),
   category: z.string().min(1, "Please select a category"),
   published: z.boolean().default(false),
   cover_image: z.string().optional(),
+  featured_image: z.string().optional(),
   tags: z.string().optional()
 });
 
@@ -39,6 +47,8 @@ const ArticleForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
+  const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([]);
+  const [activeTab, setActiveTab] = useState('content');
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -49,9 +59,11 @@ const ArticleForm = () => {
       title: '',
       content: '',
       excerpt: '',
+      meta_description: '',
       category: '',
       published: false,
       cover_image: '',
+      featured_image: '',
       tags: ''
     }
   });
@@ -116,11 +128,18 @@ const ArticleForm = () => {
           title: data.title,
           content: data.content,
           excerpt: data.excerpt || '',
+          meta_description: data.meta_description || '',
           category: data.category,
           published: data.published || false,
           cover_image: data.cover_image || '',
+          featured_image: data.featured_image || '',
           tags: data.tags ? data.tags.join(', ') : ''
         });
+
+        // Set content blocks if they exist
+        if (data.content_blocks && Array.isArray(data.content_blocks)) {
+          setContentBlocks(data.content_blocks);
+        }
       }
     } catch (error) {
       console.error('Error fetching article:', error);
@@ -170,9 +189,12 @@ const ArticleForm = () => {
         title: values.title,
         content: values.content,
         excerpt: values.excerpt || null,
+        meta_description: values.meta_description || null,
         category: values.category,
         published: values.published,
         cover_image: values.cover_image || null,
+        featured_image: values.featured_image || null,
+        content_blocks: contentBlocks,
         tags: tagsArray.length > 0 ? tagsArray : null,
         updated_at: new Date().toISOString(),
         published_at: values.published ? new Date().toISOString() : null
@@ -210,11 +232,11 @@ const ArticleForm = () => {
       
       // Redirect to articles list
       navigate('/admin/articles');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving article:', error);
       toast({
         title: "Error",
-        description: "Failed to save article",
+        description: error.message || "Failed to save article",
         variant: "destructive",
       });
     } finally {
@@ -237,7 +259,7 @@ const ArticleForm = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-8 max-w-5xl mx-auto">
+      <div className="space-y-8 max-w-6xl mx-auto">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-heading font-bold">
             {id ? 'Edit Article' : 'Create New Article'}
@@ -245,9 +267,9 @@ const ArticleForm = () => {
           <Button onClick={() => navigate('/admin/articles')}>Back to Articles</Button>
         </div>
         
-        <div className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
               <FormField
                 control={form.control}
                 name="title"
@@ -255,14 +277,14 @@ const ArticleForm = () => {
                   <FormItem>
                     <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter article title" {...field} />
+                      <Input placeholder="Enter article title" {...field} className="text-xl" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <FormField
                   control={form.control}
                   name="category"
@@ -307,108 +329,205 @@ const ArticleForm = () => {
                 
                 <FormField
                   control={form.control}
-                  name="cover_image"
+                  name="tags"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cover Image URL</FormLabel>
+                      <FormLabel>Tags (comma separated)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter image URL" {...field} />
+                        <Input placeholder="cricket, ipl, india, etc." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+            </Card>
               
-              <FormField
-                control={form.control}
-                name="excerpt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Excerpt</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Enter a short excerpt (optional)" 
-                        className="h-20"
-                        {...field} 
+            <Tabs defaultValue="content" value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid grid-cols-3 mb-6">
+                <TabsTrigger value="content">Content</TabsTrigger>
+                <TabsTrigger value="blocks">Content Blocks</TabsTrigger>
+                <TabsTrigger value="seo">SEO & Images</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="content" className="space-y-6">
+                <Card className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
+                  <FormField
+                    control={form.control}
+                    name="excerpt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Excerpt</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Enter a short excerpt (shows in article previews)" 
+                            className="h-20"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="mt-6">
+                    <FormField
+                      control={form.control}
+                      name="content"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Main Content</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Enter article main content" 
+                              className="min-h-[300px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="blocks" className="space-y-6">
+                <Card className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium mb-2">Content Blocks</h3>
+                    <p className="text-sm text-gray-500">
+                      Add rich content blocks to your article. These will appear after the main content.
+                    </p>
+                  </div>
+                  
+                  <ContentBlockManager 
+                    blocks={contentBlocks}
+                    onBlocksChange={setContentBlocks}
+                  />
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="seo" className="space-y-6">
+                <Card className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="text-lg font-medium mb-4">Cover Image</h3>
+                      <FormField
+                        control={form.control}
+                        name="cover_image"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <ImageUploader
+                                existingImageUrl={field.value}
+                                onImageUploaded={(url) => form.setValue('cover_image', url)}
+                                label="Article Cover Image"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Content</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Enter article content" 
-                        className="h-64"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tags (comma separated)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="cricket, ipl, india, etc." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="published"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Published</FormLabel>
-                      <p className="text-sm text-gray-500">
-                        Check this box to make the article publicly visible.
-                      </p>
                     </div>
-                  </FormItem>
-                )}
-              />
+                    
+                    <div>
+                      <h3 className="text-lg font-medium mb-4">Featured Image</h3>
+                      <FormField
+                        control={form.control}
+                        name="featured_image"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <ImageUploader
+                                existingImageUrl={field.value}
+                                onImageUploaded={(url) => form.setValue('featured_image', url)}
+                                label="Featured Image (Homepage)"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6">
+                    <FormField
+                      control={form.control}
+                      name="meta_description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Meta Description</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Enter SEO meta description" 
+                              className="h-20"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                          <p className="text-xs text-gray-500 mt-1">
+                            This description appears in search engine results and social media previews.
+                          </p>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </Card>
+              </TabsContent>
+            </Tabs>
               
-              <div className="flex justify-end space-x-4">
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => navigate('/admin/articles')}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Saving...' : id ? 'Update Article' : 'Create Article'}
-                </Button>
+            <Card className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
+              <Alert className="mb-6">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Before publishing</AlertTitle>
+                <AlertDescription>
+                  Make sure you have added a title, content, category, and at least one image before publishing your article.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="flex items-start space-x-6">
+                <FormField
+                  control={form.control}
+                  name="published"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Published</FormLabel>
+                        <p className="text-sm text-gray-500">
+                          Check this box to make the article publicly visible.
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="flex justify-end space-x-4 flex-grow">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => navigate('/admin/articles')}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Saving...' : id ? 'Update Article' : 'Create Article'}
+                  </Button>
+                </div>
               </div>
-            </form>
-          </Form>
-        </div>
+            </Card>
+          </form>
+        </Form>
       </div>
     </AdminLayout>
   );
