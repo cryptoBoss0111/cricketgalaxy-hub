@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LogIn, LockKeyhole } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase, isAdminUser, refreshSession } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -11,11 +11,17 @@ const AdminLoginButton = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { toast } = useToast();
+  const checkingRef = useRef(false);
   
   useEffect(() => {
     // Check if admin is logged in
     const checkAdminStatus = async () => {
+      // Prevent concurrent checks
+      if (checkingRef.current) return;
+      
+      checkingRef.current = true;
       setIsCheckingAuth(true);
+      
       try {
         console.log("Checking admin session status...");
         
@@ -35,31 +41,84 @@ const AdminLoginButton = () => {
             console.log("Token close to expiry, refreshing session...");
             await refreshSession();
           }
+          
+          const isAdmin = await isAdminUser();
+          console.log("Admin status check:", isAdmin);
+          setIsLoggedIn(isAdmin);
+          
+          if (!isAdmin) {
+            // User is logged in but not an admin
+            console.log("User is logged in but not an admin, signing out");
+            await supabase.auth.signOut();
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            toast({
+              title: "Not an Admin",
+              description: "Your account does not have admin privileges",
+              variant: "destructive",
+            });
+          }
         } else {
           console.log("No active session found");
-        }
-        
-        const isAdmin = await isAdminUser();
-        console.log("Admin status check:", isAdmin);
-        setIsLoggedIn(isAdmin);
-        
-        if (!isAdmin && sessionData.session) {
-          // User is logged in but not an admin
-          console.log("User is logged in but not an admin, signing out");
-          await supabase.auth.signOut();
-          localStorage.removeItem('adminToken');
-          localStorage.removeItem('adminUser');
-          toast({
-            title: "Not an Admin",
-            description: "Your account does not have admin privileges",
-            variant: "destructive",
-          });
+          
+          // Only check legacy token if not already validating (prevent infinite loop)
+          if (localStorage.getItem('adminToken') === 'authenticated' && 
+              localStorage.getItem('validating_admin') !== 'true') {
+            
+            localStorage.setItem('validating_admin', 'true');
+            console.log("Found legacy admin token, validating...");
+            
+            try {
+              const adminUserStr = localStorage.getItem('adminUser');
+              if (!adminUserStr) {
+                console.log("No admin user data found, clearing token");
+                localStorage.removeItem('adminToken');
+                setIsLoggedIn(false);
+              } else {
+                const adminUser = JSON.parse(adminUserStr);
+                if (!adminUser.id) {
+                  console.log("Invalid admin user data, clearing token");
+                  localStorage.removeItem('adminToken');
+                  localStorage.removeItem('adminUser');
+                  setIsLoggedIn(false);
+                } else {
+                  // Validate once against the database
+                  const { data: adminCheck } = await supabase
+                    .from('admins')
+                    .select('id')
+                    .eq('id', adminUser.id)
+                    .maybeSingle();
+                    
+                  setIsLoggedIn(!!adminCheck);
+                  
+                  if (!adminCheck) {
+                    console.log("Admin validation failed, clearing token");
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('adminUser');
+                  } else {
+                    console.log("Legacy admin token validated successfully");
+                  }
+                }
+              }
+            } catch (error) {
+              console.error("Error validating legacy admin token:", error);
+              localStorage.removeItem('adminToken');
+              localStorage.removeItem('adminUser');
+              setIsLoggedIn(false);
+            } finally {
+              localStorage.removeItem('validating_admin');
+            }
+          } else {
+            setIsLoggedIn(false);
+          }
         }
       } catch (error) {
         console.error("Error checking admin status:", error);
         setIsLoggedIn(false);
       } finally {
         setIsCheckingAuth(false);
+        checkingRef.current = false;
+        localStorage.removeItem('validating_admin');
       }
     };
     
@@ -98,11 +157,14 @@ const AdminLoginButton = () => {
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Set up periodic session check every 5 minutes
+    // Set up periodic session check (less frequent to avoid loops)
     const intervalId = setInterval(() => {
       console.log("Periodic admin status check");
-      checkAdminStatus();
-    }, 300000); // 5 minutes
+      // Only run if not already checking
+      if (!checkingRef.current) {
+        checkAdminStatus();
+      }
+    }, 600000); // 10 minutes instead of 5
     
     return () => {
       subscription.unsubscribe();
