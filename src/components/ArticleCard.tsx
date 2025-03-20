@@ -7,7 +7,9 @@ interface ArticleCardProps {
   id: string;
   title: string;
   excerpt: string;
-  imageUrl: string;
+  imageUrl?: string;
+  cover_image?: string;
+  featured_image?: string;
   category: string;
   author: string;
   date: string;
@@ -21,6 +23,8 @@ export const ArticleCard = ({
   title,
   excerpt,
   imageUrl,
+  cover_image,
+  featured_image,
   category,
   author,
   date,
@@ -28,8 +32,8 @@ export const ArticleCard = ({
   className,
   variant = 'default'
 }: ArticleCardProps) => {
-  // Use a default image if none is provided
-  const displayImage = imageUrl || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop';
+  // Prioritize cover_image, then featured_image, then imageUrl, then fallback to default
+  const displayImage = cover_image || featured_image || imageUrl || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop';
   
   return (
     <Link

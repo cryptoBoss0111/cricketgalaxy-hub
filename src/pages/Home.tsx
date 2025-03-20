@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, TrendingUp, ChevronRight, Calendar, Users, Trophy, BarChart2 } from 'lucide-react';
@@ -203,7 +202,6 @@ const HomePage = () => {
       <main>
         <HeroSection />
         
-        {/* Top Stories Section */}
         <section className="py-12 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-8">
@@ -224,6 +222,8 @@ const HomePage = () => {
                   title={story.title}
                   excerpt={story.excerpt}
                   imageUrl={story.imageUrl}
+                  cover_image={story.imageUrl}
+                  featured_image={story.imageUrl}
                   category={story.category}
                   author={story.author}
                   date={story.date}
@@ -241,13 +241,10 @@ const HomePage = () => {
           </div>
         </section>
         
-        {/* Multi-section Area */}
         <section className="py-12">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Main content - 2/3 width */}
               <div className="lg:col-span-2 space-y-10">
-                {/* Upcoming Matches */}
                 <div>
                   <div className="flex items-center space-x-3 mb-6">
                     <Calendar className="text-cricket-accent h-6 w-6" />
@@ -308,7 +305,6 @@ const HomePage = () => {
                   </div>
                 </div>
                 
-                {/* Fantasy Picks */}
                 <div>
                   <div className="flex items-center space-x-3 mb-6">
                     <Trophy className="text-cricket-accent h-6 w-6" />
@@ -371,7 +367,6 @@ const HomePage = () => {
                   </div>
                 </div>
                 
-                {/* Trending Players */}
                 <div>
                   <div className="flex items-center space-x-3 mb-6">
                     <Users className="text-cricket-accent h-6 w-6" />
@@ -405,9 +400,7 @@ const HomePage = () => {
                 </div>
               </div>
               
-              {/* Sidebar - 1/3 width */}
               <div className="space-y-10">
-                {/* Quick Stats */}
                 <div className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
                   <div className="flex items-center space-x-3 mb-6">
                     <BarChart2 className="text-cricket-accent h-6 w-6" />
@@ -445,7 +438,6 @@ const HomePage = () => {
                   </div>
                 </div>
                 
-                {/* Poll Widget */}
                 <div className="bg-white rounded-xl shadow-soft p-6 border border-gray-100 animate-fade-in animate-delay-300">
                   <h2 className="text-xl font-heading font-bold mb-4">Fan Poll</h2>
                   <div className="mb-4">
@@ -481,10 +473,8 @@ const HomePage = () => {
           </div>
         </section>
         
-        {/* Fantasy Picks Section */}
         <FantasyPicksSection />
         
-        {/* Footer section */}
         <Footer />
       </main>
       <Chatbot />

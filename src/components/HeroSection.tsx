@@ -41,7 +41,7 @@ export const HeroSection = () => {
             title: story.articles.title,
             excerpt: story.articles.excerpt || 'Read this exciting story...',
             category: story.articles.category,
-            imageUrl: story.articles.featured_image || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop',
+            imageUrl: story.articles.cover_image || story.articles.featured_image || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop',
             date: new Date(story.articles.published_at).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
