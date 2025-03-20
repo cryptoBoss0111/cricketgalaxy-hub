@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -21,6 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { checkAdminStatus, signOutAdmin } from '@/utils/adminAuth';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -29,6 +29,7 @@ interface AdminLayoutProps {
 interface AdminUser {
   username: string;
   role: string;
+  id?: string;
 }
 
 interface SidebarItem {
@@ -43,25 +44,64 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
+  const [isVerifying, setIsVerifying] = useState(true);
+  const authCheckComplete = useRef(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Check if the user is authenticated
-    const adminToken = localStorage.getItem('adminToken');
-    const userString = localStorage.getItem('adminUser');
+    let isMounted = true;
     
-    if (!adminToken) {
-      navigate('/admin/login');
-    } else if (userString) {
+    // Check if the user is authenticated
+    const verifyAdmin = async () => {
+      // Skip if we've already done this check or component is unmounting
+      if (!isMounted || authCheckComplete.current) return;
+      
       try {
-        const user = JSON.parse(userString);
-        setAdminUser(user);
-      } catch (error) {
-        // Invalid user data, redirect to login
-        navigate('/admin/login');
+        const adminToken = localStorage.getItem('adminToken');
+        const userString = localStorage.getItem('adminUser');
+        
+        if (!adminToken) {
+          console.log("No admin token found, redirecting to login");
+          if (isMounted) {
+            navigate('/admin/login');
+          }
+          return;
+        }
+        
+        if (userString) {
+          try {
+            const user = JSON.parse(userString);
+            if (isMounted) {
+              setAdminUser(user);
+            }
+          } catch (error) {
+            console.error("Error parsing admin user data:", error);
+            if (isMounted) {
+              navigate('/admin/login');
+            }
+            return;
+          }
+        }
+        
+        // Do a single fast check of admin status
+        const { isAdmin } = await checkAdminStatus();
+        
+        if (!isAdmin && isMounted) {
+          console.log("Admin status check failed, redirecting to login");
+          navigate('/admin/login');
+          return;
+        }
+        
+        if (isMounted) {
+          authCheckComplete.current = true;
+        }
+      } finally {
+        if (isMounted) {
+          setIsVerifying(false);
+        }
       }
-    }
+    };
     
     // Handle responsive behavior
     const handleResize = () => {
@@ -74,36 +114,65 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     handleResize();
     window.addEventListener('resize', handleResize);
     
+    // Only verify once
+    if (!authCheckComplete.current) {
+      verifyAdmin();
+    }
+    
     return () => {
+      isMounted = false;
       window.removeEventListener('resize', handleResize);
     };
   }, [navigate]);
   
-  const handleLogout = () => {
-    // Clear authentication data
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
-    
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
-      duration: 3000,
-    });
-    
-    navigate('/admin/login');
+  const handleLogout = async () => {
+    try {
+      // Clear authentication data
+      const { success } = await signOutAdmin();
+      
+      if (success) {
+        toast({
+          title: "Logged out",
+          description: "You have been successfully logged out",
+          duration: 3000,
+        });
+        
+        navigate('/admin/login');
+      } else {
+        throw new Error("Logout failed");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout Error",
+        description: "An error occurred during logout",
+        variant: "destructive",
+      });
+    }
   };
+  
+  // Show loading state while verifying
+  if (isVerifying) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-cricket-accent border-t-transparent rounded-full"></div>
+        <span className="ml-3">Verifying admin access...</span>
+      </div>
+    );
+  }
   
   const sidebarItems: SidebarItem[] = [
     {
       icon: <LayoutDashboard size={20} />,
       label: 'Dashboard',
       href: '/admin/dashboard',
-      active: true
+      active: window.location.pathname === '/admin/dashboard'
     },
     {
       icon: <FileText size={20} />,
       label: 'Articles',
-      href: '/admin/articles'
+      href: '/admin/articles',
+      active: window.location.pathname.includes('/admin/articles')
     },
     {
       icon: <Calendar size={20} />,
@@ -153,7 +222,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           <div className="flex items-center">
             {adminUser && (
               <Avatar className="h-8 w-8 bg-cricket-accent text-white">
-                <span className="text-sm font-semibold">{adminUser.username.substring(0, 2).toUpperCase()}</span>
+                <span className="text-sm font-semibold">{adminUser.username?.substring(0, 2).toUpperCase() || 'AD'}</span>
               </Avatar>
             )}
           </div>
@@ -171,7 +240,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       {/* Sidebar */}
       <aside 
         className={cn(
-          "admin-sidebar",
+          "fixed inset-y-0 left-0 z-40 bg-gradient-to-b from-cricket-primary to-cricket-secondary text-white transition-all",
           isMobile ? "transition-transform" : "",
           isMobile && !isMobileMenuOpen ? "-translate-x-full" : "",
           isCollapsed && !isMobile ? "w-20" : "w-64"
@@ -180,7 +249,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         <div className="p-4 flex items-center justify-between">
           {!isCollapsed && (
             <Link to="/admin/dashboard">
-              <span className="text-xl font-heading font-bold bg-gradient-to-r from-cricket-accent to-cricket-secondary bg-clip-text text-transparent">
+              <span className="text-xl font-heading font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                 Admin Panel
               </span>
             </Link>
@@ -236,14 +305,14 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             <div className="flex items-center">
               {!isCollapsed && adminUser && (
                 <Avatar className="h-10 w-10 mr-3 bg-white/10 text-white">
-                  <span className="text-sm font-semibold">{adminUser.username.substring(0, 2).toUpperCase()}</span>
+                  <span className="text-sm font-semibold">{adminUser.username?.substring(0, 2).toUpperCase() || 'AD'}</span>
                 </Avatar>
               )}
               
               <div className={cn("flex-1", isCollapsed ? "hidden" : "")}>
                 {adminUser && (
                   <div>
-                    <p className="text-sm font-medium text-white">{adminUser.username}</p>
+                    <p className="text-sm font-medium text-white">{adminUser.username || 'Admin'}</p>
                     <p className="text-xs text-gray-400">Administrator</p>
                   </div>
                 )}
@@ -288,7 +357,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       {/* Main Content */}
       <main 
         className={cn(
-          "admin-content transition-all", 
+          "transition-all duration-200", 
           isMobile ? "ml-0 pt-16" : "",
           isCollapsed && !isMobile ? "ml-20" : isMobile ? "ml-0" : "ml-64"
         )}

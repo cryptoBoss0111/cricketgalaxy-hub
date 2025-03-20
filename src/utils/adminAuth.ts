@@ -296,7 +296,7 @@ export const loginAdmin = async (email: string, password: string) => {
         console.log("Admin login successful");
         localStorage.setItem('adminToken', 'authenticated');
         localStorage.setItem('adminUser', JSON.stringify({ 
-          email, 
+          username: email, 
           role: 'admin',
           id: data.user?.id
         }));
@@ -363,7 +363,7 @@ export const loginAdmin = async (email: string, password: string) => {
           return { 
             success: true, 
             message: "Login successful", 
-            user: { id: rpcData, email }
+            user: { id: rpcData, username: email }
           };
         } else {
           throw new Error('Invalid username or password');

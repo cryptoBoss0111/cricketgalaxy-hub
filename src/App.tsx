@@ -38,6 +38,7 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       
       try {
         setIsChecking(true);
+        // Use the improved checkAdminStatus with caching
         const { isAdmin } = await checkAdminStatus();
         
         if (isMounted) {
