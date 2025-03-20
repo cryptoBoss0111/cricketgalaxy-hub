@@ -15,7 +15,6 @@ const AdminLoginButton = () => {
   // Check admin status on component mount
   useEffect(() => {
     let isMounted = true;
-    let checkInterval: number | null = null;
     
     const checkAuth = async () => {
       if (!isMounted) return;
@@ -26,12 +25,14 @@ const AdminLoginButton = () => {
         
         if (isMounted) {
           setIsLoggedIn(isAdmin);
-          setIsChecking(false);
         }
       } catch (error) {
         console.error("Error checking admin status:", error);
         if (isMounted) {
           setIsLoggedIn(false);
+        }
+      } finally {
+        if (isMounted) {
           setIsChecking(false);
         }
       }
@@ -40,16 +41,14 @@ const AdminLoginButton = () => {
     // Initial check
     checkAuth();
     
-    // Setup periodic check every 5 minutes
-    checkInterval = window.setInterval(() => {
+    // Setup a one-time check after 5 seconds to ensure we're up-to-date
+    const checkTimeout = setTimeout(() => {
       checkAuth();
-    }, 5 * 60 * 1000);
+    }, 5000);
     
     return () => {
       isMounted = false;
-      if (checkInterval) {
-        clearInterval(checkInterval);
-      }
+      clearTimeout(checkTimeout);
     };
   }, []);
 

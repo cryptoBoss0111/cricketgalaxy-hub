@@ -66,7 +66,10 @@ const AdminLogin = () => {
           duration: 3000,
         });
         
-        navigate('/admin/dashboard');
+        // Short delay to ensure storage is updated
+        setTimeout(() => {
+          navigate('/admin/dashboard');
+        }, 100);
       }
     } catch (err: any) {
       console.error('Login error:', err);

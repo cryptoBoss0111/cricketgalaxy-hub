@@ -2,18 +2,34 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
-// Simple admin authentication check function
+// Global flag to prevent concurrent validation
+let isValidating = false;
+
+// Helper function to check admin status
 export const checkAdminStatus = async () => {
   try {
     console.log("Checking admin status...");
+    
+    // Prevent concurrent validation
+    if (isValidating) {
+      console.log("Validation already in progress, skipping...");
+      return { 
+        isAdmin: false, 
+        session: null,
+        message: "Validation in progress"
+      };
+    }
+    
+    isValidating = true;
     
     // Check for an active session
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError) {
       console.error("Session error:", sessionError);
+      isValidating = false;
       return { 
         isAdmin: false, 
         session: null,
@@ -30,6 +46,8 @@ export const checkAdminStatus = async () => {
         .select('id')
         .eq('id', sessionData.session.user.id)
         .maybeSingle();
+      
+      isValidating = false;
       
       if (adminError) {
         console.error("Admin check error:", adminError);
@@ -75,6 +93,8 @@ export const checkAdminStatus = async () => {
             .eq('id', adminUser.id)
             .maybeSingle();
           
+          isValidating = false;
+          
           if (adminCheckError) {
             console.error("Legacy admin check error:", adminCheckError);
             // Clear invalid tokens
@@ -110,6 +130,7 @@ export const checkAdminStatus = async () => {
     }
     
     // No valid session or token
+    isValidating = false;
     console.log("No admin authentication found");
     return { 
       isAdmin: false, 
@@ -117,6 +138,7 @@ export const checkAdminStatus = async () => {
       message: "No active session found"
     };
   } catch (error) {
+    isValidating = false;
     console.error("Admin verification error:", error);
     return { 
       isAdmin: false, 
@@ -139,6 +161,9 @@ export const signOutAdmin = async () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
     
+    // Reset validation flag
+    isValidating = false;
+    
     return { success: true };
   } catch (error) {
     console.error("Error during admin signout:", error);
@@ -153,59 +178,56 @@ export const useAdminAuth = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   
+  // Using useCallback to prevent recreation of the function on each render
+  const verifyAdmin = useCallback(async () => {
+    setIsChecking(true);
+    
+    try {
+      const { isAdmin, message } = await checkAdminStatus();
+      
+      setIsAdmin(isAdmin);
+      
+      if (!isAdmin) {
+        console.log("Not authenticated as admin:", message);
+        
+        toast({
+          title: "Authentication Required",
+          description: message,
+          variant: "destructive",
+        });
+        
+        navigate('/admin/login');
+      } else {
+        console.log("Admin authentication verified");
+      }
+    } catch (error) {
+      console.error("Admin verification error:", error);
+      
+      setIsAdmin(false);
+      toast({
+        title: "Authentication Error",
+        description: "Please try logging in again",
+        variant: "destructive",
+      });
+      
+      navigate('/admin/login');
+    } finally {
+      setIsChecking(false);
+    }
+  }, [navigate, toast]);
+  
   useEffect(() => {
     let isMounted = true;
     
-    const verifyAdmin = async () => {
-      if (!isMounted) return;
-      setIsChecking(true);
-      
-      try {
-        const { isAdmin, message } = await checkAdminStatus();
-        
-        if (isMounted) {
-          setIsAdmin(isAdmin);
-          
-          if (!isAdmin) {
-            console.log("Not authenticated as admin:", message);
-            
-            toast({
-              title: "Authentication Required",
-              description: message,
-              variant: "destructive",
-            });
-            
-            navigate('/admin/login');
-          } else {
-            console.log("Admin authentication verified");
-          }
-        }
-      } catch (error) {
-        console.error("Admin verification error:", error);
-        
-        if (isMounted) {
-          setIsAdmin(false);
-          toast({
-            title: "Authentication Error",
-            description: "Please try logging in again",
-            variant: "destructive",
-          });
-          
-          navigate('/admin/login');
-        }
-      } finally {
-        if (isMounted) {
-          setIsChecking(false);
-        }
-      }
-    };
-    
-    verifyAdmin();
+    // Only verify if component is mounted
+    if (isMounted) {
+      verifyAdmin();
+    }
     
     return () => {
       isMounted = false;
     };
-  }, [navigate, toast]);
+  }, [verifyAdmin]);
   
   return { isChecking, isAdmin };
 };
@@ -248,6 +270,9 @@ export const loginAdmin = async (email: string, password: string) => {
           role: 'admin',
           id: data.user?.id
         }));
+        
+        // Reset validation flag
+        isValidating = false;
         
         return { 
           success: true, 
@@ -297,6 +322,9 @@ export const loginAdmin = async (email: string, password: string) => {
             role: 'admin',
             id: rpcData
           }));
+          
+          // Reset validation flag
+          isValidating = false;
           
           return { 
             success: true, 
