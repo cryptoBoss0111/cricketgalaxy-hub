@@ -1,15 +1,14 @@
 
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, User } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { checkAdminStatus } from '@/utils/adminAuth';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { checkAdminStatus, loginAdmin } from "@/utils/adminAuth";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -28,9 +27,9 @@ const AdminLogin = () => {
     
     const checkSession = async () => {
       if (!isMounted) return;
-      setCheckingSession(true);
       
       try {
+        setCheckingSession(true);
         const { isAdmin } = await checkAdminStatus();
         
         if (isMounted && isAdmin) {
@@ -58,84 +57,37 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      // First try to sign in with Supabase auth
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const result = await loginAdmin(email, password);
       
-      if (data?.session) {
-        // Verify if this user is an admin
-        const { data: adminData } = await supabase
-          .from('admins')
-          .select('id')
-          .eq('id', data.session.user.id)
-          .maybeSingle();
+      if (result.success) {
+        toast({
+          title: "Login successful",
+          description: "Welcome to the admin dashboard",
+          duration: 3000,
+        });
         
-        if (adminData) {
-          // User is an admin
-          localStorage.setItem('adminToken', 'authenticated');
-          localStorage.setItem('adminUser', JSON.stringify({ 
-            email, 
-            role: 'admin',
-            id: data.user?.id
-          }));
-          
-          toast({
-            title: "Login successful",
-            description: "Welcome to the admin dashboard",
-            duration: 3000,
-          });
-          
-          navigate('/admin/dashboard');
-          return;
-        } else {
-          // User exists but is not an admin
-          await supabase.auth.signOut();
-          throw new Error("You don't have admin privileges");
-        }
-      } else if (authError) {
-        // If Supabase auth fails, try the RPC method as fallback
-        const { data: rpcData, error: functionError } = await supabase.rpc(
-          'authenticate_admin',
-          {
-            admin_username: email,
-            admin_password: password
-          }
-        );
-        
-        if (functionError) {
-          throw functionError;
-        }
-        
-        // Check if authentication was successful
-        if (rpcData) {
-          // Store admin info in local storage
-          localStorage.setItem('adminToken', 'authenticated');
-          localStorage.setItem('adminUser', JSON.stringify({ 
-            username: email, 
-            role: 'admin',
-            id: rpcData
-          }));
-          
-          toast({
-            title: "Login successful",
-            description: "Welcome to the admin dashboard",
-            duration: 3000,
-          });
-          
-          navigate('/admin/dashboard');
-        } else {
-          setError('Invalid username or password');
-        }
+        navigate('/admin/dashboard');
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.message || 'An error occurred during login. Please try again.');
+      
+      let errorMessage = 'An error occurred during login. Please try again.';
+      
+      if (err.message) {
+        if (err.message.includes("Invalid login credentials") || 
+            err.message.includes("Invalid email or password") ||
+            err.message.includes("Invalid username or password")) {
+          errorMessage = "Invalid email or password";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
       
       toast({
         title: "Login error",
-        description: err.message || "An unexpected error occurred. Please try again.",
+        description: errorMessage,
         variant: "destructive",
         duration: 3000,
       });

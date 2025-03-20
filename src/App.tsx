@@ -15,7 +15,14 @@ import AdminDashboard from "./admin/Dashboard";
 import ArticleForm from "./admin/ArticleForm";
 import ArticlesList from "./admin/ArticlesList";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Protected route component for admin routes
 const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -25,6 +32,7 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-cricket-accent border-t-transparent rounded-full"></div>
+        <span className="ml-3">Verifying admin access...</span>
       </div>
     );
   }

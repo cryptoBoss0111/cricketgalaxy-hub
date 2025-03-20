@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LogIn, LockKeyhole, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { checkAdminStatus, signOutAdmin } from "@/utils/adminAuth";
 
@@ -13,36 +12,44 @@ const AdminLoginButton = () => {
   const [isChecking, setIsChecking] = useState(true);
   const { toast } = useToast();
   
-  // Check admin status on component mount and auth state changes
+  // Check admin status on component mount
   useEffect(() => {
     let isMounted = true;
+    let checkInterval: number | null = null;
     
     const checkAuth = async () => {
       if (!isMounted) return;
-      setIsChecking(true);
       
       try {
+        setIsChecking(true);
         const { isAdmin } = await checkAdminStatus();
-        if (isMounted) setIsLoggedIn(isAdmin);
+        
+        if (isMounted) {
+          setIsLoggedIn(isAdmin);
+          setIsChecking(false);
+        }
       } catch (error) {
         console.error("Error checking admin status:", error);
-        if (isMounted) setIsLoggedIn(false);
-      } finally {
-        if (isMounted) setIsChecking(false);
+        if (isMounted) {
+          setIsLoggedIn(false);
+          setIsChecking(false);
+        }
       }
     };
     
     // Initial check
     checkAuth();
     
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    // Setup periodic check every 5 minutes
+    checkInterval = window.setInterval(() => {
       checkAuth();
-    });
+    }, 5 * 60 * 1000);
     
     return () => {
       isMounted = false;
-      subscription.unsubscribe();
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
     };
   }, []);
 
@@ -59,14 +66,19 @@ const AdminLoginButton = () => {
     setIsChecking(true);
     
     try {
-      await signOutAdmin();
-      setIsLoggedIn(false);
-      navigate("/");
+      const { success } = await signOutAdmin();
       
-      toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out",
-      });
+      if (success) {
+        setIsLoggedIn(false);
+        navigate("/");
+        
+        toast({
+          title: "Logged Out",
+          description: "You have been successfully logged out",
+        });
+      } else {
+        throw new Error("Logout failed");
+      }
     } catch (error) {
       console.error("Error during logout:", error);
       toast({
