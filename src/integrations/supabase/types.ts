@@ -85,15 +85,7 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "articles_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "admins"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       fantasy_picks: {
         Row: {

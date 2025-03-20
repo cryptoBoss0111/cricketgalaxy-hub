@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Demo credentials for fallback authentication
@@ -312,7 +313,7 @@ export const bypassRLSArticleSave = async (articleData: any, isUpdate = false, a
     
     console.log("Saving article with admin ID:", adminId);
     
-    // Direct database operations - with simplified approach that leverages new RLS policies
+    // Direct database operations with simplified approach using new RLS policies
     if (isUpdate && articleId) {
       console.log("Updating existing article:", articleId);
       
