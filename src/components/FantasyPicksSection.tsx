@@ -8,6 +8,21 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define a type that matches what's returned by the getFantasyPicks function
+type FantasyPickFromDB = {
+  id: string;
+  player_name: string;
+  team: string;
+  role: string;
+  form: string;
+  points_prediction: number;
+  reason: string;
+  match: string;
+  created_at: string;
+  updated_at: string;
+};
+
+// Define our component's internal type that extends what we get from DB
 type FantasyPick = {
   id: string;
   player_name: string;
@@ -41,7 +56,22 @@ const FantasyPicksSection = () => {
         }
         
         if (data && data.length > 0) {
-          setFantasyPicks(data as FantasyPick[]);
+          // Transform the DB data to our component's expected format
+          const transformedData: FantasyPick[] = data.map((dbPick: FantasyPickFromDB) => ({
+            id: dbPick.id,
+            player_name: dbPick.player_name,
+            team: dbPick.team,
+            role: dbPick.role,
+            form: (dbPick.form as 'Excellent' | 'Good' | 'Average' | 'Poor'),
+            image_url: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop',
+            stats: 'Recent stats not available',
+            points_prediction: dbPick.points_prediction,
+            match_details: dbPick.match,
+            selection_reason: dbPick.reason,
+            created_at: dbPick.created_at
+          }));
+          
+          setFantasyPicks(transformedData);
         } else {
           // Fallback data if no fantasy picks are available
           setFantasyPicks([
