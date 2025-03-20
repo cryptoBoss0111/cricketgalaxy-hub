@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LogIn, LockKeyhole, LogOut } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -10,7 +10,15 @@ const AdminLoginButton = () => {
   const navigate = useNavigate();
   const { isAdmin, isChecking, signOut } = useAdminAuth();
   const buttonClicked = useRef(false);
+  const [loginAttempted, setLoginAttempted] = useState(false);
   const { toast } = useToast();
+  
+  // Clear login attempted state when admin status changes
+  useEffect(() => {
+    if (isAdmin && loginAttempted) {
+      setLoginAttempted(false);
+    }
+  }, [isAdmin, loginAttempted]);
   
   const handleAdminAction = () => {
     if (buttonClicked.current) return; // Prevent double clicks
@@ -19,6 +27,7 @@ const AdminLoginButton = () => {
     setTimeout(() => { buttonClicked.current = false; }, 1000); // Reset after 1 second
     
     if (isAdmin) {
+      setLoginAttempted(true);
       navigate("/admin/dashboard");
     } else {
       navigate("/admin/login");
@@ -32,10 +41,7 @@ const AdminLoginButton = () => {
     buttonClicked.current = true;
     try {
       await signOut();
-      toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out",
-      });
+      // Toast notification is handled in the signOut function
     } catch (error) {
       console.error("Logout error:", error);
       toast({
@@ -55,12 +61,17 @@ const AdminLoginButton = () => {
         className={`flex items-center gap-1 ${isAdmin ? 'bg-cricket-accent hover:bg-cricket-accent/90' : 'text-gray-600 hover:text-cricket-accent'} transition-colors`}
         onClick={handleAdminAction}
         aria-label={isAdmin ? "Admin Dashboard" : "Admin Login"}
-        disabled={isChecking}
+        disabled={isChecking || loginAttempted}
       >
         {isChecking ? (
           <span className="flex items-center">
             <span className="h-3 w-3 animate-spin rounded-full border-2 border-t-transparent mr-1"></span>
             <span className="hidden md:inline">Checking...</span>
+          </span>
+        ) : loginAttempted ? (
+          <span className="flex items-center">
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-t-transparent mr-1"></span>
+            <span className="hidden md:inline">Loading...</span>
           </span>
         ) : isAdmin ? (
           <>

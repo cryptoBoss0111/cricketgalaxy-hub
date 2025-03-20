@@ -5,8 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 let isValidating = false;
 // Store verified admin status for faster access
 let cachedAdminVerified = false;
-// Cache expiry time (5 minutes)
-const CACHE_EXPIRY = 5 * 60 * 1000;
+// Cache expiry time (15 minutes)
+const CACHE_EXPIRY = 15 * 60 * 1000;
 let lastVerificationTime = 0;
 
 // Helper function to check admin status
@@ -27,7 +27,7 @@ export const checkAdminStatus = async () => {
     
     // Prevent concurrent validation
     if (isValidating) {
-      console.log("Validation already in progress, skipping...");
+      console.log("Validation already in progress, using cached result...");
       return { 
         isAdmin: cachedAdminVerified, 
         session: null,
@@ -75,6 +75,14 @@ export const checkAdminStatus = async () => {
         console.log("User confirmed as admin in database");
         cachedAdminVerified = true;
         lastVerificationTime = now;
+        
+        // Store admin info for faster checks
+        localStorage.setItem('adminToken', 'authenticated');
+        localStorage.setItem('adminUser', JSON.stringify({ 
+          id: sessionData.session.user.id,
+          role: 'admin'
+        }));
+        
         return { 
           isAdmin: true, 
           session: sessionData.session,
@@ -83,6 +91,11 @@ export const checkAdminStatus = async () => {
       } else {
         console.log("User is not an admin");
         cachedAdminVerified = false;
+        
+        // Clear any stale admin tokens
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        
         return { 
           isAdmin: false, 
           session: sessionData.session,
@@ -194,6 +207,13 @@ export const signOutAdmin = async () => {
     return { success: true };
   } catch (error) {
     console.error("Error during admin signout:", error);
+    
+    // Still remove local tokens on error
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    isValidating = false;
+    cachedAdminVerified = false;
+    
     return { success: false, error };
   }
 };
@@ -309,6 +329,10 @@ export const loginAdmin = async (email: string, password: string) => {
         throw rpcError;
       }
     }
+    
+    // Clear any stale tokens on error
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
     
     throw error;
   }

@@ -17,15 +17,25 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
   const [isAdmin, setIsAdmin] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const initialCheckDone = useRef(false);
+  const checkInProgress = useRef(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const verifyAdmin = async (): Promise<boolean> => {
+    // Prevent multiple simultaneous verifications
+    if (checkInProgress.current) {
+      console.log("Admin verification already in progress, skipping...");
+      return isAdmin;
+    }
+    
     try {
+      checkInProgress.current = true;
       setIsChecking(true);
       console.log("Verifying admin status...");
+      
       const { isAdmin: adminStatus } = await checkAdminStatus();
       console.log("Admin verification result:", adminStatus);
+      
       setIsAdmin(adminStatus);
       initialCheckDone.current = true;
       return adminStatus;
@@ -36,6 +46,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
       return false;
     } finally {
       setIsChecking(false);
+      checkInProgress.current = false;
     }
   };
 
@@ -88,9 +99,8 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     
     window.addEventListener('storage', handleStorageChange);
     
-    if (!initialCheckDone.current) {
-      checkAuth();
-    }
+    // Initial check
+    checkAuth();
     
     return () => {
       isMounted = false;
@@ -98,14 +108,14 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     };
   }, []);
 
-  // Recheck admin status periodically
+  // Recheck admin status periodically - but reduce the frequency to avoid too many checks
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!isChecking) {
+      if (!isChecking && initialCheckDone.current) {
         console.log("Performing periodic admin check");
         verifyAdmin();
       }
-    }, 5 * 60 * 1000); // Check every 5 minutes
+    }, 15 * 60 * 1000); // Check every 15 minutes instead of 5
     
     return () => clearInterval(interval);
   }, [isChecking]);
