@@ -5,8 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ChatbotProvider } from "@/contexts/ChatbotContext";
-import { useState, useEffect, useRef } from "react";
-import { checkAdminStatus } from "@/utils/adminAuth";
+import { useState, useEffect } from "react";
+import { AdminAuthProvider, useAdminAuth } from "@/contexts/AdminAuthContext";
 import Home from "./pages/Home";
 import CricketNews from "./pages/CricketNews";
 import NotFound from "./pages/NotFound";
@@ -26,49 +26,31 @@ const queryClient = new QueryClient({
 
 // Protected route component for admin routes
 const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isChecking, setIsChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const verificationDone = useRef(false);
+  const { isAdmin, isChecking, verifyAdmin } = useAdminAuth();
+  const [verified, setVerified] = useState(false);
   
   useEffect(() => {
     let isMounted = true;
     
-    const verifyAdmin = async () => {
-      if (!isMounted || verificationDone.current) return;
+    const checkAuth = async () => {
+      if (!isMounted) return;
       
-      try {
-        setIsChecking(true);
-        // Use the improved checkAdminStatus with caching
-        const { isAdmin } = await checkAdminStatus();
-        
-        if (isMounted) {
-          setIsAdmin(isAdmin);
-          verificationDone.current = true;
-        }
-      } catch (error) {
-        console.error("Admin verification error:", error);
-        if (isMounted) {
-          setIsAdmin(false);
-          verificationDone.current = true;
-        }
-      } finally {
-        if (isMounted) {
-          setIsChecking(false);
-        }
+      const adminStatus = await verifyAdmin();
+      if (isMounted) {
+        setVerified(true);
       }
     };
     
-    // Only verify if not already done
-    if (!verificationDone.current) {
-      verifyAdmin();
+    if (!verified) {
+      checkAuth();
     }
     
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [verifyAdmin, verified]);
   
-  if (isChecking) {
+  if (isChecking && !verified) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-cricket-accent border-t-transparent rounded-full"></div>
@@ -91,42 +73,44 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/cricket-news" element={<CricketNews />} />
-            <Route path="/match-previews" element={<CricketNews />} />
-            <Route path="/match-reviews" element={<CricketNews />} />
-            <Route path="/fantasy-tips" element={<CricketNews />} />
-            <Route path="/player-profiles" element={<CricketNews />} />
-            <Route path="/ipl-2025" element={<CricketNews />} />
-            <Route path="/womens-cricket" element={<CricketNews />} />
-            <Route path="/world-cup" element={<CricketNews />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            
-            {/* Protected admin routes */}
-            <Route path="/admin/dashboard" element={
-              <AdminProtectedRoute>
-                <AdminDashboard />
-              </AdminProtectedRoute>
-            } />
-            <Route path="/admin/articles" element={
-              <AdminProtectedRoute>
-                <ArticlesList />
-              </AdminProtectedRoute>
-            } />
-            <Route path="/admin/articles/new" element={
-              <AdminProtectedRoute>
-                <ArticleForm />
-              </AdminProtectedRoute>
-            } />
-            <Route path="/admin/articles/edit/:id" element={
-              <AdminProtectedRoute>
-                <ArticleForm />
-              </AdminProtectedRoute>
-            } />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AdminAuthProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/cricket-news" element={<CricketNews />} />
+              <Route path="/match-previews" element={<CricketNews />} />
+              <Route path="/match-reviews" element={<CricketNews />} />
+              <Route path="/fantasy-tips" element={<CricketNews />} />
+              <Route path="/player-profiles" element={<CricketNews />} />
+              <Route path="/ipl-2025" element={<CricketNews />} />
+              <Route path="/womens-cricket" element={<CricketNews />} />
+              <Route path="/world-cup" element={<CricketNews />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              
+              {/* Protected admin routes */}
+              <Route path="/admin/dashboard" element={
+                <AdminProtectedRoute>
+                  <AdminDashboard />
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/articles" element={
+                <AdminProtectedRoute>
+                  <ArticlesList />
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/articles/new" element={
+                <AdminProtectedRoute>
+                  <ArticleForm />
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/articles/edit/:id" element={
+                <AdminProtectedRoute>
+                  <ArticleForm />
+                </AdminProtectedRoute>
+              } />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AdminAuthProvider>
         </BrowserRouter>
       </ChatbotProvider>
     </TooltipProvider>

@@ -8,7 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { checkAdminStatus, loginAdmin } from "@/utils/adminAuth";
+import { loginAdmin } from "@/utils/adminAuth";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -16,43 +17,17 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [checkingSession, setCheckingSession] = useState(true);
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isAdmin, isChecking } = useAdminAuth();
   
-  // Check if already logged in
+  // Redirect if already logged in
   useEffect(() => {
-    let isMounted = true;
-    
-    const checkSession = async () => {
-      if (!isMounted) return;
-      
-      try {
-        setCheckingSession(true);
-        const { isAdmin } = await checkAdminStatus();
-        
-        if (isMounted && isAdmin) {
-          // Add a small delay to ensure state is properly updated
-          setTimeout(() => {
-            navigate('/admin/dashboard');
-          }, 100);
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-      } finally {
-        if (isMounted) {
-          setCheckingSession(false);
-        }
-      }
-    };
-    
-    checkSession();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [navigate]);
+    if (isAdmin && !isChecking) {
+      navigate('/admin/dashboard');
+    }
+  }, [isAdmin, isChecking, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +44,7 @@ const AdminLogin = () => {
           duration: 3000,
         });
         
-        // Add a longer delay to ensure the login process is complete
+        // Add a small delay to ensure the login process is complete
         setTimeout(() => {
           navigate('/admin/dashboard');
         }, 300);
@@ -102,7 +77,7 @@ const AdminLogin = () => {
     }
   };
   
-  if (checkingSession) {
+  if (isChecking) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-gray-50 px-4">
         <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8 border border-gray-100 flex justify-center items-center">

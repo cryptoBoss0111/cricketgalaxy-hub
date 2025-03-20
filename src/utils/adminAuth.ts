@@ -1,8 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useCallback } from "react";
 
 // Global flag to prevent concurrent validation
 let isValidating = false;
@@ -197,69 +194,6 @@ export const signOutAdmin = async () => {
     console.error("Error during admin signout:", error);
     return { success: false, error };
   }
-};
-
-// Hook for admin route protection
-export const useAdminAuth = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isChecking, setIsChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  
-  // Using useCallback to prevent recreation of the function on each render
-  const verifyAdmin = useCallback(async () => {
-    if (isValidating) return; // Prevent concurrent checks
-    
-    setIsChecking(true);
-    
-    try {
-      const { isAdmin, message } = await checkAdminStatus();
-      
-      setIsAdmin(isAdmin);
-      
-      if (!isAdmin) {
-        console.log("Not authenticated as admin:", message);
-        
-        toast({
-          title: "Authentication Required",
-          description: "Please sign in with admin credentials",
-          variant: "destructive",
-        });
-        
-        navigate('/admin/login');
-      } else {
-        console.log("Admin authentication verified");
-      }
-    } catch (error) {
-      console.error("Admin verification error:", error);
-      
-      setIsAdmin(false);
-      toast({
-        title: "Authentication Error",
-        description: "Please try logging in again",
-        variant: "destructive",
-      });
-      
-      navigate('/admin/login');
-    } finally {
-      setIsChecking(false);
-    }
-  }, [navigate, toast]);
-  
-  useEffect(() => {
-    let isMounted = true;
-    
-    // Only verify if component is mounted and not already checking
-    if (isMounted && !isValidating) {
-      verifyAdmin();
-    }
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [verifyAdmin]);
-  
-  return { isChecking, isAdmin };
 };
 
 // Admin login function
