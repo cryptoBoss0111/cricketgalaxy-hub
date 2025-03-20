@@ -138,7 +138,9 @@ const ArticleForm = () => {
 
         // Set content blocks if they exist
         if (data.content_blocks && Array.isArray(data.content_blocks)) {
-          setContentBlocks(data.content_blocks);
+          // Convert the JSON data to ContentBlock type
+          const blocks = data.content_blocks as unknown as ContentBlock[];
+          setContentBlocks(blocks);
         }
       }
     } catch (error) {

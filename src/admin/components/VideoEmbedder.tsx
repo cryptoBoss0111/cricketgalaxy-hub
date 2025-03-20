@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { YouTube, Video } from 'lucide-react';
+import { Youtube, Video } from 'lucide-react';
 
 interface VideoEmbedderProps {
   onVideoUrlAdded: (videoUrl: string, videoType: 'youtube' | 'vimeo' | 'other') => void;
@@ -95,7 +95,7 @@ const VideoEmbedder = ({ onVideoUrlAdded, existingVideoUrl = '' }: VideoEmbedder
           onClick={() => setIsAdding(true)}
           className="w-full py-8 flex flex-col gap-2"
         >
-          <YouTube className="h-6 w-6" />
+          <Youtube className="h-6 w-6" />
           <span>Add Video Embed</span>
         </Button>
       )}
