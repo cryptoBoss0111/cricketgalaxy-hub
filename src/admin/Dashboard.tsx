@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { BarChart2, TrendingUp, FileText, Users, Calendar, Award, Eye, Edit, Trash2, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,20 +31,17 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Check if user is authenticated
   useEffect(() => {
     const adminToken = localStorage.getItem('adminToken');
     if (!adminToken) {
       navigate('/admin/login');
     } else {
-      // Fetch dashboard data
       fetchDashboardData();
     }
   }, [navigate]);
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch articles from Supabase
       const { data: articlesData, error: articlesError } = await supabase
         .from('articles')
         .select('*')
@@ -54,8 +50,7 @@ const AdminDashboard = () => {
       
       if (articlesError) throw articlesError;
       
-      // Transform Supabase data to match our Article interface
-      const formattedArticles = articlesData ? articlesData.map(article => ({
+      const formattedArticles: Article[] = articlesData ? articlesData.map(article => ({
         id: article.id,
         title: article.title,
         category: article.category,
@@ -67,8 +62,7 @@ const AdminDashboard = () => {
         status: article.published ? 'published' : 'draft' as 'published' | 'draft'
       })) : [];
       
-      // If no articles are found yet, use sample data
-      const articles = formattedArticles.length > 0 ? formattedArticles : [
+      const sampleArticles: Article[] = [
         {
           id: '1',
           title: 'IPL: Bumrah\'s early absence \'a challenge\', says Jayawardene',
@@ -106,14 +100,12 @@ const AdminDashboard = () => {
         }
       ];
 
-      // Set article data
-      setRecentArticles(articles);
+      setRecentArticles(formattedArticles.length > 0 ? formattedArticles : sampleArticles);
 
-      // Set stats data
       setStats([
         {
           label: 'Total Articles',
-          value: articles.length.toString(),
+          value: articlesData ? articlesData.length.toString() : '5',
           icon: <FileText className="h-8 w-8 text-cricket-accent" />,
           change: '+12%',
           isPositive: true
@@ -153,21 +145,13 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleEdit = async (id: string) => {
-    toast({
-      title: "Editing article",
-      description: `Opening editor for article ID: ${id}`,
-      duration: 3000,
-    });
-    // In a real app, this would navigate to the edit page
-    // navigate(`/admin/articles/edit/${id}`);
+  const handleEdit = (id: string) => {
+    navigate(`/admin/articles/edit/${id}`);
   };
 
   const handleDelete = async (id: string) => {
     try {
-      // Check if this is a UUID (from Supabase) or sample data
       if (id.length === 36) {
-        // It's a UUID, delete from Supabase
         const { error } = await supabase
           .from('articles')
           .delete()
@@ -182,7 +166,6 @@ const AdminDashboard = () => {
         duration: 3000,
       });
       
-      // Remove from local state
       setRecentArticles(recentArticles.filter(article => article.id !== id));
     } catch (error) {
       console.error('Error deleting article:', error);
@@ -195,12 +178,7 @@ const AdminDashboard = () => {
   };
 
   const handleCreateArticle = () => {
-    toast({
-      title: "Creating new article",
-      description: "Opening the article editor",
-      duration: 3000,
-    });
-    // navigate('/admin/articles/new');
+    navigate('/admin/articles/new');
   };
 
   if (isLoading) {
@@ -221,7 +199,7 @@ const AdminDashboard = () => {
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-heading font-bold">Dashboard</h1>
-          <Button onClick={() => toast({ title: "Refreshing data..." })}>
+          <Button onClick={() => fetchDashboardData()}>
             Refresh Data
           </Button>
         </div>
@@ -248,28 +226,15 @@ const AdminDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Articles */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-soft p-6 border border-gray-100">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center space-x-2">
                 <FileText className="text-cricket-accent h-5 w-5" />
                 <h2 className="text-xl font-heading font-semibold">Recent Articles</h2>
               </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size="sm" onClick={handleCreateArticle}>
-                    <Plus className="h-4 w-4 mr-2" /> New Article
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Create New Article</DialogTitle>
-                  </DialogHeader>
-                  <div className="py-4">
-                    <p className="text-gray-500">The editor would open here in a real application.</p>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <Button size="sm" onClick={handleCreateArticle}>
+                <Plus className="h-4 w-4 mr-2" /> New Article
+              </Button>
             </div>
 
             <div className="overflow-x-auto">
@@ -337,13 +302,14 @@ const AdminDashboard = () => {
             </div>
 
             <div className="mt-4 text-center">
-              <Button variant="outline" size="sm">
-                View All Articles
-              </Button>
+              <Link to="/admin/articles">
+                <Button variant="outline" size="sm">
+                  View All Articles
+                </Button>
+              </Link>
             </div>
           </div>
 
-          {/* Upcoming Schedule */}
           <div className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
             <div className="flex items-center space-x-2 mb-6">
               <Calendar className="text-cricket-accent h-5 w-5" />
@@ -380,14 +346,15 @@ const AdminDashboard = () => {
             </div>
 
             <div className="mt-4 text-center">
-              <Button variant="outline" size="sm">
-                Manage Match Schedule
-              </Button>
+              <Link to="/admin/matches">
+                <Button variant="outline" size="sm">
+                  Manage Match Schedule
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Performance Overview */}
         <div className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
           <div className="flex items-center space-x-2 mb-6">
             <BarChart2 className="text-cricket-accent h-5 w-5" />
