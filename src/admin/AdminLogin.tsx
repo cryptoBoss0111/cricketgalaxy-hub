@@ -33,7 +33,10 @@ const AdminLogin = () => {
         const { isAdmin } = await checkAdminStatus();
         
         if (isMounted && isAdmin) {
-          navigate('/admin/dashboard');
+          // Add a small delay to ensure state is properly updated
+          setTimeout(() => {
+            navigate('/admin/dashboard');
+          }, 100);
         }
       } catch (error) {
         console.error("Error checking session:", error);
@@ -66,10 +69,10 @@ const AdminLogin = () => {
           duration: 3000,
         });
         
-        // Short delay to ensure storage is updated
+        // Add a longer delay to ensure the login process is complete
         setTimeout(() => {
           navigate('/admin/dashboard');
-        }, 100);
+        }, 300);
       }
     } catch (err: any) {
       console.error('Login error:', err);

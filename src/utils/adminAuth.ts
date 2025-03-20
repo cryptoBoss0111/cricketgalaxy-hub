@@ -6,17 +6,33 @@ import { useState, useEffect, useCallback } from "react";
 
 // Global flag to prevent concurrent validation
 let isValidating = false;
+// Store verified admin status for faster access
+let cachedAdminVerified = false;
+// Cache expiry time (5 minutes)
+const CACHE_EXPIRY = 5 * 60 * 1000;
+let lastVerificationTime = 0;
 
 // Helper function to check admin status
 export const checkAdminStatus = async () => {
   try {
     console.log("Checking admin status...");
     
+    // Use cached result if available and not expired
+    const now = Date.now();
+    if (cachedAdminVerified && (now - lastVerificationTime < CACHE_EXPIRY)) {
+      console.log("Using cached admin verification");
+      return { 
+        isAdmin: true, 
+        session: null,
+        message: "Admin authenticated (cached)"
+      };
+    }
+    
     // Prevent concurrent validation
     if (isValidating) {
       console.log("Validation already in progress, skipping...");
       return { 
-        isAdmin: false, 
+        isAdmin: cachedAdminVerified, 
         session: null,
         message: "Validation in progress"
       };
@@ -60,6 +76,8 @@ export const checkAdminStatus = async () => {
       
       if (adminData) {
         console.log("User confirmed as admin in database");
+        cachedAdminVerified = true;
+        lastVerificationTime = now;
         return { 
           isAdmin: true, 
           session: sessionData.session,
@@ -67,6 +85,7 @@ export const checkAdminStatus = async () => {
         };
       } else {
         console.log("User is not an admin");
+        cachedAdminVerified = false;
         return { 
           isAdmin: false, 
           session: sessionData.session,
@@ -100,6 +119,7 @@ export const checkAdminStatus = async () => {
             // Clear invalid tokens
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminUser');
+            cachedAdminVerified = false;
             return { 
               isAdmin: false, 
               session: null,
@@ -109,6 +129,8 @@ export const checkAdminStatus = async () => {
             
           if (adminCheck) {
             console.log("Legacy admin token verified successfully");
+            cachedAdminVerified = true;
+            lastVerificationTime = now;
             return { 
               isAdmin: true, 
               session: null,
@@ -121,16 +143,19 @@ export const checkAdminStatus = async () => {
         console.log("Invalid legacy token, clearing...");
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminUser');
+        cachedAdminVerified = false;
       } catch (error) {
         // Error parsing admin user data, clear it
         console.error("Error parsing admin user data:", error);
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminUser');
+        cachedAdminVerified = false;
       }
     }
     
     // No valid session or token
     isValidating = false;
+    cachedAdminVerified = false;
     console.log("No admin authentication found");
     return { 
       isAdmin: false, 
@@ -139,6 +164,7 @@ export const checkAdminStatus = async () => {
     };
   } catch (error) {
     isValidating = false;
+    cachedAdminVerified = false;
     console.error("Admin verification error:", error);
     return { 
       isAdmin: false, 
@@ -161,8 +187,10 @@ export const signOutAdmin = async () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
     
-    // Reset validation flag
+    // Reset validation flag and cache
     isValidating = false;
+    cachedAdminVerified = false;
+    lastVerificationTime = 0;
     
     return { success: true };
   } catch (error) {
@@ -180,6 +208,8 @@ export const useAdminAuth = () => {
   
   // Using useCallback to prevent recreation of the function on each render
   const verifyAdmin = useCallback(async () => {
+    if (isValidating) return; // Prevent concurrent checks
+    
     setIsChecking(true);
     
     try {
@@ -192,7 +222,7 @@ export const useAdminAuth = () => {
         
         toast({
           title: "Authentication Required",
-          description: message,
+          description: "Please sign in with admin credentials",
           variant: "destructive",
         });
         
@@ -219,8 +249,8 @@ export const useAdminAuth = () => {
   useEffect(() => {
     let isMounted = true;
     
-    // Only verify if component is mounted
-    if (isMounted) {
+    // Only verify if component is mounted and not already checking
+    if (isMounted && !isValidating) {
       verifyAdmin();
     }
     
@@ -271,8 +301,10 @@ export const loginAdmin = async (email: string, password: string) => {
           id: data.user?.id
         }));
         
-        // Reset validation flag
+        // Reset validation flag and update cache
         isValidating = false;
+        cachedAdminVerified = true;
+        lastVerificationTime = Date.now();
         
         return { 
           success: true, 
@@ -323,8 +355,10 @@ export const loginAdmin = async (email: string, password: string) => {
             id: rpcData
           }));
           
-          // Reset validation flag
+          // Reset validation flag and update cache
           isValidating = false;
+          cachedAdminVerified = true;
+          lastVerificationTime = Date.now();
           
           return { 
             success: true, 

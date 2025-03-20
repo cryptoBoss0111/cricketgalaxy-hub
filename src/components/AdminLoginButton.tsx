@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LogIn, LockKeyhole, LogOut } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { checkAdminStatus, signOutAdmin } from "@/utils/adminAuth";
 
@@ -11,8 +11,9 @@ const AdminLoginButton = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const { toast } = useToast();
+  const initialCheckDone = useRef(false);
   
-  // Check admin status on component mount
+  // Check admin status on component mount, but only once
   useEffect(() => {
     let isMounted = true;
     
@@ -25,11 +26,13 @@ const AdminLoginButton = () => {
         
         if (isMounted) {
           setIsLoggedIn(isAdmin);
+          initialCheckDone.current = true;
         }
       } catch (error) {
         console.error("Error checking admin status:", error);
         if (isMounted) {
           setIsLoggedIn(false);
+          initialCheckDone.current = true;
         }
       } finally {
         if (isMounted) {
@@ -38,17 +41,13 @@ const AdminLoginButton = () => {
       }
     };
     
-    // Initial check
-    checkAuth();
-    
-    // Setup a one-time check after 5 seconds to ensure we're up-to-date
-    const checkTimeout = setTimeout(() => {
+    // Only do the initial check if not already done
+    if (!initialCheckDone.current) {
       checkAuth();
-    }, 5000);
+    }
     
     return () => {
       isMounted = false;
-      clearTimeout(checkTimeout);
     };
   }, []);
 
