@@ -19,5 +19,5 @@ export function useIsMobile() {
   return !!isMobile
 }
 
-// For backward compatibility
+// Export the same function with the old name for backward compatibility
 export const useMobile = useIsMobile;
