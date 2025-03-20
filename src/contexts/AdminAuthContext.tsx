@@ -65,7 +65,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     }
   };
 
-  // Only check admin status once on mount
+  // Check admin status on mount and whenever localStorage changes
   useEffect(() => {
     let isMounted = true;
     
@@ -75,12 +75,22 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
       await verifyAdmin();
     };
     
+    // Listen for storage events (in case admin token is changed in another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'adminToken' || e.key === 'adminUser') {
+        checkAuth();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
     if (!initialCheckDone.current) {
       checkAuth();
     }
     
     return () => {
       isMounted = false;
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 

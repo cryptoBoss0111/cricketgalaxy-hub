@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { LogIn, LockKeyhole, LogOut } from "lucide-react";
 import { useState, useRef } from "react";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminLoginButton = () => {
   const navigate = useNavigate();
   const { isAdmin, isChecking, signOut } = useAdminAuth();
   const buttonClicked = useRef(false);
+  const { toast } = useToast();
   
   const handleAdminAction = () => {
     if (buttonClicked.current) return; // Prevent double clicks
@@ -28,7 +30,20 @@ const AdminLoginButton = () => {
     if (buttonClicked.current) return; // Prevent double clicks
     
     buttonClicked.current = true;
-    await signOut();
+    try {
+      await signOut();
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout Error",
+        description: "An error occurred while logging out",
+        variant: "destructive",
+      });
+    }
     setTimeout(() => { buttonClicked.current = false; }, 1000); // Reset after 1 second
   };
 
