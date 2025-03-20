@@ -93,6 +93,11 @@ const AdminLogin = () => {
         <div className="text-center mb-8">
           <h2 className="text-2xl font-heading font-bold">Admin Login</h2>
           <p className="text-gray-500 mt-1">Enter your credentials to access the admin panel</p>
+          <div className="mt-2 p-2 bg-blue-50 text-blue-700 rounded-md text-sm">
+            <p><strong>Demo Credentials:</strong></p>
+            <p>Username: admin@12569</p>
+            <p>Password: admin@2589$</p>
+          </div>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">

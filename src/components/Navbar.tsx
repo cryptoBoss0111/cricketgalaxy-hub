@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { Menu, X, Search, Moon, Sun, MessageSquare } from 'lucide-react';
@@ -8,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { useChatbot } from '@/contexts/ChatbotContext';
+import AdminLoginButton from "./AdminLoginButton";
 
 interface NavLinkItem {
   label: string;
@@ -126,15 +126,18 @@ export const Navbar = () => {
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </Button>
 
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleChatbot}
-              className="relative"
-            >
-              <MessageSquare size={20} />
-              <span className="absolute -top-1 -right-1 h-2 w-2 bg-cricket-accent rounded-full animate-pulse-subtle"></span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <AdminLoginButton />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleChatbot}
+                className="relative"
+              >
+                <MessageSquare size={20} />
+                <span className="absolute -top-1 -right-1 h-2 w-2 bg-cricket-accent rounded-full animate-pulse-subtle"></span>
+              </Button>
+            </div>
 
             <Sheet>
               <SheetTrigger asChild>
