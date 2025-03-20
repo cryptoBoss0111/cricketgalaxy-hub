@@ -1,228 +1,202 @@
 
-import { useState, useEffect } from 'react';
-import { Trophy, TrendingUp, ChevronRight, Star, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Trophy, ChevronRight, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getFantasyPicks } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
-interface FantasyPlayer {
+type FantasyPick = {
   id: string;
   player_name: string;
   team: string;
   role: string;
-  form: string;
+  form: 'Excellent' | 'Good' | 'Average' | 'Poor';
+  image_url: string;
+  stats: string;
   points_prediction: number;
-  reason: string;
-  match: string;
-}
+  match_details: string;
+  selection_reason: string;
+  created_at: string;
+};
 
 const FantasyPicksSection = () => {
-  const [fantasyPicks, setFantasyPicks] = useState<FantasyPlayer[]>([]);
+  const [fantasyPicks, setFantasyPicks] = useState<FantasyPick[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   useEffect(() => {
     const fetchFantasyPicks = async () => {
       try {
-        setIsLoading(true);
-        const data = await getFantasyPicks();
-        // Limit to top 3 picks
-        setFantasyPicks(data.slice(0, 3));
+        const { data, error } = await supabase
+          .from('fantasy_picks')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(3);
+          
+        if (error) {
+          console.error('Error fetching fantasy picks:', error);
+          throw error;
+        }
+        
+        if (data && data.length > 0) {
+          setFantasyPicks(data as FantasyPick[]);
+        } else {
+          // Fallback data if no fantasy picks are available
+          setFantasyPicks([
+            {
+              id: '1',
+              player_name: 'Rishabh Pant',
+              team: 'Delhi Capitals',
+              role: 'WK-Batsman',
+              form: 'Excellent',
+              image_url: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop',
+              stats: 'Recent: 68(42), 45(32), 72(39)',
+              points_prediction: 95,
+              match_details: 'DC vs RCB, Apr 5, 2025',
+              selection_reason: 'In exceptional form since his return from injury',
+              created_at: new Date().toISOString()
+            },
+            {
+              id: '2',
+              player_name: 'Jasprit Bumrah',
+              team: 'Mumbai Indians',
+              role: 'Bowler',
+              form: 'Good',
+              image_url: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop',
+              stats: 'Recent: 3/24, 2/18, 4/29',
+              points_prediction: 88,
+              match_details: 'MI vs KKR, Apr 6, 2025',
+              selection_reason: 'Consistently taking wickets in the powerplay',
+              created_at: new Date().toISOString()
+            },
+            {
+              id: '3',
+              player_name: 'Shubman Gill',
+              team: 'Gujarat Titans',
+              role: 'Batsman',
+              form: 'Excellent',
+              image_url: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop',
+              stats: 'Recent: 92(58), 57(42), 104(63)',
+              points_prediction: 90,
+              match_details: 'GT vs LSG, Apr 7, 2025',
+              selection_reason: 'In great touch and scoring consistently',
+              created_at: new Date().toISOString()
+            }
+          ]);
+        }
       } catch (error) {
-        console.error('Error fetching fantasy picks:', error);
-        // Fallback data in case of error
-        setFantasyPicks([
-          {
-            id: '1',
-            player_name: 'Virat Kohli',
-            team: 'Royal Challengers Bangalore',
-            role: 'Batsman',
-            form: 'Excellent',
-            points_prediction: 125,
-            reason: 'Coming off a century in the last match and has an excellent record at this venue.',
-            match: 'RCB vs CSK'
-          },
-          {
-            id: '2',
-            player_name: 'Jasprit Bumrah',
-            team: 'Mumbai Indians',
-            role: 'Bowler',
-            form: 'Good',
-            points_prediction: 90,
-            reason: 'The pitch favors fast bowlers and he's been in great form throughout the tournament.',
-            match: 'MI vs KKR'
-          },
-          {
-            id: '3',
-            player_name: 'Ravindra Jadeja',
-            team: 'Chennai Super Kings',
-            role: 'All-rounder',
-            form: 'Excellent',
-            points_prediction: 110,
-            reason: 'Can contribute with both bat and ball, especially effective against RCB.',
-            match: 'CSK vs RCB'
-          }
-        ]);
+        console.error('Failed to fetch fantasy picks:', error);
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     fetchFantasyPicks();
   }, []);
-
-  // Helper to get role color based on player type
-  const getRoleColor = (role: string) => {
-    switch (role.toLowerCase()) {
-      case 'batsman':
-        return 'bg-blue-100 text-blue-800';
-      case 'bowler':
-        return 'bg-green-100 text-green-800';
-      case 'all-rounder':
-        return 'bg-purple-100 text-purple-800';
-      case 'wicket-keeper':
-        return 'bg-amber-100 text-amber-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Helper to get form color based on value
-  const getFormColor = (form: string) => {
-    switch (form.toLowerCase()) {
-      case 'excellent':
-        return 'bg-green-100 text-green-800';
-      case 'good':
-        return 'bg-green-50 text-green-700';
-      case 'average':
-        return 'bg-blue-50 text-blue-700';
-      case 'poor':
-        return 'bg-amber-50 text-amber-700';
-      case 'bad':
-        return 'bg-red-50 text-red-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  // Function to create gradients based on prediction points
-  const getPointsGradient = (points: number) => {
-    if (points >= 120) return 'from-amber-400 to-yellow-500';
-    if (points >= 100) return 'from-emerald-400 to-teal-500';
-    if (points >= 80) return 'from-blue-400 to-indigo-500';
-    return 'from-gray-400 to-slate-500';
-  };
-
-  if (isLoading) {
-    return (
-      <section className="py-12 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cricket-accent"></div>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
+  
   return (
-    <section className="py-12 bg-gradient-to-b from-white to-gray-50">
+    <section className="py-16 bg-gradient-to-br from-cricket-accent/10 to-white">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex justify-between items-center mb-10">
           <div className="flex items-center space-x-3">
-            <Trophy className="text-cricket-accent h-6 w-6" />
+            <Trophy className="text-cricket-accent h-7 w-7" />
             <h2 className="text-2xl md:text-3xl font-heading font-bold">Fantasy Hot Picks</h2>
           </div>
           <Link to="/fantasy-tips" className="flex items-center text-sm font-medium text-cricket-accent hover:underline">
             View All Picks <ChevronRight size={16} className="ml-1" />
           </Link>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {fantasyPicks.map((player, index) => (
-            <Card 
-              key={player.id} 
-              className={cn(
-                "overflow-hidden border-gray-200 hover:shadow-md transition-all duration-300 animate-fade-in",
-                index === 0 ? "animate-delay-100" : "",
-                index === 1 ? "animate-delay-200" : "",
-                index === 2 ? "animate-delay-300" : ""
-              )}
-            >
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 flex justify-between items-center border-b">
-                <div className="flex items-center">
-                  <div className="mr-3 flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-cricket-accent to-cricket-accent/70 flex items-center justify-center text-white font-bold">
-                    {player.player_name.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg">{player.player_name}</h3>
-                    <div className="text-gray-500 text-sm">{player.team}</div>
-                  </div>
-                </div>
-                <Badge className={getRoleColor(player.role)}>
-                  {player.role}
-                </Badge>
-              </div>
-
-              <CardContent className="p-4">
-                <div className="mb-4">
-                  <div className="text-gray-500 text-sm mb-1">Match</div>
-                  <div className="text-gray-900 font-medium">{player.match}</div>
-                </div>
-                
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="text-gray-500 text-sm mb-1">Current Form</div>
-                    <Badge className={getFormColor(player.form)}>
-                      {player.form}
-                    </Badge>
-                  </div>
-                  
-                  <div>
-                    <div className="text-gray-500 text-sm mb-1 text-center">Prediction</div>
-                    <div className={`bg-gradient-to-r ${getPointsGradient(player.points_prediction)} text-white rounded-full px-4 py-1 font-bold`}>
-                      {player.points_prediction} pts
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mb-4">
-                  <div className="text-gray-500 text-sm mb-1">Why Pick?</div>
-                  <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">{player.reason}</p>
-                </div>
-
-                <div className="mt-4 flex justify-between items-center">
-                  <div className="flex items-center text-amber-500">
-                    <Star className="h-4 w-4 mr-1 fill-current" />
-                    <Star className="h-4 w-4 mr-1 fill-current" />
-                    <Star className="h-4 w-4 mr-1 fill-current" />
-                    <Star className="h-4 w-4 mr-1 fill-current" />
-                    <Star className="h-4 w-4 mr-1 fill-current opacity-40" />
-                  </div>
-                  
-                  <Button variant="ghost" size="sm" asChild className="text-cricket-accent hover:text-cricket-accent/90 p-0">
-                    <Link to={`/player-profiles/${player.player_name.toLowerCase().replace(' ', '-')}`} className="flex items-center text-sm">
-                      Player Profile <ArrowRight className="ml-1 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="mt-8 text-center">
-          <div className="mb-4 text-gray-600">
-            Join fantasy cricket and compete with friends and cricket fans worldwide!
+        
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="shadow-md animate-pulse">
+                <CardContent className="p-6 h-64"></CardContent>
+              </Card>
+            ))}
           </div>
-          <Button asChild className="bg-cricket-accent hover:bg-cricket-accent/90">
-            <Link to="/fantasy-tips">
-              Get More Fantasy Tips
-            </Link>
-          </Button>
-        </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {fantasyPicks.map((pick, index) => (
+                <Card 
+                  key={pick.id} 
+                  className={cn(
+                    "overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border-t-4 relative animate-fade-in",
+                    index === 0 ? "border-t-yellow-500 animate-delay-100" : 
+                    index === 1 ? "border-t-blue-500 animate-delay-200" : 
+                    "border-t-green-500 animate-delay-300"
+                  )}
+                >
+                  <Badge 
+                    className={cn(
+                      "absolute top-2 right-2 font-medium",
+                      index === 0 ? "bg-yellow-500" : 
+                      index === 1 ? "bg-blue-500" : 
+                      "bg-green-500"
+                    )}
+                  >
+                    {index === 0 ? "Top Pick" : index === 1 ? "Value Pick" : "Differential Pick"}
+                  </Badge>
+                  
+                  <CardContent className="p-6">
+                    <div className="flex items-center mb-4">
+                      <img 
+                        src={pick.image_url} 
+                        alt={pick.player_name}
+                        className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-gray-200"
+                      />
+                      <div>
+                        <h3 className="font-semibold text-lg">{pick.player_name}</h3>
+                        <p className="text-gray-500 text-sm">{pick.team} • {pick.role}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="flex justify-between mb-2">
+                        <span className="text-gray-500 text-sm">Form:</span>
+                        <span className={cn(
+                          "text-sm font-medium",
+                          pick.form === 'Excellent' ? "text-green-600" :
+                          pick.form === 'Good' ? "text-blue-600" : 
+                          pick.form === 'Average' ? "text-yellow-600" : 
+                          "text-red-600"
+                        )}>
+                          {pick.form}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between mb-2">
+                        <span className="text-gray-500 text-sm">Predicted Points:</span>
+                        <span className="text-sm font-bold text-cricket-accent">{pick.points_prediction} pts</span>
+                      </div>
+                      
+                      <div className="flex justify-between mb-2">
+                        <span className="text-gray-500 text-sm">Match:</span>
+                        <span className="text-sm">{pick.match_details}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-md">
+                      <strong>Why Pick:</strong> {pick.selection_reason}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            
+            <div className="mt-10 text-center">
+              <Button asChild className="bg-cricket-accent hover:bg-cricket-accent/90">
+                <Link to="/fantasy-tips" className="flex items-center">
+                  Build Your Fantasy Team <ArrowRight size={16} className="ml-2" />
+                </Link>
+              </Button>
+              <p className="text-sm text-gray-500 mt-3">Updated daily with fresh picks from our cricket experts</p>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
