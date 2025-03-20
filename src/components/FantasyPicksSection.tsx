@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, ChevronRight, ArrowRight } from 'lucide-react';
+import { Trophy, ChevronRight, ArrowRight, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -68,7 +68,7 @@ const FantasyPicksSection = () => {
               stats: 'Recent: 3/24, 2/18, 4/29',
               points_prediction: 88,
               match_details: 'MI vs KKR, Apr 6, 2025',
-              selection_reason: 'Consistently taking wickets in the powerplay',
+              selection_reason: 'The pitch favors fast bowlers and he has been in great form throughout the tournament',
               created_at: new Date().toISOString()
             },
             {
@@ -95,6 +95,39 @@ const FantasyPicksSection = () => {
     
     fetchFantasyPicks();
   }, []);
+  
+  // Helper to get role color based on player type
+  const getRoleColor = (role: string) => {
+    switch (role.toLowerCase()) {
+      case 'batsman':
+        return 'bg-blue-100 text-blue-800';
+      case 'bowler':
+        return 'bg-green-100 text-green-800';
+      case 'all-rounder':
+        return 'bg-purple-100 text-purple-800';
+      case 'wicket-keeper':
+      case 'wk-batsman':
+        return 'bg-amber-100 text-amber-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Helper to get form color
+  const getFormColor = (form: string) => {
+    switch (form) {
+      case 'Excellent':
+        return 'text-green-600';
+      case 'Good':
+        return 'text-blue-600';
+      case 'Average':
+        return 'text-yellow-600';
+      case 'Poor':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
   
   return (
     <section className="py-16 bg-gradient-to-br from-cricket-accent/10 to-white">
@@ -159,10 +192,7 @@ const FantasyPicksSection = () => {
                         <span className="text-gray-500 text-sm">Form:</span>
                         <span className={cn(
                           "text-sm font-medium",
-                          pick.form === 'Excellent' ? "text-green-600" :
-                          pick.form === 'Good' ? "text-blue-600" : 
-                          pick.form === 'Average' ? "text-yellow-600" : 
-                          "text-red-600"
+                          getFormColor(pick.form)
                         )}>
                           {pick.form}
                         </span>
