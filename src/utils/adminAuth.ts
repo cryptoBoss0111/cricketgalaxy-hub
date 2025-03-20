@@ -104,6 +104,36 @@ export const checkAdminStatus = async () => {
     if (sessionData.session) {
       console.log("Found active session:", sessionData.session.user.id);
       
+      try {
+        // First try direct role check without RLS restrictions
+        const { data: adminData, error: adminError } = await supabase
+          .rpc('is_admin_user', { user_id: sessionData.session.user.id });
+          
+        if (!adminError && adminData === true) {
+          console.log("User confirmed as admin via RPC function");
+          cachedAdminVerified = true;
+          lastVerificationTime = now;
+          
+          // Store admin info for faster checks
+          localStorage.setItem('adminToken', 'authenticated');
+          localStorage.setItem('adminUser', JSON.stringify({ 
+            id: sessionData.session.user.id,
+            role: 'admin'
+          }));
+          
+          isValidating = false;
+          return { 
+            isAdmin: true, 
+            session: sessionData.session,
+            message: "Admin authenticated via RPC"
+          };
+        }
+      } catch (rpcError) {
+        console.error("RPC admin check error:", rpcError);
+        // Continue with standard check
+      }
+      
+      // Fall back to standard database query
       const { data: adminData, error: adminError } = await supabase
         .from('admins')
         .select('id')
@@ -425,6 +455,68 @@ export const loginAdmin = async (email: string, password: string) => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
     
+    throw error;
+  }
+};
+
+// NEW: Function to bypass RLS and save articles directly with admin service role
+export const bypassRLSArticleSave = async (articleData: any, isUpdate = false, articleId?: string) => {
+  try {
+    console.log("Using RLS bypass to save article");
+    
+    // Get current admin ID from localStorage as a fallback
+    let adminId = null;
+    const adminUserStr = localStorage.getItem('adminUser');
+    
+    if (adminUserStr) {
+      try {
+        const adminUser = JSON.parse(adminUserStr);
+        adminId = adminUser.id;
+      } catch (error) {
+        console.error("Error parsing admin user from localStorage:", error);
+      }
+    }
+    
+    if (!adminId) {
+      const { data } = await supabase.auth.getSession();
+      adminId = data.session?.user?.id;
+    }
+    
+    if (!adminId) {
+      throw new Error("Cannot determine admin ID for article save");
+    }
+    
+    // Add admin ID to article data
+    const fullArticleData = {
+      ...articleData,
+      author_id: adminId
+    };
+    
+    // Call service function to bypass RLS
+    if (isUpdate && articleId) {
+      const { data: updateResult, error: updateError } = await supabase.rpc(
+        'admin_update_article',
+        {
+          article_id: articleId,
+          article_data: fullArticleData
+        }
+      );
+      
+      if (updateError) throw updateError;
+      return { data: updateResult, success: true };
+    } else {
+      const { data: insertResult, error: insertError } = await supabase.rpc(
+        'admin_create_article',
+        {
+          article_data: fullArticleData
+        }
+      );
+      
+      if (insertError) throw insertError;
+      return { data: insertResult, success: true };
+    }
+  } catch (error) {
+    console.error("Error in RLS bypass article save:", error);
     throw error;
   }
 };
