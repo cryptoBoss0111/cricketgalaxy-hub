@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, TrendingUp, ChevronRight, Calendar, Users, Trophy, BarChart2 } from 'lucide-react';
@@ -169,7 +168,7 @@ const quickStats = [
   { label: 'Fastest Century (T20I)', value: 'Nicholas Pooran', detail: '35 balls' }
 ];
 
-const HomePage = () => {
+const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -492,4 +491,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default Home;
