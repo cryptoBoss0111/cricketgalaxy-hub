@@ -1,20 +1,325 @@
-
 import { useState, useEffect } from 'react';
 import { Search, Filter, ChevronDown } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/components/ui/use-toast';
 import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ArticleCard from '@/components/ArticleCard';
 import Chatbot from '@/components/Chatbot';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { Tables } from '@/integrations/supabase/types';
 
-// Sample data
+type Article = {
+  id: string;
+  title: string;
+  excerpt: string | null;
+  imageUrl: string;
+  category: string;
+  author: string;
+  date: string;
+  timeToRead: string;
+};
+
+const CricketNewsPage = () => {
+  const location = useLocation();
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const [sortBy, setSortBy] = useState('latest');
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
+  const [categories, setCategories] = useState<string[]>(['All Categories']);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const pathCategory = location.pathname.split('/').pop();
+    
+    const categoryMap: Record<string, string> = {
+      'cricket-news': 'All Categories',
+      'match-previews': 'Match Previews',
+      'match-reviews': 'Match Reviews',
+      'fantasy-tips': 'Fantasy Tips',
+      'player-profiles': 'Player Profiles',
+      'ipl-2025': 'IPL 2025',
+      'womens-cricket': 'Women\'s Cricket',
+      'world-cup': 'World Cup'
+    };
+    
+    if (pathCategory && categoryMap[pathCategory]) {
+      setSelectedCategory(categoryMap[pathCategory]);
+    }
+  }, [location.pathname]);
+  
+  useEffect(() => {
+    const fetchArticles = async () => {
+      setIsLoading(true);
+      
+      try {
+        const { data: articlesData, error } = await supabase
+          .from('articles')
+          .select('*')
+          .eq('published', true)
+          .order('published_at', { ascending: false });
+          
+        if (error) {
+          console.error('Error fetching articles:', error);
+          toast({
+            title: 'Error fetching articles',
+            description: error.message,
+            variant: 'destructive'
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        if (articlesData && articlesData.length > 0) {
+          const uniqueCategories = [...new Set(articlesData.map(article => article.category))];
+          setCategories(['All Categories', ...uniqueCategories]);
+          
+          const transformedArticles: Article[] = articlesData.map((article: Tables<'articles'>) => ({
+            id: article.id,
+            title: article.title,
+            excerpt: article.excerpt || article.meta_description || 'Read this exciting story...',
+            imageUrl: article.featured_image || 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop',
+            category: article.category,
+            author: 'CricketExpress Staff',
+            date: new Date(article.published_at || article.created_at).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            }),
+            timeToRead: `${Math.ceil(article.content.length / 1000)} min read`
+          }));
+          
+          setArticles(transformedArticles);
+        } else {
+          console.log('No articles found, using mock data');
+          setArticles(newsArticles);
+          
+          const uniqueCategories = [...new Set(newsArticles.map(article => article.category))];
+          setCategories(['All Categories', ...uniqueCategories]);
+        }
+      } catch (err) {
+        console.error('Error in fetching articles:', err);
+        setArticles(newsArticles);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchArticles();
+  }, [toast]);
+  
+  useEffect(() => {
+    let results = [...articles];
+    
+    if (searchQuery) {
+      results = results.filter(
+        article => 
+          article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (article.excerpt?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+          article.author.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    if (selectedCategory !== 'All Categories') {
+      results = results.filter(article => article.category === selectedCategory);
+    }
+    
+    if (sortBy === 'latest') {
+      results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    } else if (sortBy === 'oldest') {
+      results.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }
+    
+    setFilteredArticles(results);
+  }, [searchQuery, selectedCategory, sortBy, articles]);
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+  };
+  
+  return (
+    <>
+      <LiveMatchesBar />
+      <Navbar />
+      <main>
+        <section className="bg-gradient-to-r from-cricket-dark to-cricket-accent/90 text-white py-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto text-center">
+              <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
+                {selectedCategory !== 'All Categories' ? selectedCategory : 'Cricket News'}
+              </h1>
+              <p className="text-lg md:text-xl text-white/80 mb-8">
+                Stay updated with the latest {selectedCategory !== 'All Categories' ? selectedCategory.toLowerCase() : 'cricket news'}, team updates, and trending stories
+              </p>
+              
+              <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    type="search"
+                    placeholder="Search news articles..."
+                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 h-12"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" className="h-12 px-8 bg-white text-cricket-accent hover:bg-white/90">
+                  Search
+                </Button>
+              </form>
+            </div>
+          </div>
+        </section>
+        
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+              <div className="flex items-center gap-1">
+                <Filter className="text-cricket-accent h-5 w-5" />
+                <span className="font-semibold">Filter by:</span>
+              </div>
+              
+              <div className="flex flex-wrap gap-3">
+                {categories.map((category) => (
+                  <Badge
+                    key={category}
+                    variant={selectedCategory === category ? "default" : "outline"}
+                    className={cn(
+                      "cursor-pointer transition-colors",
+                      selectedCategory === category 
+                        ? "bg-cricket-accent hover:bg-cricket-accent/90" 
+                        : "hover:bg-muted"
+                    )}
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    {category}
+                  </Badge>
+                ))}
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-500">Sort:</span>
+                <Select
+                  value={sortBy}
+                  onValueChange={setSortBy}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <Separator className="mb-8" />
+            
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((_, index) => (
+                  <div key={index} className="article-card animate-pulse">
+                    <div className="h-48 bg-gray-200 rounded-t-xl"></div>
+                    <div className="p-5 space-y-3">
+                      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-full"></div>
+                      <div className="h-4 bg-gray-200 rounded w-full"></div>
+                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredArticles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredArticles.map((article, index) => (
+                  <ArticleCard
+                    key={article.id}
+                    id={article.id}
+                    title={article.title}
+                    excerpt={article.excerpt || ''}
+                    imageUrl={article.imageUrl}
+                    category={article.category}
+                    author={article.author}
+                    date={article.date}
+                    timeToRead={article.timeToRead}
+                    className={cn(
+                      "animate-fade-in",
+                      index % 3 === 0 ? "animate-delay-100" : "",
+                      index % 3 === 1 ? "animate-delay-200" : "",
+                      index % 3 === 2 ? "animate-delay-300" : ""
+                    )}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <div className="bg-gray-100 inline-flex rounded-full p-6 mb-4">
+                  <Search className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No results found</h3>
+                <p className="text-gray-500 max-w-md mx-auto mb-6">
+                  We couldn't find any articles matching your search criteria. Try different keywords or filters.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('All Categories');
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            )}
+            
+            {filteredArticles.length > 0 && !isLoading && (
+              <div className="mt-12 text-center">
+                <Button variant="outline" className="border-cricket-accent text-cricket-accent hover:bg-cricket-accent/10">
+                  Load More Articles <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+        
+        <section className="py-16 bg-cricket-dark text-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Never Miss A Story</h2>
+              <p className="text-gray-300 mb-8">
+                Subscribe to our newsletter to receive daily cricket news updates directly in your inbox.
+              </p>
+              
+              <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <Input
+                  type="email"
+                  placeholder="Your email address"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                />
+                <Button className="bg-cricket-accent hover:bg-cricket-accent/90">
+                  Subscribe
+                </Button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
+      <Chatbot />
+    </>
+  );
+};
+
 const newsArticles = [
   {
     id: '1',
@@ -97,239 +402,5 @@ const newsArticles = [
     timeToRead: '4 min read'
   }
 ];
-
-const categories = [
-  'All Categories',
-  'IPL 2025',
-  'International',
-  'Domestic',
-  'Women\'s Cricket',
-  'Analysis',
-  'Global Cricket'
-];
-
-const CricketNewsPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  const [sortBy, setSortBy] = useState('latest');
-  const [filteredArticles, setFilteredArticles] = useState(newsArticles);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Filter articles based on search query and selected category
-  useEffect(() => {
-    setIsLoading(true);
-    
-    // Simulate API call delay
-    const timer = setTimeout(() => {
-      let results = [...newsArticles];
-      
-      // Filter by search query
-      if (searchQuery) {
-        results = results.filter(
-          article => 
-            article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            article.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            article.author.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-      
-      // Filter by category
-      if (selectedCategory !== 'All Categories') {
-        results = results.filter(article => article.category === selectedCategory);
-      }
-      
-      // Sort articles
-      if (sortBy === 'latest') {
-        results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      } else if (sortBy === 'oldest') {
-        results.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      }
-      
-      setFilteredArticles(results);
-      setIsLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [searchQuery, selectedCategory, sortBy]);
-  
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Search is already handled by the useEffect
-  };
-  
-  return (
-    <>
-      <LiveMatchesBar />
-      <Navbar />
-      <main>
-        {/* Page Header */}
-        <section className="bg-gradient-to-r from-cricket-dark to-cricket-accent/90 text-white py-16">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center">
-              <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">Cricket News</h1>
-              <p className="text-lg md:text-xl text-white/80 mb-8">
-                Stay updated with the latest cricket news, team updates, and trending stories
-              </p>
-              
-              <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    type="search"
-                    placeholder="Search news articles..."
-                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 h-12"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <Button type="submit" className="h-12 px-8 bg-white text-cricket-accent hover:bg-white/90">
-                  Search
-                </Button>
-              </form>
-            </div>
-          </div>
-        </section>
-        
-        {/* Filters and Results */}
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-              <div className="flex items-center gap-1">
-                <Filter className="text-cricket-accent h-5 w-5" />
-                <span className="font-semibold">Filter by:</span>
-              </div>
-              
-              <div className="flex flex-wrap gap-3">
-                {categories.map((category) => (
-                  <Badge
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
-                    className={cn(
-                      "cursor-pointer transition-colors",
-                      selectedCategory === category 
-                        ? "bg-cricket-accent hover:bg-cricket-accent/90" 
-                        : "hover:bg-muted"
-                    )}
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    {category}
-                  </Badge>
-                ))}
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-500">Sort:</span>
-                <Select
-                  value={sortBy}
-                  onValueChange={setSortBy}
-                >
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="latest">Latest First</SelectItem>
-                    <SelectItem value="oldest">Oldest First</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <Separator className="mb-8" />
-            
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map((_, index) => (
-                  <div key={index} className="article-card animate-pulse">
-                    <div className="h-48 bg-gray-200 rounded-t-xl"></div>
-                    <div className="p-5 space-y-3">
-                      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-4 bg-gray-200 rounded w-full"></div>
-                      <div className="h-4 bg-gray-200 rounded w-full"></div>
-                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : filteredArticles.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredArticles.map((article, index) => (
-                  <ArticleCard
-                    key={article.id}
-                    id={article.id}
-                    title={article.title}
-                    excerpt={article.excerpt}
-                    imageUrl={article.imageUrl}
-                    category={article.category}
-                    author={article.author}
-                    date={article.date}
-                    timeToRead={article.timeToRead}
-                    className={cn(
-                      "animate-fade-in",
-                      index % 3 === 0 ? "animate-delay-100" : "",
-                      index % 3 === 1 ? "animate-delay-200" : "",
-                      index % 3 === 2 ? "animate-delay-300" : ""
-                    )}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16">
-                <div className="bg-gray-100 inline-flex rounded-full p-6 mb-4">
-                  <Search className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">No results found</h3>
-                <p className="text-gray-500 max-w-md mx-auto mb-6">
-                  We couldn't find any articles matching your search criteria. Try different keywords or filters.
-                </p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('All Categories');
-                  }}
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            )}
-            
-            {filteredArticles.length > 0 && !isLoading && (
-              <div className="mt-12 text-center">
-                <Button variant="outline" className="border-cricket-accent text-cricket-accent hover:bg-cricket-accent/10">
-                  Load More Articles <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-        </section>
-        
-        {/* Newsletter */}
-        <section className="py-16 bg-cricket-dark text-white">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">Never Miss A Story</h2>
-              <p className="text-gray-300 mb-8">
-                Subscribe to our newsletter to receive daily cricket news updates directly in your inbox.
-              </p>
-              
-              <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-                <Input
-                  type="email"
-                  placeholder="Your email address"
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                />
-                <Button className="bg-cricket-accent hover:bg-cricket-accent/90">
-                  Subscribe
-                </Button>
-              </form>
-            </div>
-          </div>
-        </section>
-      </main>
-      <Footer />
-      <Chatbot />
-    </>
-  );
-};
 
 export default CricketNewsPage;

@@ -604,110 +604,44 @@ export const getTopStories = async () => {
   try {
     const { data, error } = await supabase
       .from('top_stories')
-      .select(`
-        id,
-        article_id,
-        order_index,
-        featured,
-        articles (
-          id,
-          title,
-          excerpt,
-          featured_image,
-          category,
-          published_at
-        )
-      `)
+      .select('id, article_id, order_index, featured, articles(id, title, excerpt, featured_image, category, published_at)')
       .order('order_index', { ascending: true });
     
     if (error) {
-      console.error("Error fetching top stories:", error);
-      throw error;
+      console.error('Error fetching top stories:', error);
+      return [];
     }
     
-    if (!data || data.length === 0) {
-      console.log("No top stories found, returning mock data");
-      // Return mock data when no data is found
-      return [
-        {
-          id: 'mock-1',
-          article_id: 'mock-article-1',
-          order_index: 1,
-          featured: true,
-          articles: {
-            id: 'mock-article-1',
-            title: 'India vs Australia: 3rd Test Preview',
-            excerpt: 'Preview of the upcoming test match between India and Australia',
-            featured_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop',
-            category: 'Match Previews',
-            published_at: new Date().toISOString()
-          }
-        },
-        {
-          id: 'mock-2',
-          article_id: 'mock-article-2',
-          order_index: 2,
-          featured: false,
-          articles: {
-            id: 'mock-article-2',
-            title: 'Top 10 Players to Watch in IPL 2025',
-            excerpt: 'The rising stars to keep an eye on in this IPL season',
-            featured_image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop',
-            category: 'IPL',
-            published_at: new Date().toISOString()
-          }
-        },
-        {
-          id: 'mock-3',
-          article_id: 'mock-article-3',
-          order_index: 3,
-          featured: false,
-          articles: {
-            id: 'mock-article-3',
-            title: 'Women\'s World Cup Final Recap',
-            excerpt: 'Highlights from the thrilling Women\'s World Cup final',
-            featured_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop',
-            category: 'Women\'s Cricket',
-            published_at: new Date().toISOString()
-          }
-        }
-      ];
-    }
-    
-    return data;
+    return data || [];
   } catch (error) {
-    console.error("Error in getTopStories:", error);
-    // Return mock data on error
-    return [
-      {
-        id: 'mock-error-1',
-        article_id: 'mock-article-error-1',
-        order_index: 1,
-        featured: true,
-        articles: {
-          id: 'mock-article-error-1',
-          title: 'India vs Australia: 3rd Test Preview',
-          excerpt: 'Preview of the upcoming test match between India and Australia',
-          featured_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop',
-          category: 'Match Previews',
-          published_at: new Date().toISOString()
-        }
-      },
-      {
-        id: 'mock-error-2',
-        article_id: 'mock-article-error-2',
-        order_index: 2,
-        featured: false,
-        articles: {
-          id: 'mock-article-error-2',
-          title: 'Top 10 Players to Watch in IPL 2025',
-          excerpt: 'The rising stars to keep an eye on in this IPL season',
-          featured_image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop',
-          category: 'IPL',
-          published_at: new Date().toISOString()
-        }
-      }
-    ];
+    console.error('Error in getTopStories:', error);
+    return [];
+  }
+};
+
+// Get articles by category
+export const getArticlesByCategory = async (category: string) => {
+  try {
+    const query = supabase
+      .from('articles')
+      .select('*')
+      .eq('published', true);
+    
+    if (category && category !== 'All Categories') {
+      query.eq('category', category);
+    }
+    
+    const { data, error } = await query.order('published_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching articles by category:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error in getArticlesByCategory:', error);
+    return [];
   }
 };
 

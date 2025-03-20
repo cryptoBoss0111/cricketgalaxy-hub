@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getTopStories } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 interface HeroArticle {
   id: string;
@@ -18,6 +19,7 @@ interface HeroArticle {
 }
 
 export const HeroSection = () => {
+  const { toast } = useToast();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [heroArticles, setHeroArticles] = useState<HeroArticle[]>([]);
@@ -50,6 +52,7 @@ export const HeroSection = () => {
         
         // If no featured stories, use fallback data
         if (featuredStories.length === 0) {
+          console.log('No top stories found, returning mock data');
           setHeroArticles([
             {
               id: '1',
@@ -83,6 +86,13 @@ export const HeroSection = () => {
         }
       } catch (error) {
         console.error('Error fetching top stories:', error);
+        // Toast notification for error
+        toast({
+          title: "Error fetching featured articles",
+          description: "Could not load the featured articles. Using sample data instead.",
+          variant: "destructive"
+        });
+        
         // Fallback to mock data in case of error
         setHeroArticles([
           {
@@ -118,7 +128,7 @@ export const HeroSection = () => {
     };
     
     fetchTopStories();
-  }, []);
+  }, [toast]);
   
   useEffect(() => {
     // Only start carousel if we have articles
@@ -164,6 +174,22 @@ export const HeroSection = () => {
   
   const article = heroArticles[currentSlide];
   
+  // Convert category to URL-friendly format
+  const getCategoryUrl = (category: string) => {
+    const categoryMap: Record<string, string> = {
+      'IPL 2025': 'ipl-2025',
+      'Series': 'cricket-news',
+      'Match Previews': 'match-previews',
+      'Match Reviews': 'match-reviews',
+      'Fantasy Tips': 'fantasy-tips',
+      'Player Profiles': 'player-profiles',
+      'Women\'s Cricket': 'womens-cricket',
+      'World Cup': 'world-cup'
+    };
+    
+    return categoryMap[category] || 'cricket-news';
+  };
+  
   return (
     <section className="relative bg-gradient-to-b from-gray-900 to-cricket-dark text-white py-16 overflow-hidden">
       {/* Background pattern */}
@@ -177,9 +203,11 @@ export const HeroSection = () => {
               isAnimating ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
             )}>
               <div className="flex flex-wrap gap-2 mb-4">
-                <Badge className="bg-cricket-accent hover:bg-cricket-accent/90">
-                  {article.category}
-                </Badge>
+                <Link to={`/${getCategoryUrl(article.category)}`}>
+                  <Badge className="bg-cricket-accent hover:bg-cricket-accent/90">
+                    {article.category}
+                  </Badge>
+                </Link>
                 
                 {article.isFeaturedPick && (
                   <Badge className="bg-amber-500 hover:bg-amber-600 flex items-center gap-1">
@@ -212,8 +240,8 @@ export const HeroSection = () => {
                 </Button>
                 
                 <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                  <Link to="/cricket-news">
-                    Latest News
+                  <Link to={`/${getCategoryUrl(article.category)}`}>
+                    More {article.category} News
                   </Link>
                 </Button>
               </div>
