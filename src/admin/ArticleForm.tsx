@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -27,9 +26,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Info } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { bypassRLSArticleSave } from '@/utils/adminAuth';
+import { bypassRLSArticleSave } from '@/utils/admin/articles';
 
-// Define the schema for article form validation
 const articleSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100, "Title is too long"),
   content: z.string().min(50, "Content must be at least 50 characters"),
@@ -57,7 +55,6 @@ const ArticleForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Initialize the form with react-hook-form
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
     defaultValues: {
@@ -73,14 +70,11 @@ const ArticleForm = () => {
     }
   });
 
-  // Check authentication and setup admin ID
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Refresh session first to ensure we have fresh tokens
         await refreshAdminSession();
         
-        // Then verify admin status
         const adminStatus = await verifyAdmin();
         
         if (!adminStatus) {
@@ -94,11 +88,9 @@ const ArticleForm = () => {
           return false;
         }
         
-        // Get current session
         const { data: sessionData } = await supabase.auth.getSession();
         let userId = sessionData.session?.user?.id;
         
-        // Try to get admin info from localStorage if session doesn't have it
         if (!userId) {
           const adminUserStr = localStorage.getItem('adminUser');
           if (adminUserStr) {
@@ -112,7 +104,6 @@ const ArticleForm = () => {
           }
         }
         
-        // If we still don't have a user ID, redirect to login
         if (!userId) {
           toast({
             title: "Authentication Required",
@@ -140,9 +131,7 @@ const ArticleForm = () => {
     
     checkAuth().then(isAuth => {
       if (isAuth) {
-        // Fetch categories for dropdown
         fetchCategories();
-        // If editing, fetch article data
         if (id) {
           fetchArticle(id);
         }
@@ -150,7 +139,6 @@ const ArticleForm = () => {
     });
   }, [id, navigate, toast, verifyAdmin, refreshAdminSession]);
 
-  // Fetch existing categories
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
@@ -160,7 +148,6 @@ const ArticleForm = () => {
       
       if (error) throw error;
       
-      // Extract unique categories
       const uniqueCategories = Array.from(new Set(data?.map(item => item.category)));
       setCategories(uniqueCategories);
     } catch (error) {
@@ -168,7 +155,6 @@ const ArticleForm = () => {
     }
   };
 
-  // Fetch article data if editing
   const fetchArticle = async (articleId: string) => {
     setIsLoading(true);
     try {
@@ -193,9 +179,7 @@ const ArticleForm = () => {
           tags: data.tags ? data.tags.join(', ') : ''
         });
 
-        // Set content blocks if they exist
         if (data.content_blocks && Array.isArray(data.content_blocks)) {
-          // Convert the JSON data to ContentBlock type
           const blocks = data.content_blocks as unknown as ContentBlock[];
           setContentBlocks(blocks);
         }
@@ -213,13 +197,11 @@ const ArticleForm = () => {
     }
   };
 
-  // Handle form submission
   const onSubmit = async (values: ArticleFormValues) => {
     setIsSubmitting(true);
     setSaveError(null);
     
     try {
-      // Double-check admin status before saving
       if (!adminId || !isAdmin) {
         console.log("Verifying admin status before saving...");
         const adminCheck = await verifyAdmin();
@@ -234,13 +216,11 @@ const ArticleForm = () => {
         }
       }
       
-      // Explicitly refresh the session before saving
       console.log("Refreshing session before saving article...");
       const sessionRefreshed = await refreshAdminSession();
       
       if (!sessionRefreshed) {
         console.log("Session refresh failed, trying local admin ID as fallback");
-        // If session refresh fails, check if we have a local admin ID to use as fallback
         if (!adminId) {
           toast({
             title: "Session Expired",
@@ -250,13 +230,11 @@ const ArticleForm = () => {
           navigate('/admin/login');
           return;
         }
-        // Otherwise continue with the existing adminId from localStorage
         console.log("Using cached admin ID:", adminId);
       } else {
         console.log("Session refreshed successfully");
       }
       
-      // Ensure we have an admin ID
       const effectiveAdminId = adminId;
       if (!effectiveAdminId) {
         toast({
@@ -268,7 +246,6 @@ const ArticleForm = () => {
         return;
       }
       
-      // Prepare tags array
       const tagsArray = values.tags ? values.tags.split(',').map(tag => tag.trim()) : [];
       
       const articleData = {
@@ -292,7 +269,6 @@ const ArticleForm = () => {
       let result;
       
       try {
-        // Try RLS bypass method first
         if (id) {
           const { data } = await bypassRLSArticleSave(articleData, true, id);
           result = data;
@@ -306,9 +282,7 @@ const ArticleForm = () => {
         console.error("RLS bypass failed, trying direct method:", bypassError);
         setSaveError(`RLS bypass error: ${bypassError.message || 'Unknown error'}`);
         
-        // Fall back to direct method
         if (id) {
-          // Update existing article
           const { data, error } = await supabase
             .from('articles')
             .update(articleData)
@@ -322,7 +296,6 @@ const ArticleForm = () => {
           
           result = data;
         } else {
-          // Create new article
           const { data, error } = await supabase
             .from('articles')
             .insert({
@@ -349,12 +322,10 @@ const ArticleForm = () => {
       
       console.log("Save successful, result:", result);
       
-      // Redirect to articles list
       navigate('/admin/articles');
     } catch (error: any) {
       console.error('Error saving article:', error);
       
-      // More descriptive error message
       let errorMessage = "Failed to save article";
       if (error.message) {
         errorMessage = error.message;
@@ -373,7 +344,7 @@ const ArticleForm = () => {
       setIsSubmitting(false);
     }
   };
-  
+
   if (isLoading) {
     return (
       <AdminLayout>
@@ -397,7 +368,6 @@ const ArticleForm = () => {
           <Button onClick={() => navigate('/admin/articles')}>Back to Articles</Button>
         </div>
         
-        {/* Show admin status */}
         {isAdmin ? (
           <Alert className="bg-green-50 border-green-200">
             <Info className="h-4 w-4 text-green-600" />
@@ -416,7 +386,6 @@ const ArticleForm = () => {
           </Alert>
         )}
         
-        {/* Show error message if there was a problem saving */}
         {saveError && (
           <Alert variant="destructive">
             <Info className="h-4 w-4" />
@@ -461,7 +430,6 @@ const ArticleForm = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* Include standard categories */}
                           <SelectItem value="IPL 2025">IPL 2025</SelectItem>
                           <SelectItem value="Analysis">Analysis</SelectItem>
                           <SelectItem value="Match Preview">Match Preview</SelectItem>
@@ -471,7 +439,6 @@ const ArticleForm = () => {
                           <SelectItem value="Fantasy Tips">Fantasy Tips</SelectItem>
                           <SelectItem value="World Cup">World Cup</SelectItem>
                           
-                          {/* Include any additional categories from the database */}
                           {categories
                             .filter(category => !["IPL 2025", "Analysis", "Match Preview", "Match Review", 
                                                 "Women's Cricket", "Player Profile", "Fantasy Tips", "World Cup"]
