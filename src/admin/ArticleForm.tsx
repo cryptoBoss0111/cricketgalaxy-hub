@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { 
@@ -25,21 +25,30 @@ import ImageUploader from './components/ImageUploader';
 import ContentBlockManager, { ContentBlock } from './components/ContentBlockManager';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Info } from 'lucide-react';
+import { Info, AlertCircle } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { bypassRLSArticleSave } from '@/utils/adminAuth';
 
-// Define the schema for article form validation
+// Define the schema for article form validation with required fields
 const articleSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100, "Title is too long"),
   content: z.string().min(50, "Content must be at least 50 characters"),
-  excerpt: z.string().max(200, "Excerpt must be less than 200 characters").optional(),
+  excerpt: z.string().min(10, "Excerpt must be at least 10 characters").max(200, "Excerpt must be less than 200 characters"),
   meta_description: z.string().max(160, "Meta description must be less than 160 characters").optional(),
   category: z.string().min(1, "Please select a category"),
   published: z.boolean().default(false),
-  cover_image: z.string().optional(),
-  featured_image: z.string().optional(),
+  cover_image: z.string().min(1, "Cover image is required for published articles").optional(),
+  featured_image: z.string().min(1, "Featured image is required for published articles").optional(),
   tags: z.string().optional()
+}).refine((data) => {
+  // If article is being published, ensure required fields are filled
+  if (data.published) {
+    return !!data.cover_image && !!data.featured_image && !!data.excerpt;
+  }
+  return true;
+}, {
+  message: "Cover image, featured image, and excerpt are required for published articles",
+  path: ["published"] // Show the error on the published field
 });
 
 type ArticleFormValues = z.infer<typeof articleSchema>;
@@ -53,9 +62,11 @@ const ArticleForm = () => {
   const [activeTab, setActiveTab] = useState('content');
   const [adminId, setAdminId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const { isAdmin, verifyAdmin, refreshAdminSession } = useAdminAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
   
   // Initialize the form with react-hook-form
   const form = useForm<ArticleFormValues>({
@@ -70,11 +81,39 @@ const ArticleForm = () => {
       cover_image: '',
       featured_image: '',
       tags: ''
-    }
+    },
+    mode: 'onChange' // Validate on change for better user experience
   });
+
+  // Get form values for validation
+  const watchPublished = form.watch("published");
+  const watchCoverImage = form.watch("cover_image");
+  const watchFeaturedImage = form.watch("featured_image");
+  const watchExcerpt = form.watch("excerpt");
+
+  // Check for validation warnings when publish checkbox is checked
+  useEffect(() => {
+    const warnings: string[] = [];
+    
+    if (watchPublished) {
+      if (!watchCoverImage) {
+        warnings.push("Cover image is required for published articles");
+      }
+      if (!watchFeaturedImage) {
+        warnings.push("Featured image is required for published articles");
+      }
+      if (!watchExcerpt || watchExcerpt.length < 10) {
+        warnings.push("A descriptive excerpt (min 10 characters) is required for published articles");
+      }
+    }
+    
+    setValidationWarnings(warnings);
+  }, [watchPublished, watchCoverImage, watchFeaturedImage, watchExcerpt]);
 
   // Check authentication and setup admin ID
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
       try {
         // Refresh session first to ensure we have fresh tokens
@@ -139,7 +178,7 @@ const ArticleForm = () => {
     };
     
     checkAuth().then(isAuth => {
-      if (isAuth) {
+      if (isAuth && isMounted) {
         // Fetch categories for dropdown
         fetchCategories();
         // If editing, fetch article data
@@ -148,6 +187,10 @@ const ArticleForm = () => {
         }
       }
     });
+    
+    return () => {
+      isMounted = false;
+    };
   }, [id, navigate, toast, verifyAdmin, refreshAdminSession]);
 
   // Fetch existing categories
@@ -213,8 +256,53 @@ const ArticleForm = () => {
     }
   };
 
+  // Validate the form before submission
+  const validateForm = (values: ArticleFormValues): boolean => {
+    // Additional validations for published articles
+    if (values.published) {
+      if (!values.cover_image) {
+        form.setError("cover_image", {
+          type: "manual",
+          message: "Cover image is required for published articles"
+        });
+        setActiveTab('seo');
+        return false;
+      }
+      
+      if (!values.featured_image) {
+        form.setError("featured_image", {
+          type: "manual",
+          message: "Featured image is required for published articles"
+        });
+        setActiveTab('seo');
+        return false;
+      }
+      
+      if (!values.excerpt || values.excerpt.length < 10) {
+        form.setError("excerpt", {
+          type: "manual",
+          message: "A descriptive excerpt is required for published articles"
+        });
+        setActiveTab('content');
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
   // Handle form submission
   const onSubmit = async (values: ArticleFormValues) => {
+    // Validate the form first
+    if (!validateForm(values)) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the validation errors before publishing",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     setSaveError(null);
     
@@ -427,15 +515,30 @@ const ArticleForm = () => {
           </Alert>
         )}
         
+        {/* Show validation warnings */}
+        {validationWarnings.length > 0 && watchPublished && (
+          <Alert variant="warning" className="bg-amber-50 border-amber-200">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-700">Validation Warnings</AlertTitle>
+            <AlertDescription className="text-amber-600">
+              <ul className="list-disc pl-5 space-y-1 mt-2">
+                {validationWarnings.map((warning, index) => (
+                  <li key={index}>{warning}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
               <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>Title <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Enter article title" {...field} className="text-xl" />
                     </FormControl>
@@ -450,7 +553,7 @@ const ArticleForm = () => {
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
+                      <FormLabel>Category <span className="text-red-500">*</span></FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
                         defaultValue={field.value}
@@ -517,7 +620,9 @@ const ArticleForm = () => {
                     name="excerpt"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Excerpt</FormLabel>
+                        <FormLabel>
+                          Excerpt {watchPublished && <span className="text-red-500">*</span>}
+                        </FormLabel>
                         <FormControl>
                           <Textarea 
                             placeholder="Enter a short excerpt (shows in article previews)" 
@@ -526,6 +631,11 @@ const ArticleForm = () => {
                           />
                         </FormControl>
                         <FormMessage />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {watchPublished ? 
+                            "Required for published articles. Appears in article previews and search results." :
+                            "Appears in article previews and search results."}
+                        </p>
                       </FormItem>
                     )}
                   />
@@ -536,7 +646,7 @@ const ArticleForm = () => {
                       name="content"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Main Content</FormLabel>
+                          <FormLabel>Main Content <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Textarea 
                               placeholder="Enter article main content" 
@@ -572,7 +682,9 @@ const ArticleForm = () => {
                 <Card className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-lg font-medium mb-4">Cover Image</h3>
+                      <h3 className="text-lg font-medium mb-4">
+                        Cover Image {watchPublished && <span className="text-red-500">*</span>}
+                      </h3>
                       <FormField
                         control={form.control}
                         name="cover_image"
@@ -582,7 +694,7 @@ const ArticleForm = () => {
                               <ImageUploader
                                 existingImageUrl={field.value}
                                 onImageUploaded={(url) => form.setValue('cover_image', url)}
-                                label="Article Cover Image"
+                                label={`Article Cover Image ${watchPublished ? '(Required)' : ''}`}
                               />
                             </FormControl>
                             <FormMessage />
@@ -592,7 +704,9 @@ const ArticleForm = () => {
                     </div>
                     
                     <div>
-                      <h3 className="text-lg font-medium mb-4">Featured Image</h3>
+                      <h3 className="text-lg font-medium mb-4">
+                        Featured Image {watchPublished && <span className="text-red-500">*</span>}
+                      </h3>
                       <FormField
                         control={form.control}
                         name="featured_image"
@@ -602,7 +716,7 @@ const ArticleForm = () => {
                               <ImageUploader
                                 existingImageUrl={field.value}
                                 onImageUploaded={(url) => form.setValue('featured_image', url)}
-                                label="Featured Image (Homepage)"
+                                label={`Featured Image (Homepage) ${watchPublished ? '(Required)' : ''}`}
                               />
                             </FormControl>
                             <FormMessage />
@@ -644,6 +758,8 @@ const ArticleForm = () => {
                 <AlertTitle>Before publishing</AlertTitle>
                 <AlertDescription>
                   Make sure you have added a title, content, category, and at least one image before publishing your article.
+                  {watchPublished && 
+                   " Published articles require a title, category, content, excerpt, cover image, and featured image."}
                 </AlertDescription>
               </Alert>
               
@@ -663,6 +779,8 @@ const ArticleForm = () => {
                         <FormLabel>Published</FormLabel>
                         <p className="text-sm text-gray-500">
                           Check this box to make the article publicly visible.
+                          {field.value && 
+                           " Make sure all required fields are filled before publishing."}
                         </p>
                       </div>
                     </FormItem>

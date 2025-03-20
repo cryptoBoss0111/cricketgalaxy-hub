@@ -17,6 +17,75 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl || null);
   const { toast } = useToast();
   
+  // Function to create and make bucket public
+  const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
+    try {
+      // Check if bucket exists
+      const { data: bucket, error: getBucketError } = await supabase.storage
+        .getBucket(bucketName);
+      
+      if (getBucketError) {
+        console.log(`Creating bucket ${bucketName}...`);
+        const { error: createError } = await supabase.storage
+          .createBucket(bucketName, {
+            public: true,
+            fileSizeLimit: 5242880 // 5MB
+          });
+        
+        if (createError) {
+          console.error(`Error creating bucket: ${createError.message}`);
+          return false;
+        }
+      } else if (bucket) {
+        // Make sure bucket is public
+        const { error: updateError } = await supabase.storage
+          .updateBucket(bucketName, { public: true });
+        
+        if (updateError) {
+          console.error(`Error updating bucket to public: ${updateError.message}`);
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error managing bucket:", error);
+      return false;
+    }
+  };
+  
+  // Direct upload function with better error handling
+  const directUpload = async (file: File, bucketName: string): Promise<string> => {
+    // Generate unique filename
+    const timestamp = new Date().getTime();
+    const randomString = Math.random().toString(36).substring(2, 12);
+    const extension = file.name.split('.').pop();
+    const uniqueFileName = `${timestamp}-${randomString}.${extension}`;
+    
+    try {
+      // Upload the file
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(uniqueFileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(uniqueFileName);
+      
+      return publicUrl;
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      throw new Error(`Upload failed: ${error.message}`);
+    }
+  };
+  
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -55,72 +124,24 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     
     try {
       console.log("Starting image upload process...");
-      
-      // Force create the bucket if it doesn't exist (multiple attempts)
-      let bucketCreated = false;
       const bucketName = 'article_images';
       
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          console.log(`Attempt ${attempt} to create/check bucket '${bucketName}'`);
-          
-          // First try to create the bucket
-          await supabase.storage.createBucket(bucketName, {
-            public: true,
-            fileSizeLimit: 5242880 // 5MB
-          });
-          
-          console.log(`Bucket '${bucketName}' created or already exists`);
-          bucketCreated = true;
-          break; // Exit the loop if successful
-        } catch (bucketError: any) {
-          // If the bucket already exists, consider it a success
-          if (bucketError.message && bucketError.message.includes("already exists")) {
-            console.log(`Bucket '${bucketName}' already exists`);
-            bucketCreated = true;
-            break;
-          }
-          
-          console.warn(`Attempt ${attempt} failed to create bucket:`, bucketError);
-          
-          if (attempt === 3) {
-            console.log("All bucket creation attempts failed, will try upload anyway");
-          }
-          
-          // Short delay before retry
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      }
+      // Ensure bucket exists and is public
+      await ensureBucketExists(bucketName);
       
-      // Retry upload with multiple attempts
-      let uploadSuccess = false;
+      // Try direct upload method
       let imageUrl = '';
-      
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          console.log(`Attempt ${attempt} to upload file to ${bucketName}`);
-          
-          imageUrl = await uploadImageToStorage(file);
-          
-          if (imageUrl) {
-            console.log("Upload successful, image URL:", imageUrl);
-            uploadSuccess = true;
-            break; // Exit the loop if successful
-          }
-        } catch (uploadError) {
-          console.error(`Attempt ${attempt} failed to upload:`, uploadError);
-          
-          if (attempt === 3) {
-            throw uploadError; // Re-throw on final attempt
-          }
-          
-          // Short delay before retry
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+      try {
+        imageUrl = await directUpload(file, bucketName);
+      } catch (directError) {
+        console.error("Direct upload failed:", directError);
+        
+        // Try with standard uploadImageToStorage as fallback
+        imageUrl = await uploadImageToStorage(file, bucketName);
       }
       
-      if (!uploadSuccess) {
-        throw new Error("Failed to upload image after multiple attempts");
+      if (!imageUrl) {
+        throw new Error("Failed to get image URL after upload");
       }
       
       onImageUploaded(imageUrl);
@@ -143,12 +164,6 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
         errorMessage = `${error.statusText} (${error.status})`;
       }
       
-      // Suggest a workaround if bucket creation failed
-      if (errorMessage.includes("row-level security policy") || 
-          errorMessage.includes("permission denied")) {
-        errorMessage += ". Try refreshing the page or logging in again.";
-      }
-      
       toast({
         title: "Upload failed",
         description: errorMessage,
@@ -157,7 +172,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       });
       
       // Clear the preview on error
-      setPreviewUrl(null);
+      setPreviewUrl(existingImageUrl);
     } finally {
       setIsUploading(false);
     }

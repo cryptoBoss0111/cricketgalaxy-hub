@@ -1,8 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Demo credentials for fallback authentication
 const DEMO_ADMIN_EMAIL = 'admin@cricketexpress.com';
-const DEMO_ADMIN_ID = 'demo-admin-id';
+const DEMO_ADMIN_UUID = '00000000-0000-0000-0000-000000000000'; // Valid UUID format for demo admin
 
 // Helper function to check admin status with better fallback mechanisms
 export const checkAdminStatus = async () => {
@@ -18,7 +19,7 @@ export const checkAdminStatus = async () => {
         const adminUserObj = JSON.parse(adminUserStr);
         
         // Special case for demo admin
-        if (adminUserObj.id === DEMO_ADMIN_ID) {
+        if (adminUserObj.email === DEMO_ADMIN_EMAIL) {
           console.log("Demo admin authenticated via localStorage");
           return { 
             isAdmin: true, 
@@ -41,7 +42,7 @@ export const checkAdminStatus = async () => {
       if (adminToken === 'authenticated' && adminUserStr) {
         try {
           const adminUserObj = JSON.parse(adminUserStr);
-          if (adminUserObj.id === DEMO_ADMIN_ID) {
+          if (adminUserObj.email === DEMO_ADMIN_EMAIL) {
             return { 
               isAdmin: true, 
               session: null,
@@ -171,12 +172,13 @@ export const loginAdmin = async (email: string, password: string) => {
     if (email === DEMO_ADMIN_EMAIL && password === 'admin123') {
       console.log("Using demo credentials");
       
-      // Store demo admin info in local storage
+      // Store demo admin info in local storage with valid UUID
       localStorage.setItem('adminToken', 'authenticated');
       localStorage.setItem('adminUser', JSON.stringify({ 
         username: email, 
+        email: email,
         role: 'admin',
-        id: DEMO_ADMIN_ID
+        id: DEMO_ADMIN_UUID
       }));
       
       return { 
@@ -217,6 +219,7 @@ export const loginAdmin = async (email: string, password: string) => {
           localStorage.setItem('adminToken', 'authenticated');
           localStorage.setItem('adminUser', JSON.stringify({ 
             username: email, 
+            email: email,
             role: 'admin',
             id: data.user?.id
           }));
@@ -247,12 +250,13 @@ export const loginAdmin = async (email: string, password: string) => {
     if (email === DEMO_ADMIN_EMAIL && password === 'admin123') {
       console.log("Demo credentials detected after initial failure, allowing access");
       
-      // Store demo admin info
+      // Store demo admin info with valid UUID
       localStorage.setItem('adminToken', 'authenticated');
       localStorage.setItem('adminUser', JSON.stringify({ 
         username: email, 
+        email: email,
         role: 'admin',
-        id: DEMO_ADMIN_ID
+        id: DEMO_ADMIN_UUID
       }));
       
       return { 
@@ -295,8 +299,10 @@ export const bypassRLSArticleSave = async (articleData: any, isUpdate = false, a
       console.log("Found admin ID in session:", adminId);
     }
     
-    if (!adminId) {
-      throw new Error("Cannot determine admin ID for article save");
+    // For demo admin, use the UUID instead of the string ID
+    if (adminId === DEMO_ADMIN_UUID || !adminId) {
+      console.log("Using demo admin UUID");
+      adminId = DEMO_ADMIN_UUID;
     }
     
     // Add admin ID to article data
