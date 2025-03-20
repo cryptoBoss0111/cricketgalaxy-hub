@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { uploadImageToStorage, supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { Image, Upload, X, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,75 +31,47 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     checkSession();
   }, []);
   
-  // Function to create and ensure bucket is public
-  const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
-    try {
-      console.log(`Checking if bucket ${bucketName} exists...`);
-      
-      // Check if bucket exists
-      const { data: bucket, error: getBucketError } = await supabase.storage
-        .getBucket(bucketName);
-      
-      if (getBucketError) {
-        console.log(`Error checking bucket ${bucketName}: ${getBucketError.message}`);
-        return false;
-      }
-      
-      if (!bucket) {
-        console.log(`Bucket ${bucketName} doesn't exist, cannot create it programmatically`);
-        toast({
-          title: "Storage configuration error",
-          description: "Please check your Supabase storage configuration",
-          variant: "destructive",
-        });
-        return false;
-      }
-      
-      console.log(`Bucket ${bucketName} exists`);
-      return true;
-    } catch (error) {
-      console.error("Error checking bucket:", error);
-      return false;
+  // Upload file function with simplified approach
+  const uploadFile = async (file: File): Promise<string> => {
+    // First check session before uploading
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error("Authentication required to upload files");
     }
-  };
-  
-  // Direct upload function with better error handling
-  const directUpload = async (file: File, bucketName: string): Promise<string> => {
+    
     // Generate unique filename
     const timestamp = new Date().getTime();
     const randomString = Math.random().toString(36).substring(2, 12);
     const extension = file.name.split('.').pop();
-    const uniqueFileName = `${timestamp}-${randomString}.${extension}`;
+    const fileName = `${timestamp}-${randomString}.${extension}`;
+    const bucketName = 'article_images';
     
-    try {
-      // First check session before uploading
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        throw new Error("Authentication required to upload files");
-      }
-      
-      // Upload the file
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(uniqueFileName, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
-      
-      if (error) {
-        throw error;
-      }
-      
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(uniqueFileName);
-      
-      return publicUrl;
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      throw new Error(`Upload failed: ${error.message || 'Unknown error'}`);
+    console.log(`Uploading file ${fileName} to ${bucketName}...`);
+    
+    // Upload directly without checking bucket
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: true,
+      });
+    
+    if (error) {
+      console.error('Storage upload error:', error);
+      throw error;
     }
+    
+    if (!data) {
+      throw new Error("Upload failed with no error details");
+    }
+    
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(fileName);
+    
+    console.log("Image uploaded successfully, public URL:", publicUrl);
+    return publicUrl;
   };
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,37 +117,9 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     
     try {
       console.log("Starting image upload process...");
-      const bucketName = 'article_images';
       
-      // Ensure bucket exists
-      const bucketExists = await ensureBucketExists(bucketName);
-      if (!bucketExists) {
-        throw new Error("Storage bucket not accessible");
-      }
-      
-      // Try direct upload method
-      let imageUrl = '';
-      try {
-        imageUrl = await directUpload(file, bucketName);
-      } catch (directError: any) {
-        console.error("Direct upload failed:", directError);
-        
-        // Try with standard uploadImageToStorage as fallback
-        try {
-          imageUrl = await uploadImageToStorage(file, bucketName);
-        } catch (fallbackError: any) {
-          console.error("Fallback upload failed:", fallbackError);
-          throw new Error(
-            directError.message || 
-            (typeof fallbackError === 'object' && fallbackError.message) || 
-            "Failed to upload image. Please try again."
-          );
-        }
-      }
-      
-      if (!imageUrl) {
-        throw new Error("Failed to get image URL after upload");
-      }
+      // Simplified upload approach
+      const imageUrl = await uploadFile(file);
       
       onImageUploaded(imageUrl);
       setPreviewUrl(imageUrl);
@@ -225,7 +169,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       <p className="text-sm font-medium">{label}</p>
       
       {error && (
-        <Alert variant="warning" className="mb-3">
+        <Alert variant="destructive" className="mb-3">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Upload Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>

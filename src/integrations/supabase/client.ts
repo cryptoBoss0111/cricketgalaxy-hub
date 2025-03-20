@@ -140,55 +140,16 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
   }
   
   const uniqueFileName = generateUniqueFileName(file.name);
-  
-  // Try to ensure the bucket exists and is public
-  try {
-    console.log(`Checking if bucket ${bucketName} exists...`);
-    
-    const { data: bucketExists, error: bucketError } = await supabase
-      .storage
-      .getBucket(bucketName);
-    
-    if (bucketError) {
-      console.log(`Error checking bucket ${bucketName}, will try to create it:`, bucketError);
-      
-      try {
-        console.log(`Creating bucket ${bucketName}...`);
-        await supabase.storage.createBucket(bucketName, {
-          public: true,
-          fileSizeLimit: 5242880 // 5MB
-        });
-        console.log(`Bucket ${bucketName} created successfully`);
-      } catch (createError) {
-        console.warn(`Error creating bucket ${bucketName}:`, createError);
-        // Continue anyway - the upload might still work
-      }
-    } else if (bucketExists) {
-      console.log(`Bucket ${bucketName} found, making sure it's public...`);
-      
-      // Make sure the bucket is public
-      try {
-        await supabase.storage.updateBucket(bucketName, { public: true });
-        console.log(`Bucket ${bucketName} updated to public`);
-      } catch (updateError) {
-        console.warn(`Error updating bucket ${bucketName} to public:`, updateError);
-        // Continue anyway - the upload might still work
-      }
-    }
-  } catch (bucketCheckError) {
-    console.warn("Error checking/updating bucket:", bucketCheckError);
-    // Continue anyway, the bucket might already exist
-  }
-  
   console.log(`Uploading file ${uniqueFileName} to ${bucketName}...`);
   
-  // Upload file
+  // Skip bucket checking as it's causing issues
+  // Try direct upload
   const { data, error } = await supabase
     .storage
     .from(bucketName)
     .upload(uniqueFileName, file, {
       cacheControl: '3600',
-      upsert: true, // Changed to true to avoid conflicts
+      upsert: true,
     });
   
   if (error) {
