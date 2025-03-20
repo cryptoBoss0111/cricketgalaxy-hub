@@ -219,6 +219,7 @@ const TopStoriesManager = () => {
 
   // Get count of featured stories (which appear in the carousel)
   const featuredStoriesCount = topStories.filter(story => story.featured).length;
+  const maxFeaturedStories = 3; // Maximum number of stories in the carousel
   
   return (
     <AdminLayout>
@@ -245,11 +246,16 @@ const TopStoriesManager = () => {
               <p><strong>How to manage the homepage carousel:</strong></p>
               <ul className="list-disc ml-5 mt-1 text-sm">
                 <li>Articles marked with a <span className="text-amber-500">★</span> will appear in the homepage carousel</li>
-                <li>Up to 3 featured articles will be displayed in the carousel</li>
+                <li>Up to {maxFeaturedStories} featured articles will be displayed in the carousel</li>
                 <li>Drag and drop to reorder the stories - this order will apply to both the top stories list and the carousel</li>
                 <li>Click the star icon to toggle whether a story appears in the carousel</li>
                 <li>Don't forget to click "Save Changes" when you're done</li>
               </ul>
+              {featuredStoriesCount > maxFeaturedStories && (
+                <p className="text-red-600 mt-2 font-semibold">
+                  Warning: You have selected {featuredStoriesCount} featured stories, but only the first {maxFeaturedStories} will appear in the carousel.
+                </p>
+              )}
             </div>
           </AlertDescription>
         </Alert>
@@ -261,7 +267,7 @@ const TopStoriesManager = () => {
                 <CardTitle>Manage Top Stories</CardTitle>
                 <CardDescription className="mt-1">
                   {featuredStoriesCount > 0 ? (
-                    <span>Currently displaying <strong>{featuredStoriesCount}</strong> story/stories in the homepage carousel</span>
+                    <span>Currently displaying <strong>{Math.min(featuredStoriesCount, maxFeaturedStories)}</strong> story/stories in the homepage carousel</span>
                   ) : (
                     <span className="text-amber-600">No stories currently featured in the homepage carousel</span>
                   )}
@@ -304,6 +310,8 @@ const TopStoriesManager = () => {
                                 {...provided.draggableProps}
                                 className={`flex items-center p-3 border rounded-lg hover:shadow-sm ${
                                   story.featured ? 'bg-amber-50 border-amber-200' : 'bg-white'
+                                } ${
+                                  story.featured && index >= maxFeaturedStories ? 'border-red-200' : ''
                                 }`}
                               >
                                 <div {...provided.dragHandleProps} className="pr-3 cursor-grab">
@@ -328,8 +336,13 @@ const TopStoriesManager = () => {
                                         <span>{formatDate(story.articles.published_at)}</span>
                                       </div>
                                       {story.featured && (
-                                        <div className="text-xs text-amber-600 mt-1 font-medium">
-                                          Shown in homepage carousel
+                                        <div className={`text-xs font-medium mt-1 ${
+                                          index >= maxFeaturedStories ? 'text-red-600' : 'text-amber-600'
+                                        }`}>
+                                          {index < maxFeaturedStories 
+                                            ? 'Shown in homepage carousel' 
+                                            : `Not visible in carousel (exceeds ${maxFeaturedStories} limit)`
+                                          }
                                         </div>
                                       )}
                                     </div>
