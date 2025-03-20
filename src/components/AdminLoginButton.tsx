@@ -1,9 +1,8 @@
-
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LogIn, LockKeyhole } from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isAdminUser } from "@/integrations/supabase/client";
 
 const AdminLoginButton = () => {
   const navigate = useNavigate();
@@ -12,18 +11,16 @@ const AdminLoginButton = () => {
   useEffect(() => {
     // Check if admin is logged in
     const checkAdminStatus = async () => {
-      // Check session with supabase
-      const { data } = await supabase.auth.getSession();
-      const adminToken = localStorage.getItem('adminToken');
-      setIsLoggedIn(!!data.session || adminToken === 'authenticated');
+      const isAdmin = await isAdminUser();
+      setIsLoggedIn(isAdmin);
     };
     
     // Check initially
     checkAdminStatus();
     
     // Set up supabase auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session || localStorage.getItem('adminToken') === 'authenticated');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async () => {
+      await checkAdminStatus();
     });
     
     // Set up window event listener for storage changes

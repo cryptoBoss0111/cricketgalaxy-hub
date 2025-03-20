@@ -37,29 +37,42 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      // First try Supabase authentication
+      // First try to sign in with Supabase auth
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
       if (data?.session) {
-        // Supabase auth successful
-        localStorage.setItem('adminToken', 'authenticated');
-        localStorage.setItem('adminUser', JSON.stringify({ 
-          email, 
-          role: 'admin',
-          id: data.user?.id
-        }));
+        // Now verify if this user is an admin
+        const { data: adminData, error: adminError } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('id', data.session.user.id)
+          .maybeSingle();
         
-        toast({
-          title: "Login successful",
-          description: "Welcome to the admin dashboard",
-          duration: 3000,
-        });
-        
-        navigate('/admin/dashboard');
-        return;
+        if (adminData) {
+          // User is an admin in our admins table
+          localStorage.setItem('adminToken', 'authenticated');
+          localStorage.setItem('adminUser', JSON.stringify({ 
+            email, 
+            role: 'admin',
+            id: data.user?.id
+          }));
+          
+          toast({
+            title: "Login successful",
+            description: "Welcome to the admin dashboard",
+            duration: 3000,
+          });
+          
+          navigate('/admin/dashboard');
+          return;
+        } else {
+          // User exists but is not an admin
+          await supabase.auth.signOut(); // Sign them out
+          throw new Error("You don't have admin privileges");
+        }
       }
       
       // If Supabase auth fails, try the RPC method as fallback
@@ -105,13 +118,13 @@ const AdminLogin = () => {
           });
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login error:', err);
-      setError('An error occurred during login. Please try again.');
+      setError(err.message || 'An error occurred during login. Please try again.');
       
       toast({
         title: "Login error",
-        description: "An unexpected error occurred. Please try again.",
+        description: err.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
         duration: 3000,
       });

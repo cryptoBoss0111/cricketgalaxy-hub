@@ -19,6 +19,37 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
 });
 
+// Check if current user is an admin
+export const isAdminUser = async (): Promise<boolean> => {
+  try {
+    // First check if we have a session
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      // Check for legacy admin token
+      const adminToken = localStorage.getItem('adminToken');
+      return adminToken === 'authenticated';
+    }
+    
+    // If we have a session, check if the user ID is in the admins table
+    const currentUserId = sessionData.session.user.id;
+    const { data: adminData, error } = await supabase
+      .from('admins')
+      .select('id')
+      .eq('id', currentUserId)
+      .single();
+      
+    if (error || !adminData) {
+      console.warn("User is not an admin:", error?.message);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    return false;
+  }
+};
+
 // Generate a unique filename for uploads
 export const generateUniqueFileName = (fileName: string) => {
   const timestamp = new Date().getTime();
