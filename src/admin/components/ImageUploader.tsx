@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { uploadImageToStorage } from '@/integrations/supabase/client';
+import { uploadImageToStorage, supabase } from '@/integrations/supabase/client';
 import { Image, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
