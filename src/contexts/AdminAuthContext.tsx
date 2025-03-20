@@ -2,7 +2,8 @@
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { checkAdminStatus, signOutAdmin } from "@/utils/admin/verification";
+import { checkAdminStatus } from "@/utils/admin/verification";
+import { signOutAdmin } from "@/utils/admin/authentication";
 import { refreshSession } from "@/integrations/supabase/client";
 
 type AdminAuthContextType = {
