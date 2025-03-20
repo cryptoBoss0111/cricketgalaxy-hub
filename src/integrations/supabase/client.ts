@@ -571,8 +571,8 @@ export const getAnalyticsData = async () => {
       { id: '1', title: 'India vs Australia: 3rd Test Preview', views: 1245 },
       { id: '2', title: 'IPL 2025 Auction Analysis', views: 987 },
       { id: '3', title: 'Top 10 Players to Watch', views: 876 },
-      { id: '4', title: 'England's Tour of India: What to Expect', views: 743 },
-      { id: '5', title: 'Women's World Cup Final Recap', views: 654 }
+      { id: '4', title: "England's Tour of India: What to Expect", views: 743 },
+      { id: '5', title: "Women's World Cup Final Recap", views: 654 }
     ],
     userActivity: {
       activeUsers: 842,
