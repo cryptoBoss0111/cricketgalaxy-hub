@@ -1,22 +1,26 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  getCacheStatus, 
+  setValidationStatus, 
+  setCacheVerified, 
+  resetCache 
+} from './cache';
+import {
+  getStoredAdminData,
+  setAdminData,
+  clearAdminData
+} from './storage';
 
-// Global flag to prevent concurrent validation
-let isValidating = false;
-// Store verified admin status for faster access
-let cachedAdminVerified = false;
-// Cache expiry time (15 minutes)
-const CACHE_EXPIRY = 15 * 60 * 1000;
-let lastVerificationTime = 0;
-
-// Helper function to check admin status with better fallback mechanisms
+// Main function to check admin status
 export const checkAdminStatus = async () => {
   try {
     console.log("Checking admin status...");
     
     // Use cached result if available and not expired
-    const now = Date.now();
-    if (cachedAdminVerified && (now - lastVerificationTime < CACHE_EXPIRY)) {
+    const { isValidating, isCacheValid, now } = getCacheStatus();
+    
+    if (isCacheValid) {
       console.log("Using cached admin verification");
       return { 
         isAdmin: true, 
@@ -29,34 +33,23 @@ export const checkAdminStatus = async () => {
     if (isValidating) {
       console.log("Validation already in progress, using cached result...");
       return { 
-        isAdmin: cachedAdminVerified, 
+        isAdmin: getCacheStatus().cachedAdminVerified, 
         session: null,
         message: "Validation in progress"
       };
     }
     
-    isValidating = true;
+    setValidationStatus(true);
     
     // First check for a legacy token in localStorage
-    const adminToken = localStorage.getItem('adminToken');
-    const adminUserStr = localStorage.getItem('adminUser');
-    let adminUserObj = null;
-    
-    if (adminToken === 'authenticated' && adminUserStr) {
-      try {
-        adminUserObj = JSON.parse(adminUserStr);
-        console.log("Found admin token in localStorage:", adminUserObj);
-      } catch (error) {
-        console.error("Error parsing admin user data:", error);
-      }
-    }
+    const { adminToken, adminUserObj } = getStoredAdminData();
     
     // Always check session first and try to refresh if needed
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError) {
       console.error("Session error:", sessionError);
-      isValidating = false;
+      setValidationStatus(false);
       
       // Fall back to stored admin token if session check fails
       if (adminUserObj && adminUserObj.id) {
@@ -116,17 +109,12 @@ export const checkAdminStatus = async () => {
           
         if (!adminError && adminData === true) {
           console.log("User confirmed as admin via Edge Function");
-          cachedAdminVerified = true;
-          lastVerificationTime = now;
+          setCacheVerified(true);
           
           // Store admin info for faster checks
-          localStorage.setItem('adminToken', 'authenticated');
-          localStorage.setItem('adminUser', JSON.stringify({ 
-            id: sessionData.session.user.id,
-            role: 'admin'
-          }));
+          setAdminData(sessionData.session.user.id);
           
-          isValidating = false;
+          setValidationStatus(false);
           return { 
             isAdmin: true, 
             session: sessionData.session,
@@ -145,7 +133,7 @@ export const checkAdminStatus = async () => {
         .eq('id', sessionData.session.user.id)
         .maybeSingle();
       
-      isValidating = false;
+      setValidationStatus(false);
       
       if (adminError) {
         console.error("Admin check error:", adminError);
@@ -153,8 +141,7 @@ export const checkAdminStatus = async () => {
         // Fall back to stored admin token if database check fails
         if (adminUserObj && adminUserObj.id === sessionData.session.user.id) {
           console.log("Database check failed, using stored admin token as fallback");
-          cachedAdminVerified = true;
-          lastVerificationTime = now;
+          setCacheVerified(true);
           return { 
             isAdmin: true, 
             session: sessionData.session,
@@ -171,15 +158,10 @@ export const checkAdminStatus = async () => {
       
       if (adminData) {
         console.log("User confirmed as admin in database");
-        cachedAdminVerified = true;
-        lastVerificationTime = now;
+        setCacheVerified(true);
         
         // Store admin info for faster checks
-        localStorage.setItem('adminToken', 'authenticated');
-        localStorage.setItem('adminUser', JSON.stringify({ 
-          id: sessionData.session.user.id,
-          role: 'admin'
-        }));
+        setAdminData(sessionData.session.user.id);
         
         return { 
           isAdmin: true, 
@@ -188,11 +170,10 @@ export const checkAdminStatus = async () => {
         };
       } else {
         console.log("User is not an admin");
-        cachedAdminVerified = false;
+        setCacheVerified(false);
         
         // Clear any stale admin tokens
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
+        clearAdminData();
         
         return { 
           isAdmin: false, 
@@ -215,13 +196,12 @@ export const checkAdminStatus = async () => {
           .eq('id', adminUserObj.id)
           .maybeSingle();
         
-        isValidating = false;
+        setValidationStatus(false);
         
         if (adminCheckError) {
           console.error("Legacy admin check error:", adminCheckError);
           // If the database check fails but we have a stored token, trust it as a last resort
-          cachedAdminVerified = true;
-          lastVerificationTime = now;
+          setCacheVerified(true);
           return { 
             isAdmin: true, 
             session: null,
@@ -231,8 +211,7 @@ export const checkAdminStatus = async () => {
           
         if (adminCheck) {
           console.log("Legacy admin token verified successfully");
-          cachedAdminVerified = true;
-          lastVerificationTime = now;
+          setCacheVerified(true);
           return { 
             isAdmin: true, 
             session: null,
@@ -242,9 +221,7 @@ export const checkAdminStatus = async () => {
         
         // Invalid admin data, clear it
         console.log("Invalid legacy token, clearing...");
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
-        cachedAdminVerified = false;
+        clearAdminData();
         return { 
           isAdmin: false, 
           session: null,
@@ -253,10 +230,8 @@ export const checkAdminStatus = async () => {
       } catch (error) {
         // Error parsing admin user data, clear it
         console.error("Error parsing admin user data:", error);
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
-        cachedAdminVerified = false;
-        isValidating = false;
+        clearAdminData();
+        setValidationStatus(false);
         return { 
           isAdmin: false, 
           session: null,
@@ -266,8 +241,8 @@ export const checkAdminStatus = async () => {
     }
     
     // No valid session or token
-    isValidating = false;
-    cachedAdminVerified = false;
+    setValidationStatus(false);
+    setCacheVerified(false);
     console.log("No admin authentication found");
     return { 
       isAdmin: false, 
@@ -275,33 +250,24 @@ export const checkAdminStatus = async () => {
       message: "No active session found"
     };
   } catch (error) {
-    isValidating = false;
+    setValidationStatus(false);
     console.error("Admin verification error:", error);
     
     // If verification completely fails but we have a stored token,
     // trust it as an absolute last resort to avoid lockouts
-    const adminToken = localStorage.getItem('adminToken');
-    const adminUserStr = localStorage.getItem('adminUser');
+    const { adminToken, adminUserObj } = getStoredAdminData();
     
-    if (adminToken === 'authenticated' && adminUserStr) {
-      try {
-        const adminUser = JSON.parse(adminUserStr);
-        if (adminUser && adminUser.id) {
-          console.log("FALLBACK: Using stored admin token due to complete verification failure");
-          cachedAdminVerified = true;
-          lastVerificationTime = Date.now();
-          return { 
-            isAdmin: true, 
-            session: null,
-            message: "Admin authenticated via emergency fallback (verification failed)"
-          };
-        }
-      } catch (e) {
-        // Ignore parsing errors
-      }
+    if (adminToken === 'authenticated' && adminUserObj && adminUserObj.id) {
+      console.log("FALLBACK: Using stored admin token due to complete verification failure");
+      setCacheVerified(true);
+      return { 
+        isAdmin: true, 
+        session: null,
+        message: "Admin authenticated via emergency fallback (verification failed)"
+      };
     }
     
-    cachedAdminVerified = false;
+    setCacheVerified(false);
     return { 
       isAdmin: false, 
       session: null,
@@ -313,9 +279,7 @@ export const checkAdminStatus = async () => {
 // Exposed method to reset admin verification cache
 export const verifyAdmin = async (forceRefresh = false): Promise<boolean> => {
   if (forceRefresh) {
-    cachedAdminVerified = false;
-    lastVerificationTime = 0;
-    isValidating = false;
+    resetCache();
   }
   
   const { isAdmin } = await checkAdminStatus();
