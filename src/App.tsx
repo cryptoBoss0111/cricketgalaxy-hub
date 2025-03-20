@@ -3,8 +3,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ChatbotProvider } from "@/contexts/ChatbotContext";
+import { useEffect, useState } from "react";
+import { supabase, isAdminUser } from "@/integrations/supabase/client";
 import Home from "./pages/Home";
 import CricketNews from "./pages/CricketNews";
 import NotFound from "./pages/NotFound";
@@ -14,6 +16,49 @@ import ArticleForm from "./admin/ArticleForm";
 import ArticlesList from "./admin/ArticlesList";
 
 const queryClient = new QueryClient();
+
+// Protected route component for admin routes
+const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const adminStatus = await isAdminUser();
+        setIsAdmin(adminStatus);
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        setIsAdmin(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAdmin();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async () => {
+      checkAdmin();
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+  
+  if (isLoading) {
+    return <div className="h-screen flex items-center justify-center">
+      <div className="animate-spin h-8 w-8 border-4 border-cricket-accent border-t-transparent rounded-full"></div>
+    </div>;
+  }
+  
+  if (!isAdmin) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -33,10 +78,29 @@ const App = () => (
             <Route path="/womens-cricket" element={<CricketNews />} />
             <Route path="/world-cup" element={<CricketNews />} />
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/articles" element={<ArticlesList />} />
-            <Route path="/admin/articles/new" element={<ArticleForm />} />
-            <Route path="/admin/articles/edit/:id" element={<ArticleForm />} />
+            
+            {/* Protected admin routes */}
+            <Route path="/admin/dashboard" element={
+              <AdminProtectedRoute>
+                <AdminDashboard />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/articles" element={
+              <AdminProtectedRoute>
+                <ArticlesList />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/articles/new" element={
+              <AdminProtectedRoute>
+                <ArticleForm />
+              </AdminProtectedRoute>
+            } />
+            <Route path="/admin/articles/edit/:id" element={
+              <AdminProtectedRoute>
+                <ArticleForm />
+              </AdminProtectedRoute>
+            } />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

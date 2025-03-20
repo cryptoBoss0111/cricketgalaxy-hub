@@ -19,21 +19,31 @@ const AdminLoginButton = () => {
       try {
         console.log("Checking admin session status...");
         
-        // First refresh the session if possible
-        await refreshSession();
+        // First check if we have an active session
+        const { data: sessionData } = await supabase.auth.getSession();
+        console.log("Current session:", sessionData.session ? "Active" : "None");
         
-        const { data } = await supabase.auth.getSession();
-        console.log("Current session:", data.session ? "Active" : "None");
-        
-        if (data.session) {
-          console.log("Session found, expires at:", new Date(data.session.expires_at * 1000).toLocaleString());
+        if (sessionData.session) {
+          console.log("Session found, expires at:", new Date(sessionData.session.expires_at * 1000).toLocaleString());
+          
+          // If session is about to expire, refresh it first
+          const expiresAt = sessionData.session.expires_at * 1000;
+          const now = Date.now();
+          const timeToExpiry = expiresAt - now;
+          
+          if (timeToExpiry < 300000) { // less than 5 minutes
+            console.log("Token close to expiry, refreshing session...");
+            await refreshSession();
+          }
+        } else {
+          console.log("No active session found");
         }
         
         const isAdmin = await isAdminUser();
         console.log("Admin status check:", isAdmin);
         setIsLoggedIn(isAdmin);
         
-        if (!isAdmin && data.session) {
+        if (!isAdmin && sessionData.session) {
           // User is logged in but not an admin
           console.log("User is logged in but not an admin, signing out");
           await supabase.auth.signOut();
