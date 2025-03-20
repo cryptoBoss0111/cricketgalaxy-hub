@@ -1,113 +1,142 @@
 
-import { supabase, refreshSession, isAdminUser } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 
-// A utility function to verify admin status before performing operations
-export const verifyAdminAndRefresh = async () => {
+// Simple admin authentication check function
+export const checkAdminStatus = async () => {
   try {
-    // Check if a validation is already in progress
-    if (localStorage.getItem('validating_admin') === 'true') {
+    // Check for an active session
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    // If we have a session, check if the user is an admin
+    if (sessionData.session) {
+      const { data: adminData } = await supabase
+        .from('admins')
+        .select('id')
+        .eq('id', sessionData.session.user.id)
+        .maybeSingle();
+      
       return { 
-        isAdmin: false, 
-        message: "Authentication check already in progress", 
-        userId: null 
+        isAdmin: !!adminData, 
+        session: sessionData.session,
+        message: adminData ? "Admin authenticated" : "User is not an admin"
       };
     }
     
-    localStorage.setItem('validating_admin', 'true');
+    // No active session, check for legacy token
+    const adminToken = localStorage.getItem('adminToken');
+    const adminUserStr = localStorage.getItem('adminUser');
     
-    try {
-      // First check if we have a session at all
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      if (!sessionData.session) {
-        // No active session, check for legacy token
-        const adminToken = localStorage.getItem('adminToken');
-        const adminUserStr = localStorage.getItem('adminUser');
+    if (adminToken === 'authenticated' && adminUserStr) {
+      try {
+        const adminUser = JSON.parse(adminUserStr);
         
-        if (adminToken === 'authenticated' && adminUserStr) {
-          try {
-            const adminUser = JSON.parse(adminUserStr);
-            if (adminUser.id) {
-              const { data: adminCheck } = await supabase
-                .from('admins')
-                .select('id')
-                .eq('id', adminUser.id)
-                .maybeSingle();
-                
-              if (adminCheck) {
-                return { isAdmin: true, message: "Admin authenticated via legacy token", userId: adminUser.id };
-              } else {
-                // Invalid admin data
-                localStorage.removeItem('adminToken');
-                localStorage.removeItem('adminUser');
-                return { isAdmin: false, message: "Invalid admin credentials in storage", userId: null };
-              }
-            }
-          } catch (error) {
-            console.error("Error parsing admin user data:", error);
-            localStorage.removeItem('adminToken');
-            localStorage.removeItem('adminUser');
-            return { isAdmin: false, message: "Error with stored admin data", userId: null };
+        if (adminUser.id) {
+          const { data: adminCheck } = await supabase
+            .from('admins')
+            .select('id')
+            .eq('id', adminUser.id)
+            .maybeSingle();
+            
+          if (adminCheck) {
+            return { 
+              isAdmin: true, 
+              session: null,
+              message: "Admin authenticated via legacy token"
+            };
           }
         }
         
-        return { isAdmin: false, message: "No active session found", userId: null };
+        // Invalid admin data, clear it
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+      } catch (error) {
+        // Error parsing admin user data, clear it
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
       }
-      
-      // Then refresh the session if we have one
-      await refreshSession();
-      
-      // Then check if the user is an admin
-      const isAdmin = await isAdminUser();
-      if (!isAdmin) {
-        return { isAdmin: false, message: "You must be logged in as an admin to access this page", userId: null };
-      }
-
-      // Get the current user ID
-      const userId = sessionData.session?.user?.id;
-      
-      if (!userId) {
-        return { isAdmin: false, message: "No user ID found in session", userId: null };
-      }
-      
-      return { isAdmin: true, message: "Admin authenticated", userId };
-    } finally {
-      localStorage.removeItem('validating_admin');
     }
+    
+    // No valid session or token
+    return { 
+      isAdmin: false, 
+      session: null,
+      message: "No active session found"
+    };
   } catch (error) {
     console.error("Admin verification error:", error);
-    localStorage.removeItem('validating_admin');
-    return { isAdmin: false, message: "Authentication error", userId: null };
+    return { 
+      isAdmin: false, 
+      session: null,
+      message: "Authentication error"
+    };
   }
 };
 
-// A hook to handle admin authentication
+// Hook for admin route protection
 export const useAdminAuth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isChecking, setIsChecking] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   
-  const checkAndRedirect = async () => {
-    const { isAdmin, message, userId } = await verifyAdminAndRefresh();
+  useEffect(() => {
+    let isMounted = true;
     
-    if (!isAdmin) {
-      toast({
-        title: "Authentication Required",
-        description: message,
-        variant: "destructive",
-      });
+    const verifyAdmin = async () => {
+      setIsChecking(true);
       
-      // Clear any legacy tokens that might be causing issues
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminUser');
-      
-      navigate('/admin/login');
-      return null;
-    }
+      try {
+        const { isAdmin, message } = await checkAdminStatus();
+        
+        if (isMounted) {
+          setIsAdmin(isAdmin);
+          
+          if (!isAdmin) {
+            toast({
+              title: "Authentication Required",
+              description: message,
+              variant: "destructive",
+            });
+            
+            navigate('/admin/login');
+          }
+        }
+      } catch (error) {
+        console.error("Admin verification error:", error);
+        
+        if (isMounted) {
+          setIsAdmin(false);
+          toast({
+            title: "Authentication Error",
+            description: "Please try logging in again",
+            variant: "destructive",
+          });
+          
+          navigate('/admin/login');
+        }
+      } finally {
+        if (isMounted) {
+          setIsChecking(false);
+        }
+      }
+    };
     
-    return userId;
-  };
+    verifyAdmin();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate, toast]);
   
-  return { checkAndRedirect };
+  return { isChecking, isAdmin };
+};
+
+// Helper function to sign out admin
+export const signOutAdmin = async () => {
+  await supabase.auth.signOut();
+  localStorage.removeItem('adminToken');
+  localStorage.removeItem('adminUser');
 };

@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ChatbotProvider } from "@/contexts/ChatbotContext";
 import { useEffect, useState } from "react";
-import { supabase, isAdminUser } from "@/integrations/supabase/client";
+import { useAdminAuth } from "@/utils/adminAuth";
 import Home from "./pages/Home";
 import CricketNews from "./pages/CricketNews";
 import NotFound from "./pages/NotFound";
@@ -19,38 +19,14 @@ const queryClient = new QueryClient();
 
 // Protected route component for admin routes
 const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isChecking, isAdmin } = useAdminAuth();
   
-  useEffect(() => {
-    const checkAdmin = async () => {
-      try {
-        const adminStatus = await isAdminUser();
-        setIsAdmin(adminStatus);
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-        setIsAdmin(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    checkAdmin();
-    
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async () => {
-      checkAdmin();
-    });
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-  
-  if (isLoading) {
-    return <div className="h-screen flex items-center justify-center">
-      <div className="animate-spin h-8 w-8 border-4 border-cricket-accent border-t-transparent rounded-full"></div>
-    </div>;
+  if (isChecking) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-cricket-accent border-t-transparent rounded-full"></div>
+      </div>
+    );
   }
   
   if (!isAdmin) {
