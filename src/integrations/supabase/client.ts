@@ -223,3 +223,366 @@ export const getArticleById = async (id: string) => {
   
   return data;
 };
+
+// Get player profiles
+export const getPlayerProfiles = async (searchQuery?: string, teamFilter?: string, roleFilter?: string) => {
+  let query = supabase
+    .from('player_profiles')
+    .select('*')
+    .order('name');
+  
+  if (teamFilter) {
+    query = query.eq('team', teamFilter);
+  }
+  
+  if (roleFilter) {
+    query = query.eq('role', roleFilter);
+  }
+  
+  const { data, error } = await query;
+  
+  if (error) {
+    console.error("Error fetching player profiles:", error);
+    throw error;
+  }
+  
+  // Apply search query filtering in-memory if provided
+  let filteredData = data || [];
+  if (searchQuery && searchQuery.trim() !== '') {
+    const searchLower = searchQuery.toLowerCase();
+    filteredData = filteredData.filter(player => 
+      player.name.toLowerCase().includes(searchLower) ||
+      player.team.toLowerCase().includes(searchLower)
+    );
+  }
+  
+  return filteredData;
+};
+
+// Create or update player profile
+export const upsertPlayerProfile = async (playerData: any) => {
+  const { id, ...otherData } = playerData;
+  const method = id ? 'update' : 'insert';
+  
+  if (method === 'update') {
+    const { data, error } = await supabase
+      .from('player_profiles')
+      .update({
+        ...otherData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select();
+    
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await supabase
+      .from('player_profiles')
+      .insert({
+        ...otherData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select();
+    
+    if (error) throw error;
+    return data;
+  }
+};
+
+// Delete player profile
+export const deletePlayerProfile = async (id: string) => {
+  const { error } = await supabase
+    .from('player_profiles')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+  return true;
+};
+
+// Get upcoming matches
+export const getUpcomingMatches = async () => {
+  const { data, error } = await supabase
+    .from('upcoming_matches')
+    .select('*')
+    .order('match_time', { ascending: true });
+  
+  if (error) {
+    console.error("Error fetching upcoming matches:", error);
+    throw error;
+  }
+  
+  return data || [];
+};
+
+// Create or update match
+export const upsertMatch = async (matchData: any) => {
+  const { id, ...otherData } = matchData;
+  const method = id ? 'update' : 'insert';
+  
+  if (method === 'update') {
+    const { data, error } = await supabase
+      .from('upcoming_matches')
+      .update({
+        ...otherData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select();
+    
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await supabase
+      .from('upcoming_matches')
+      .insert({
+        ...otherData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select();
+    
+    if (error) throw error;
+    return data;
+  }
+};
+
+// Delete match
+export const deleteMatch = async (id: string) => {
+  const { error } = await supabase
+    .from('upcoming_matches')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+  return true;
+};
+
+// Get fantasy picks
+export const getFantasyPicks = async () => {
+  const { data, error } = await supabase
+    .from('fantasy_picks')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error("Error fetching fantasy picks:", error);
+    throw error;
+  }
+  
+  return data || [];
+};
+
+// Create or update fantasy pick
+export const upsertFantasyPick = async (pickData: any) => {
+  const { id, ...otherData } = pickData;
+  const method = id ? 'update' : 'insert';
+  
+  if (method === 'update') {
+    const { data, error } = await supabase
+      .from('fantasy_picks')
+      .update({
+        ...otherData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select();
+    
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await supabase
+      .from('fantasy_picks')
+      .insert({
+        ...otherData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select();
+    
+    if (error) throw error;
+    return data;
+  }
+};
+
+// Delete fantasy pick
+export const deleteFantasyPick = async (id: string) => {
+  const { error } = await supabase
+    .from('fantasy_picks')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
+  return true;
+};
+
+// Get navigation items
+export const getNavigationItems = async () => {
+  const { data, error } = await supabase
+    .from('navigation_items')
+    .select('*')
+    .order('order_index', { ascending: true });
+  
+  if (error) {
+    console.error("Error fetching navigation items:", error);
+    throw error;
+  }
+  
+  return data || [];
+};
+
+// Update navigation item order
+export const updateNavigationOrder = async (items: any[]) => {
+  // Update each item with its new order index
+  for (let i = 0; i < items.length; i++) {
+    const { error } = await supabase
+      .from('navigation_items')
+      .update({ order_index: i + 1 })
+      .eq('id', items[i].id);
+    
+    if (error) {
+      console.error(`Error updating item ${items[i].id}:`, error);
+      throw error;
+    }
+  }
+  
+  return true;
+};
+
+// Get all media files
+export const getMediaFiles = async (bucketName = 'article_images') => {
+  const { data, error } = await supabase
+    .storage
+    .from(bucketName)
+    .list();
+  
+  if (error) {
+    console.error("Error fetching media files:", error);
+    throw error;
+  }
+  
+  // Add public URLs to each file
+  const filesWithUrls = data.map(file => {
+    const { data: { publicUrl } } = supabase
+      .storage
+      .from(bucketName)
+      .getPublicUrl(file.name);
+    
+    return {
+      ...file,
+      publicUrl
+    };
+  });
+  
+  return filesWithUrls || [];
+};
+
+// Delete media file
+export const deleteMediaFile = async (fileName: string, bucketName = 'article_images') => {
+  const { error } = await supabase
+    .storage
+    .from(bucketName)
+    .remove([fileName]);
+  
+  if (error) {
+    console.error("Error deleting media file:", error);
+    throw error;
+  }
+  
+  return true;
+};
+
+// Get top stories
+export const getTopStories = async () => {
+  const { data, error } = await supabase
+    .from('top_stories')
+    .select(`
+      id,
+      article_id,
+      order_index,
+      featured,
+      articles (
+        id,
+        title,
+        excerpt,
+        featured_image,
+        category,
+        published_at
+      )
+    `)
+    .order('order_index', { ascending: true });
+  
+  if (error) {
+    console.error("Error fetching top stories:", error);
+    throw error;
+  }
+  
+  return data || [];
+};
+
+// Update top stories
+export const updateTopStories = async (items: any[]) => {
+  // First delete all existing top stories
+  const { error: deleteError } = await supabase
+    .from('top_stories')
+    .delete()
+    .neq('id', 'placeholder'); // Delete all rows
+  
+  if (deleteError) {
+    console.error("Error deleting existing top stories:", deleteError);
+    throw deleteError;
+  }
+  
+  // Then insert the new order
+  if (items.length > 0) {
+    const itemsToInsert = items.map((item, index) => ({
+      article_id: item.article_id,
+      order_index: index + 1,
+      featured: item.featured || false
+    }));
+    
+    const { error: insertError } = await supabase
+      .from('top_stories')
+      .insert(itemsToInsert);
+    
+    if (insertError) {
+      console.error("Error inserting top stories:", insertError);
+      throw insertError;
+    }
+  }
+  
+  return true;
+};
+
+// Get analytics data (placeholder for now)
+export const getAnalyticsData = async () => {
+  // For now, return mock data
+  // In a real implementation, you might pull this from a database or analytics service
+  return {
+    pageViews: {
+      today: 846,
+      yesterday: 765,
+      thisWeek: 4582,
+      lastWeek: 4123
+    },
+    topArticles: [
+      { id: '1', title: 'India vs Australia: 3rd Test Preview', views: 1245 },
+      { id: '2', title: 'IPL 2025 Auction Analysis', views: 987 },
+      { id: '3', title: 'Top 10 Players to Watch', views: 876 },
+      { id: '4', title: 'England's Tour of India: What to Expect', views: 743 },
+      { id: '5', title: 'Women's World Cup Final Recap', views: 654 }
+    ],
+    userActivity: {
+      activeUsers: 842,
+      newUsers: 128,
+      returningUsers: 714
+    },
+    deviceStats: {
+      mobile: 68,
+      desktop: 24,
+      tablet: 8
+    }
+  };
+};

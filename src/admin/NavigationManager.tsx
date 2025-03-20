@@ -1,56 +1,84 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { GripVertical, Plus, Trash2, Edit, Undo2, Save } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { GripVertical, Save, Edit, Trash2, Plus, Link, Eye, EyeOff } from 'lucide-react';
 import AdminLayout from './AdminLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form';
+import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { getNavigationItems, updateNavigationOrder, supabase } from '@/integrations/supabase/client';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
-interface NavItem {
+interface NavigationItem {
   id: string;
   label: string;
   path: string;
   order_index: number;
   visible: boolean;
-  created_at?: string;
-  updated_at?: string;
 }
 
-const NavigationManager = () => {
-  const [navItems, setNavItems] = useState<NavItem[]>([]);
-  const [originalNavItems, setOriginalNavItems] = useState<NavItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [currentItem, setCurrentItem] = useState<NavItem | null>(null);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+const navigationItemSchema = z.object({
+  id: z.string().optional(),
+  label: z.string().min(1, 'Navigation label is required'),
+  path: z.string().min(1, 'Path is required'),
+  visible: z.boolean().default(true)
+});
 
+type NavigationItemFormValues = z.infer<typeof navigationItemSchema>;
+
+const NavigationManager = () => {
+  const [navItems, setNavItems] = useState<NavigationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<NavigationItem | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  
+  const { toast } = useToast();
+  
+  const form = useForm<NavigationItemFormValues>({
+    resolver: zodResolver(navigationItemSchema),
+    defaultValues: {
+      label: '',
+      path: '',
+      visible: true
+    }
+  });
+  
+  // Fetch navigation items
   useEffect(() => {
     const fetchNavItems = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('navigation_items')
-          .select('*')
-          .order('order_index', { ascending: true });
-        
-        if (error) throw error;
-        
-        setNavItems(data || []);
-        setOriginalNavItems(JSON.parse(JSON.stringify(data || []))); // Deep copy
+        const data = await getNavigationItems();
+        setNavItems(data);
       } catch (error) {
         console.error('Error fetching navigation items:', error);
         toast({
-          title: "Error",
-          description: "Failed to load navigation items",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Failed to load navigation items',
+          variant: 'destructive'
         });
       } finally {
         setIsLoading(false);
@@ -58,8 +86,9 @@ const NavigationManager = () => {
     };
     
     fetchNavItems();
-  }, [toast]);
+  }, []);
   
+  // Handle drag and drop reordering
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
     
@@ -67,296 +96,412 @@ const NavigationManager = () => {
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
-    // Update order values
+    // Update order index
     const updatedItems = items.map((item, index) => ({
       ...item,
       order_index: index + 1
     }));
     
     setNavItems(updatedItems);
-    setIsEditing(true);
   };
   
-  const handleItemVisibilityChange = (id: string, checked: boolean) => {
-    const updatedItems = navItems.map(item => 
-      item.id === id ? { ...item, visible: checked } : item
-    );
-    setNavItems(updatedItems);
-    setIsEditing(true);
-  };
-  
-  const handleEdit = (item: NavItem) => {
-    setCurrentItem(item);
-    setDialogOpen(true);
-  };
-  
-  const handleAddNew = () => {
-    setCurrentItem({
-      id: `new-${Date.now()}`,
-      label: '',
-      path: '',
-      order_index: navItems.length + 1,
-      visible: true
-    });
-    setDialogOpen(true);
-  };
-  
-  const handleSaveItem = () => {
-    if (!currentItem) return;
-    
-    if (!currentItem.label.trim() || !currentItem.path.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Label and path are required",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Ensure path starts with /
-    const path = currentItem.path.startsWith('/') ? currentItem.path : `/${currentItem.path}`;
-    
-    let updatedItems;
-    if (currentItem.id.startsWith('new-')) {
-      // New item
-      const newItem = {
-        ...currentItem,
-        id: currentItem.id.replace('new-', ''),
-        path
-      };
-      updatedItems = [...navItems, newItem];
-    } else {
-      // Existing item
-      updatedItems = navItems.map(item => 
-        item.id === currentItem.id ? { ...currentItem, path } : item
-      );
-    }
-    
-    setNavItems(updatedItems);
-    setDialogOpen(false);
-    setIsEditing(true);
-  };
-  
-  const handleDeleteItem = (id: string) => {
-    const updatedItems = navItems.filter(item => item.id !== id);
-    setNavItems(updatedItems);
-    setIsEditing(true);
-  };
-  
-  const discardChanges = () => {
-    setNavItems(JSON.parse(JSON.stringify(originalNavItems))); // Deep copy
-    setIsEditing(false);
-  };
-  
-  const saveChanges = async () => {
-    setIsLoading(true);
+  // Toggle visibility of a navigation item
+  const toggleVisibility = async (id: string) => {
     try {
-      // Prepare data for upsert
-      const itemsToUpsert = navItems.map(({ id, label, path, order_index, visible }) => ({
-        id: id.startsWith('new-') ? undefined : id, // Let Supabase generate IDs for new items
-        label,
-        path,
-        order_index,
-        visible
-      }));
+      const item = navItems.find(item => item.id === id);
+      if (!item) return;
       
-      // First, delete removed items
-      const originalIds = originalNavItems.map(item => item.id);
-      const currentIds = navItems.map(item => item.id.startsWith('new-') ? '' : item.id).filter(Boolean);
-      const deletedIds = originalIds.filter(id => !currentIds.includes(id));
-      
-      if (deletedIds.length > 0) {
-        const { error: deleteError } = await supabase
-          .from('navigation_items')
-          .delete()
-          .in('id', deletedIds);
-          
-        if (deleteError) throw deleteError;
-      }
-      
-      // Then, upsert the current items
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('navigation_items')
-        .upsert(itemsToUpsert)
-        .select();
+        .update({ visible: !item.visible })
+        .eq('id', id);
       
       if (error) throw error;
       
-      // Update state with the returned data
-      if (data) {
-        setNavItems(data);
-        setOriginalNavItems(JSON.parse(JSON.stringify(data))); // Deep copy
-      }
-      
-      setIsEditing(false);
+      setNavItems(navItems.map(item => 
+        item.id === id ? { ...item, visible: !item.visible } : item
+      ));
       
       toast({
-        title: "Success",
-        description: "Navigation items saved successfully",
+        title: 'Success',
+        description: `Item ${item.visible ? 'hidden' : 'shown'} successfully`,
       });
     } catch (error) {
-      console.error('Error saving navigation items:', error);
+      console.error('Error toggling visibility:', error);
       toast({
-        title: "Error",
-        description: "Failed to save changes",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to update item visibility',
+        variant: 'destructive'
+      });
+    }
+  };
+  
+  // Save navigation order
+  const saveNavigationOrder = async () => {
+    setIsSaving(true);
+    try {
+      await updateNavigationOrder(navItems);
+      
+      toast({
+        title: 'Success',
+        description: 'Navigation order updated successfully',
+      });
+    } catch (error) {
+      console.error('Error saving navigation order:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save navigation order',
+        variant: 'destructive'
       });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
+    }
+  };
+  
+  // Open form to edit or create navigation item
+  const openForm = (item?: NavigationItem) => {
+    if (item) {
+      setSelectedItem(item);
+      form.reset({
+        id: item.id,
+        label: item.label,
+        path: item.path,
+        visible: item.visible
+      });
+    } else {
+      setSelectedItem(null);
+      form.reset({
+        label: '',
+        path: '',
+        visible: true
+      });
+    }
+    setIsFormOpen(true);
+  };
+  
+  // Open delete confirmation dialog
+  const confirmDelete = (id: string) => {
+    setItemToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  // Delete navigation item
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from('navigation_items')
+        .delete()
+        .eq('id', itemToDelete);
+      
+      if (error) throw error;
+      
+      setNavItems(navItems.filter(item => item.id !== itemToDelete));
+      
+      toast({
+        title: 'Success',
+        description: 'Navigation item deleted successfully',
+      });
+    } catch (error) {
+      console.error('Error deleting navigation item:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete navigation item',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setItemToDelete(null);
+    }
+  };
+  
+  // Save navigation item
+  const onSubmit = async (values: NavigationItemFormValues) => {
+    try {
+      if (values.id) {
+        // Update existing item
+        const { error } = await supabase
+          .from('navigation_items')
+          .update({
+            label: values.label,
+            path: values.path,
+            visible: values.visible
+          })
+          .eq('id', values.id);
+        
+        if (error) throw error;
+        
+        setNavItems(navItems.map(item => 
+          item.id === values.id ? { ...item, label: values.label, path: values.path, visible: values.visible } : item
+        ));
+        
+        toast({
+          title: 'Success',
+          description: 'Navigation item updated successfully',
+        });
+      } else {
+        // Create new item
+        const { data, error } = await supabase
+          .from('navigation_items')
+          .insert({
+            label: values.label,
+            path: values.path,
+            visible: values.visible,
+            order_index: navItems.length + 1
+          })
+          .select();
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setNavItems([...navItems, data[0]]);
+        }
+        
+        toast({
+          title: 'Success',
+          description: 'Navigation item created successfully',
+        });
+      }
+      
+      setIsFormOpen(false);
+    } catch (error) {
+      console.error('Error saving navigation item:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to ${values.id ? 'update' : 'create'} navigation item`,
+        variant: 'destructive'
+      });
     }
   };
   
   return (
     <AdminLayout>
-      <div className="space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-heading font-bold">Navigation Manager</h1>
+      <div className="p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-heading font-bold">Navigation Manager</h1>
+            <p className="text-gray-500 mt-1">Organize and customize website navigation</p>
+          </div>
           <div className="flex gap-2">
-            {isEditing && (
-              <Button variant="outline" onClick={discardChanges} disabled={isLoading}>
-                <Undo2 className="h-4 w-4 mr-2" />
-                Discard
-              </Button>
-            )}
-            <Button onClick={handleAddNew} disabled={isLoading}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Item
+            <Button variant="outline" onClick={() => openForm()}>
+              <Plus className="h-4 w-4 mr-2" /> Add Item
             </Button>
-            {isEditing && (
-              <Button onClick={saveChanges} disabled={isLoading}>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </Button>
-            )}
+            <Button onClick={saveNavigationOrder} disabled={isSaving}>
+              <Save className="h-4 w-4 mr-2" /> {isSaving ? 'Saving...' : 'Save Order'}
+            </Button>
           </div>
         </div>
         
-        <Card className="p-6">
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin h-8 w-8 border-2 border-cricket-accent border-t-transparent rounded-full"></div>
-            </div>
-          ) : (
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="navigation-items">
-                {(provided) => (
-                  <div 
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="space-y-2"
-                  >
-                    <div className="grid grid-cols-12 gap-4 font-semibold text-sm text-gray-500 mb-4 px-2">
-                      <div className="col-span-1"></div>
-                      <div className="col-span-3">Label</div>
-                      <div className="col-span-4">Path</div>
-                      <div className="col-span-1 text-center">Order</div>
-                      <div className="col-span-1 text-center">Visible</div>
-                      <div className="col-span-2 text-center">Actions</div>
-                    </div>
-                    
-                    {navItems.map((item, index) => (
-                      <Draggable key={item.id} draggableId={item.id} index={index}>
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className="grid grid-cols-12 gap-4 items-center bg-white p-3 rounded-md border border-gray-100 hover:border-gray-300 transition-colors"
-                          >
-                            <div className="col-span-1 flex justify-center">
-                              <div {...provided.dragHandleProps} className="cursor-grab">
-                                <GripVertical className="h-5 w-5 text-gray-400" />
-                              </div>
-                            </div>
-                            <div className="col-span-3 font-medium">{item.label}</div>
-                            <div className="col-span-4 text-sm text-gray-600">{item.path}</div>
-                            <div className="col-span-1 text-center">{item.order_index}</div>
-                            <div className="col-span-1 flex justify-center">
-                              <Checkbox 
-                                checked={item.visible} 
-                                onCheckedChange={(checked) => handleItemVisibilityChange(item.id, checked as boolean)}
-                              />
-                            </div>
-                            <div className="col-span-2 flex justify-center space-x-2">
-                              <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleDeleteItem(item.id)}
-                                className="text-red-500 hover:bg-red-50 hover:text-red-600"
+        <Card>
+          <CardHeader>
+            <CardTitle>Website Navigation Items</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cricket-accent"></div>
+              </div>
+            ) : navItems.length === 0 ? (
+              <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
+                <h3 className="text-xl font-medium text-gray-500">No navigation items found</h3>
+                <p className="text-gray-400 mt-2 mb-6">Add navigation items to display in the website header</p>
+                <Button onClick={() => openForm()}>
+                  <Plus className="h-4 w-4 mr-2" /> Add Your First Navigation Item
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <p className="text-sm text-gray-500 mb-4">
+                  Drag and drop to reorder navigation items. Items at the top will appear first in the navigation menu.
+                </p>
+                
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <Droppable droppableId="navigationItems">
+                    {(provided) => (
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        className="space-y-2"
+                      >
+                        {navItems.map((item, index) => (
+                          <Draggable key={item.id} draggableId={item.id} index={index}>
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className={`flex items-center p-3 border rounded-lg ${
+                                  item.visible ? 'bg-white' : 'bg-gray-50'
+                                } hover:shadow-sm`}
                               >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          )}
+                                <div {...provided.dragHandleProps} className="pr-3 cursor-grab">
+                                  <GripVertical className="h-5 w-5 text-gray-400" />
+                                </div>
+                                
+                                <div className="flex-1 min-w-0 flex items-center">
+                                  <div>
+                                    <h4 className={`font-medium ${!item.visible && 'text-gray-400'}`}>
+                                      {item.label}
+                                    </h4>
+                                    <div className="flex items-center text-xs text-gray-500 mt-1">
+                                      <Link className="h-3 w-3 mr-1" />
+                                      <span className="truncate">{item.path}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex gap-2 ml-4">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => toggleVisibility(item.id)}
+                                    title={item.visible ? 'Hide item' : 'Show item'}
+                                    className={item.visible ? 'text-green-500' : 'text-gray-400'}
+                                  >
+                                    {item.visible ? (
+                                      <Eye className="h-4 w-4" />
+                                    ) : (
+                                      <EyeOff className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                  
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => openForm(item)}
+                                    title="Edit item"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => confirmDelete(item.id)}
+                                    title="Delete item"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
       
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+      {/* Navigation Item Form Dialog */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {currentItem && currentItem.id.startsWith('new-') 
-                ? 'Add Navigation Item' 
-                : 'Edit Navigation Item'}
+              {selectedItem ? 'Edit Navigation Item' : 'Add Navigation Item'}
             </DialogTitle>
             <DialogDescription>
-              Configure the navigation item details below.
+              {selectedItem 
+                ? 'Update the navigation item details below' 
+                : 'Fill in the details to add a new navigation item'}
             </DialogDescription>
           </DialogHeader>
           
-          {currentItem && (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label htmlFor="nav-label" className="text-sm font-medium">Label</label>
-                <Input 
-                  id="nav-label"
-                  value={currentItem.label} 
-                  onChange={(e) => setCurrentItem({...currentItem, label: e.target.value})}
-                  placeholder="e.g. Cricket News"
-                />
-              </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="label"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Navigation Label</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="E.g. Home, About, Contact" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div className="space-y-2">
-                <label htmlFor="nav-path" className="text-sm font-medium">Path</label>
-                <Input 
-                  id="nav-path"
-                  value={currentItem.path} 
-                  onChange={(e) => setCurrentItem({...currentItem, path: e.target.value})}
-                  placeholder="e.g. /cricket-news"
-                />
-                <p className="text-xs text-gray-500">The URL path for this navigation item (must start with /)</p>
-              </div>
+              <FormField
+                control={form.control}
+                name="path"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL Path</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="E.g. /, /about, /contact" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="nav-visible"
-                  checked={currentItem.visible} 
-                  onCheckedChange={(checked) => setCurrentItem({...currentItem, visible: checked as boolean})}
-                />
-                <label htmlFor="nav-visible" className="text-sm font-medium">
-                  Visible in navigation
-                </label>
-              </div>
-            </div>
-          )}
-          
+              <FormField
+                control={form.control}
+                name="visible"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Visibility</FormLabel>
+                      <FormDescription>
+                        Show this item in navigation
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsFormOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  {selectedItem ? 'Update Item' : 'Add Item'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this navigation item? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveItem}>
-              Save
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+            >
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

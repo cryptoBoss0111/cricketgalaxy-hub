@@ -1,537 +1,551 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Calendar, Plus, Edit, Trash2, Search } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import AdminLayout from './AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from '@/components/ui/dialog';
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Calendar, Trophy, ArrowUpDown } from 'lucide-react';
-import AdminLayout from './AdminLayout';
-import { supabase } from '@/integrations/supabase/client';
+import { getUpcomingMatches, upsertMatch, deleteMatch, uploadImageToStorage } from '@/integrations/supabase/client';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
+const matchFormSchema = z.object({
+  id: z.string().optional(),
+  team1: z.string().min(1, 'Team 1 is required'),
+  team2: z.string().min(1, 'Team 2 is required'),
+  match_time: z.string().min(1, 'Match date and time is required'),
+  venue: z.string().min(1, 'Venue is required'),
+  competition: z.string().min(1, 'Competition is required'),
+  match_type: z.string().min(1, 'Match type is required'),
+  image: z.string().optional()
+});
+
+type MatchFormValues = z.infer<typeof matchFormSchema>;
 
 interface Match {
   id: string;
   team1: string;
   team2: string;
-  venue: string;
-  match_date: string;
   match_time: string;
-  match_type: string; // T20, ODI, Test
-  tournament: string;
-  description?: string;
-  is_featured: boolean;
-  status: 'upcoming' | 'live' | 'completed';
+  venue: string;
+  competition: string;
+  match_type: string;
+  image?: string;
 }
 
 const MatchesManager = () => {
-  const [isLoading, setIsLoading] = useState(true);
   const [matches, setMatches] = useState<Match[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentMatch, setCurrentMatch] = useState<Partial<Match> | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'live' | 'completed'>('upcoming');
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [matchToDelete, setMatchToDelete] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  
   const { toast } = useToast();
-  const navigate = useNavigate();
-
-  // Mock data for matches
-  const mockMatches: Match[] = [
-    {
-      id: '1',
-      team1: 'India',
-      team2: 'Australia',
-      venue: 'Sydney Cricket Ground, Australia',
-      match_date: '2025-01-15',
-      match_time: '09:30',
-      match_type: 'Test',
-      tournament: 'Border-Gavaskar Trophy',
-      description: 'First Test of the 5-match Border-Gavaskar Trophy series',
-      is_featured: true,
-      status: 'upcoming'
-    },
-    {
-      id: '2',
-      team1: 'England',
-      team2: 'South Africa',
-      venue: 'Lord\'s, London',
-      match_date: '2025-02-02',
-      match_time: '14:00',
-      match_type: 'ODI',
-      tournament: 'England vs South Africa Series',
-      description: 'First ODI of the 3-match series',
-      is_featured: false,
-      status: 'upcoming'
-    },
-    {
-      id: '3',
-      team1: 'Mumbai Indians',
-      team2: 'Chennai Super Kings',
-      venue: 'Wankhede Stadium, Mumbai',
-      match_date: '2025-04-10',
-      match_time: '19:30',
-      match_type: 'T20',
-      tournament: 'IPL 2025',
-      description: 'Opening match of IPL 2025',
-      is_featured: true,
-      status: 'upcoming'
-    },
-    {
-      id: '4',
-      team1: 'Royal Challengers Bangalore',
-      team2: 'Kolkata Knight Riders',
-      venue: 'M. Chinnaswamy Stadium, Bangalore',
-      match_date: '2025-04-12',
-      match_time: '19:30',
-      match_type: 'T20',
-      tournament: 'IPL 2025',
-      is_featured: false,
-      status: 'upcoming'
-    }
-  ];
-
-  useEffect(() => {
-    const fetchMatches = async () => {
-      setIsLoading(true);
-      try {
-        // In a real implementation, we would fetch from Supabase
-        // const { data, error } = await supabase
-        //   .from('matches')
-        //   .select('*')
-        //   .order('match_date', { ascending: true });
-        
-        // if (error) throw error;
-        
-        // Using mock data for now
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-        setMatches(mockMatches);
-      } catch (error) {
-        console.error('Error fetching matches:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load matches',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchMatches();
-  }, [toast]);
-
-  const filteredMatches = matches.filter(match => match.status === activeTab);
-
-  const handleAddNew = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    setCurrentMatch({
+  
+  const form = useForm<MatchFormValues>({
+    resolver: zodResolver(matchFormSchema),
+    defaultValues: {
       team1: '',
       team2: '',
+      match_time: '',
       venue: '',
-      match_date: tomorrow.toISOString().split('T')[0],
-      match_time: '19:30',
-      match_type: 'T20',
-      tournament: '',
-      description: '',
-      is_featured: false,
-      status: 'upcoming'
-    });
-    setIsEditing(false);
-    setIsDialogOpen(true);
-  };
-
-  const handleEdit = (match: Match) => {
-    setCurrentMatch({...match});
-    setIsEditing(true);
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this match?')) {
-      try {
-        setIsLoading(true);
-        // In a real implementation, we would delete from Supabase
-        // const { error } = await supabase.from('matches').delete().eq('id', id);
-        // if (error) throw error;
-        
-        // Update local state
-        setMatches(matches.filter(match => match.id !== id));
-        
-        toast({
-          title: 'Success',
-          description: 'Match deleted successfully',
-        });
-      } catch (error) {
-        console.error('Error deleting match:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to delete match',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
+      competition: '',
+      match_type: '',
+      image: ''
     }
-  };
-
-  const handleSave = async () => {
-    if (!currentMatch) return;
-    
-    if (!currentMatch.team1 || !currentMatch.team2 || !currentMatch.venue || 
-        !currentMatch.match_date || !currentMatch.tournament) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
+  });
+  
+  useEffect(() => {
+    fetchMatches();
+  }, []);
+  
+  const fetchMatches = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      
-      // In a real implementation, we would save to Supabase
-      // const { data, error } = isEditing
-      //   ? await supabase.from('matches').update(currentMatch).eq('id', currentMatch.id).select()
-      //   : await supabase.from('matches').insert(currentMatch).select();
-      // if (error) throw error;
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Update local state
-      if (isEditing) {
-        setMatches(matches.map(match => 
-          match.id === currentMatch.id ? {...currentMatch as Match} : match
-        ));
-      } else {
-        const newMatch = {
-          ...currentMatch,
-          id: `new-${Date.now()}`,
-        } as Match;
-        
-        setMatches([...matches, newMatch]);
-      }
-      
-      setIsDialogOpen(false);
-      toast({
-        title: 'Success',
-        description: `Match ${isEditing ? 'updated' : 'added'} successfully`,
-      });
+      const data = await getUpcomingMatches();
+      setMatches(data);
     } catch (error) {
-      console.error('Error saving match:', error);
+      console.error('Error fetching matches:', error);
       toast({
         title: 'Error',
-        description: `Failed to ${isEditing ? 'update' : 'add'} match`,
-        variant: 'destructive',
+        description: 'Failed to load match schedule',
+        variant: 'destructive'
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  
+  const openForm = (match?: Match) => {
+    if (match) {
+      setSelectedMatch(match);
+      form.reset({
+        id: match.id,
+        team1: match.team1,
+        team2: match.team2,
+        match_time: new Date(match.match_time).toISOString().slice(0, 16),
+        venue: match.venue,
+        competition: match.competition,
+        match_type: match.match_type,
+        image: match.image || ''
+      });
+    } else {
+      setSelectedMatch(null);
+      form.reset({
+        team1: '',
+        team2: '',
+        match_time: '',
+        venue: '',
+        competition: '',
+        match_type: '',
+        image: ''
+      });
+    }
+    setIsFormOpen(true);
   };
-
-  const getMatchTypeColor = (type: string) => {
-    switch (type) {
-      case 'Test':
-        return 'bg-red-100 text-red-800';
-      case 'ODI':
-        return 'bg-blue-100 text-blue-800';
-      case 'T20':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setImageFile(e.target.files[0]);
     }
   };
-
+  
+  const confirmDelete = (id: string) => {
+    setMatchToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const handleDelete = async () => {
+    if (!matchToDelete) return;
+    
+    try {
+      await deleteMatch(matchToDelete);
+      setMatches(matches.filter(m => m.id !== matchToDelete));
+      toast({
+        title: 'Success',
+        description: 'Match deleted successfully',
+      });
+    } catch (error) {
+      console.error('Error deleting match:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete match',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setMatchToDelete(null);
+    }
+  };
+  
+  const onSubmit = async (values: MatchFormValues) => {
+    try {
+      setIsUploading(true);
+      
+      // Upload image if selected
+      let imageUrl = values.image;
+      if (imageFile) {
+        imageUrl = await uploadImageToStorage(imageFile);
+      }
+      
+      // Format data and save match
+      const matchData = {
+        ...values,
+        image: imageUrl,
+        match_time: new Date(values.match_time).toISOString()
+      };
+      
+      await upsertMatch(matchData);
+      
+      toast({
+        title: 'Success',
+        description: `Match ${values.id ? 'updated' : 'created'} successfully`,
+      });
+      
+      setIsFormOpen(false);
+      fetchMatches();
+    } catch (error) {
+      console.error('Error saving match:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to ${values.id ? 'update' : 'create'} match`,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  const filteredMatches = matches.filter(match => {
+    if (!searchQuery) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return (
+      match.team1.toLowerCase().includes(query) ||
+      match.team2.toLowerCase().includes(query) ||
+      match.venue.toLowerCase().includes(query) ||
+      match.competition.toLowerCase().includes(query)
+    );
+  });
+  
+  // Helper to format date
+  const formatMatchDate = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), "dd MMM yyyy, h:mm a");
+    } catch (error) {
+      return dateString;
+    }
+  };
+  
   return (
     <AdminLayout>
-      <div className="p-6 space-y-8">
-        <div className="flex justify-between items-center">
+      <div className="p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-heading font-bold">Match Schedule Manager</h1>
-            <p className="text-muted-foreground mt-1">Manage upcoming cricket matches and schedules</p>
+            <h1 className="text-3xl font-heading font-bold">Match Schedule</h1>
+            <p className="text-gray-500 mt-1">Manage upcoming cricket matches</p>
           </div>
-          <Button onClick={handleAddNew}>
-            <Plus className="mr-2 h-4 w-4" /> Add Match
+          <Button onClick={() => openForm()}>
+            <Plus className="h-4 w-4 mr-2" /> Add Match
           </Button>
         </div>
         
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-          <TabsList className="grid w-full max-w-md grid-cols-3 mb-8">
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="live">Live</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="upcoming" className="mt-0">
-            {isLoading && filteredMatches.length === 0 ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin h-8 w-8 border-2 border-cricket-accent border-t-transparent rounded-full"></div>
-              </div>
-            ) : filteredMatches.length === 0 ? (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                  <h3 className="text-xl font-medium">No Upcoming Matches</h3>
-                  <p className="text-muted-foreground mt-2">Schedule a new match to see it here</p>
-                  <Button className="mt-4" onClick={handleAddNew}>
-                    <Plus className="mr-2 h-4 w-4" /> Add Match
-                  </Button>
+        <div className="mb-6 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search matches by team, venue or competition..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cricket-accent"></div>
+          </div>
+        ) : filteredMatches.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-xl shadow-sm border">
+            <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-medium text-gray-500">No matches found</h3>
+            <p className="text-gray-400 mt-2 mb-6">Add upcoming matches to show here</p>
+            <Button onClick={() => openForm()}>
+              <Plus className="h-4 w-4 mr-2" /> Add Your First Match
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredMatches.map((match) => (
+              <Card key={match.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                <CardHeader className="p-4 pb-2 bg-gray-50">
+                  <CardTitle className="text-lg flex justify-between items-center">
+                    <span className="text-cricket-primary">{match.competition}</span>
+                    <span className="text-sm bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                      {match.match_type}
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                
+                <CardContent className="p-4 pt-3">
+                  {match.image && (
+                    <div className="relative h-32 w-full mb-3 rounded overflow-hidden">
+                      <img 
+                        src={match.image} 
+                        alt={`${match.team1} vs ${match.team2}`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="font-medium">{match.team1}</div>
+                    <div className="text-sm text-gray-500">vs</div>
+                    <div className="font-medium text-right">{match.team2}</div>
+                  </div>
+                  
+                  <div className="text-sm text-gray-500 mb-1">
+                    <span className="font-medium">Date:</span> {formatMatchDate(match.match_time)}
+                  </div>
+                  
+                  <div className="text-sm text-gray-500 mb-4">
+                    <span className="font-medium">Venue:</span> {match.venue}
+                  </div>
+                  
+                  <Separator className="my-3" />
+                  
+                  <div className="flex justify-end space-x-2 mt-3">
+                    <Button variant="outline" size="sm" onClick={() => openForm(match)}>
+                      <Edit className="h-4 w-4 mr-1" /> Edit
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => confirmDelete(match.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" /> Delete
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {filteredMatches.map((match) => (
-                  <Card key={match.id} className={`overflow-hidden hover:shadow-md transition-shadow ${match.is_featured ? 'border-cricket-accent' : ''}`}>
-                    {match.is_featured && (
-                      <div className="bg-cricket-accent text-white px-3 py-1 text-xs font-semibold uppercase text-center">
-                        Featured Match
-                      </div>
-                    )}
-                    <CardHeader className="bg-gray-50 pb-3">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getMatchTypeColor(match.match_type)}`}>
-                            {match.match_type}
-                          </span>
-                          <span className="ml-2 inline-block px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full">
-                            {match.tournament}
-                          </span>
-                        </div>
-                        <div className="flex space-x-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleEdit(match)}
-                            className="h-8 w-8"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleDelete(match.id)}
-                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <CardTitle className="mt-3 text-xl">
-                        <div className="flex justify-between items-center">
-                          <span>{match.team1}</span>
-                          <ArrowUpDown className="h-4 w-4 mx-4 text-gray-400" />
-                          <span>{match.team2}</span>
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-4">
-                      <div className="space-y-3">
-                        <div>
-                          <div className="text-sm font-medium">Date & Time</div>
-                          <div className="text-sm">
-                            {formatDate(match.match_date)} at {match.match_time}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">Venue</div>
-                          <div className="text-sm text-muted-foreground">{match.venue}</div>
-                        </div>
-                        {match.description && (
-                          <div>
-                            <div className="text-sm font-medium">Description</div>
-                            <div className="text-sm text-muted-foreground">{match.description}</div>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="live" className="mt-0">
-            {/* Content for live matches - similar structure */}
-            <Card className="text-center py-12">
-              <CardContent>
-                <Trophy className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-xl font-medium">No Live Matches</h3>
-                <p className="text-muted-foreground mt-2">Live matches will appear here</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="completed" className="mt-0">
-            {/* Content for completed matches - similar structure */}
-            <Card className="text-center py-12">
-              <CardContent>
-                <Trophy className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-xl font-medium">No Completed Matches</h3>
-                <p className="text-muted-foreground mt-2">Completed matches will appear here</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            ))}
+          </div>
+        )}
       </div>
       
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
+      {/* Match Form Dialog */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{isEditing ? 'Edit Match' : 'Add New Match'}</DialogTitle>
+            <DialogTitle>
+              {selectedMatch ? 'Edit Match' : 'Add New Match'}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedMatch 
+                ? 'Update the match details below' 
+                : 'Fill in the details to add a new match to the schedule'}
+            </DialogDescription>
           </DialogHeader>
           
-          {currentMatch && (
-            <div className="space-y-4 py-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="team1" className="text-sm font-medium">Team 1 *</label>
-                  <Input 
-                    id="team1"
-                    value={currentMatch.team1} 
-                    onChange={(e) => setCurrentMatch({...currentMatch, team1: e.target.value})}
-                    placeholder="e.g. India"
-                  />
-                </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="team1"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Team 1</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="E.g. India" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
-                <div className="space-y-2">
-                  <label htmlFor="team2" className="text-sm font-medium">Team 2 *</label>
-                  <Input 
-                    id="team2"
-                    value={currentMatch.team2} 
-                    onChange={(e) => setCurrentMatch({...currentMatch, team2: e.target.value})}
-                    placeholder="e.g. Australia"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="venue" className="text-sm font-medium">Venue *</label>
-                <Input 
-                  id="venue"
-                  value={currentMatch.venue} 
-                  onChange={(e) => setCurrentMatch({...currentMatch, venue: e.target.value})}
-                  placeholder="e.g. Sydney Cricket Ground"
+                <FormField
+                  control={form.control}
+                  name="team2"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Team 2</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="E.g. Australia" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="match-date" className="text-sm font-medium">Match Date *</label>
-                  <Input 
-                    id="match-date"
-                    type="date"
-                    value={currentMatch.match_date} 
-                    onChange={(e) => setCurrentMatch({...currentMatch, match_date: e.target.value})}
-                  />
-                </div>
+              <FormField
+                control={form.control}
+                name="match_time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Match Date & Time</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="datetime-local" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="venue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Venue</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="E.g. Melbourne Cricket Ground" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="competition"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Competition</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select competition" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="ICC World Cup">ICC World Cup</SelectItem>
+                          <SelectItem value="ICC Champions Trophy">ICC Champions Trophy</SelectItem>
+                          <SelectItem value="T20 World Cup">T20 World Cup</SelectItem>
+                          <SelectItem value="IPL">IPL</SelectItem>
+                          <SelectItem value="Test Series">Test Series</SelectItem>
+                          <SelectItem value="ODI Series">ODI Series</SelectItem>
+                          <SelectItem value="T20I Series">T20I Series</SelectItem>
+                          <SelectItem value="Big Bash League">Big Bash League</SelectItem>
+                          <SelectItem value="The Hundred">The Hundred</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
-                <div className="space-y-2">
-                  <label htmlFor="match-time" className="text-sm font-medium">Match Time *</label>
-                  <Input 
-                    id="match-time"
-                    type="time"
-                    value={currentMatch.match_time} 
-                    onChange={(e) => setCurrentMatch({...currentMatch, match_time: e.target.value})}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="match-type" className="text-sm font-medium">Match Type *</label>
-                  <Select 
-                    value={currentMatch.match_type} 
-                    onValueChange={(value) => setCurrentMatch({...currentMatch, match_type: value})}
-                  >
-                    <SelectTrigger id="match-type">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="T20">T20</SelectItem>
-                      <SelectItem value="ODI">ODI</SelectItem>
-                      <SelectItem value="Test">Test</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="status" className="text-sm font-medium">Match Status *</label>
-                  <Select 
-                    value={currentMatch.status} 
-                    onValueChange={(value: 'upcoming' | 'live' | 'completed') => 
-                      setCurrentMatch({...currentMatch, status: value})
-                    }
-                  >
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="upcoming">Upcoming</SelectItem>
-                      <SelectItem value="live">Live</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="tournament" className="text-sm font-medium">Tournament *</label>
-                <Input 
-                  id="tournament"
-                  value={currentMatch.tournament} 
-                  onChange={(e) => setCurrentMatch({...currentMatch, tournament: e.target.value})}
-                  placeholder="e.g. ICC World Cup 2025"
+                <FormField
+                  control={form.control}
+                  name="match_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Match Type</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select match type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Test">Test</SelectItem>
+                          <SelectItem value="ODI">ODI</SelectItem>
+                          <SelectItem value="T20">T20</SelectItem>
+                          <SelectItem value="T10">T10</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
               
-              <div className="space-y-2">
-                <label htmlFor="description" className="text-sm font-medium">Description</label>
-                <Textarea 
-                  id="description"
-                  value={currentMatch.description} 
-                  onChange={(e) => setCurrentMatch({...currentMatch, description: e.target.value})}
-                  placeholder="Optional match description"
-                  rows={3}
-                />
-              </div>
+              <FormItem>
+                <FormLabel>Match Image</FormLabel>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleFileChange}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Recommended size: 800x400 pixels
+                    </p>
+                  </div>
+                  
+                  {(form.watch('image') || selectedMatch?.image) && !imageFile && (
+                    <div className="relative h-20 w-full">
+                      <img 
+                        src={form.watch('image') || selectedMatch?.image} 
+                        alt="Match preview" 
+                        className="absolute inset-0 h-full w-full object-cover rounded"
+                      />
+                    </div>
+                  )}
+                  
+                  {imageFile && (
+                    <div className="relative h-20 w-full">
+                      <img 
+                        src={URL.createObjectURL(imageFile)} 
+                        alt="New image preview" 
+                        className="absolute inset-0 h-full w-full object-cover rounded"
+                      />
+                    </div>
+                  )}
+                </div>
+              </FormItem>
               
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="is-featured"
-                  checked={currentMatch.is_featured} 
-                  onCheckedChange={(checked) => 
-                    setCurrentMatch({...currentMatch, is_featured: checked})
-                  }
-                />
-                <label htmlFor="is-featured" className="text-sm font-medium">
-                  Feature this match on homepage
-                </label>
-              </div>
-            </div>
-          )}
-          
+              <FormField
+                control={form.control}
+                name="image"
+                render={({ field }) => (
+                  <FormItem className="hidden">
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsFormOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isUploading}>
+                  {isUploading ? 'Saving...' : 'Save Match'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this match? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              {isEditing ? 'Update' : 'Add'} Match
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+            >
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
