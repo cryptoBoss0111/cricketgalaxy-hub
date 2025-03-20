@@ -1,4 +1,3 @@
-
 import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from "@/components/ui/toaster"
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'

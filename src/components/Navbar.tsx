@@ -46,16 +46,11 @@ const Icons = {
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
-
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
-
   const location = useLocation();
 
   const navigationItems = [
     { name: 'Home', href: '/' },
-    { name: 'News', href: '/cricket-news' },
+    { name: 'News', href: '/news' },
     { name: 'Players', href: '/players' },
     { name: 'Matches', href: '/matches' },
     { name: 'Fantasy Picks', href: '/fantasy-picks' },
