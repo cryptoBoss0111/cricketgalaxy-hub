@@ -6,6 +6,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { supabase, uploadImageToStorage } from '@/integrations/supabase/client';
 import { Image, Upload, X, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 interface ImageUploaderProps {
   onImageUploaded: (imageUrl: string) => void;
@@ -18,18 +19,25 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl || null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { refreshAdminSession, isAdmin } = useAdminAuth();
   
   // Check session on component mount
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+      try {
+        // Attempt to refresh the admin session first
+        await refreshAdminSession();
+        
+        // Clear any previous errors after successful refresh
+        setError(null);
+      } catch (err) {
+        console.error("Session check error:", err);
         setError("Please log in to upload images");
       }
     };
     
     checkSession();
-  }, []);
+  }, [refreshAdminSession]);
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -75,14 +83,17 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     try {
       console.log("Starting image upload process...");
       
-      // Check authentication before upload
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        throw new Error("Authentication required to upload files");
+      // Explicitly refresh admin session before attempting upload
+      if (!isAdmin) {
+        console.log("Not authenticated as admin, refreshing session...");
+        const refreshSuccess = await refreshAdminSession();
+        if (!refreshSuccess) {
+          throw new Error("Authentication required to upload files");
+        }
       }
       
-      // Use the uploadImageToStorage utility function
-      const imageUrl = await uploadImageToStorage(file, 'article_images');
+      // Use the uploadImageToStorage utility function with force auth flag
+      const imageUrl = await uploadImageToStorage(file, 'article_images', true);
       
       console.log("Upload successful, image URL:", imageUrl);
       onImageUploaded(imageUrl);

@@ -134,7 +134,7 @@ export const generateUniqueFileName = (fileName: string) => {
 };
 
 // Upload file to storage with better error handling and retry logic
-export const uploadImageToStorage = async (file: File, bucketName = 'article_images') => {
+export const uploadImageToStorage = async (file: File, bucketName = 'article_images', useAdminFallback = false) => {
   if (!file) {
     throw new Error('No file provided');
   }
@@ -142,7 +142,20 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
   // First check session before uploading
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData.session) {
-    throw new Error("Authentication required to upload files");
+    // If no session but useAdminFallback is true, try to use admin token
+    if (useAdminFallback) {
+      console.log("No active session, trying admin fallback...");
+      const adminUserStr = localStorage.getItem('adminUser');
+      const adminToken = localStorage.getItem('adminToken');
+      
+      if (adminToken !== 'authenticated' || !adminUserStr) {
+        throw new Error("Authentication required to upload files");
+      }
+      
+      console.log("Using admin authentication for upload");
+    } else {
+      throw new Error("Authentication required to upload files");
+    }
   }
   
   // Generate unique filename
@@ -153,30 +166,62 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
   
   console.log(`Uploading file ${fileName} to ${bucketName}...`);
   
-  // Directly attempt upload without checking bucket existence
-  const { data, error } = await supabase.storage
-    .from(bucketName)
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: true,
-    });
+  // Try upload with exponential backoff (3 attempts)
+  let attempt = 0;
+  const maxAttempts = 3;
   
-  if (error) {
-    console.error("Storage upload error:", error);
-    throw error;
+  while (attempt < maxAttempts) {
+    attempt++;
+    
+    try {
+      // Directly attempt upload without checking bucket existence
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+      
+      if (error) {
+        console.error(`Storage upload error (attempt ${attempt}/${maxAttempts}):`, error);
+        
+        // If not the last attempt, wait before retrying
+        if (attempt < maxAttempts) {
+          const backoffMs = Math.pow(2, attempt) * 500; // Exponential backoff
+          console.log(`Retrying upload in ${backoffMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
+          continue;
+        }
+        
+        throw error;
+      }
+      
+      if (!data) {
+        if (attempt < maxAttempts) {
+          const backoffMs = Math.pow(2, attempt) * 500;
+          console.log(`No data returned, retrying in ${backoffMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
+          continue;
+        }
+        throw new Error("Upload failed with no error details");
+      }
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(fileName);
+      
+      console.log("Image uploaded successfully, public URL:", publicUrl);
+      return publicUrl;
+    } catch (err) {
+      if (attempt >= maxAttempts) {
+        throw err;
+      }
+      // Otherwise continue to next attempt
+    }
   }
   
-  if (!data) {
-    throw new Error("Upload failed with no error details");
-  }
-  
-  // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from(bucketName)
-    .getPublicUrl(fileName);
-  
-  console.log("Image uploaded successfully, public URL:", publicUrl);
-  return publicUrl;
+  throw new Error("All upload attempts failed");
 };
 
 // Get published articles for the public site
