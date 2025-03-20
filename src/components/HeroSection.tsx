@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { getTopStories } from '@/integrations/supabase/client';
 
 interface HeroArticle {
   id: string;
@@ -18,35 +19,105 @@ interface HeroArticle {
 export const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [heroArticles, setHeroArticles] = useState<HeroArticle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  const heroArticles: HeroArticle[] = [
-    {
-      id: '1',
-      title: 'India Dominates in Historic Cricket Series Win Against Australia',
-      excerpt: 'Team India secures a remarkable series victory on Australian soil with stellar performances from both senior and emerging players.',
-      category: 'Series',
-      imageUrl: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop',
-      date: 'Mar 15, 2025'
-    },
-    {
-      id: '2',
-      title: 'IPL 2025: Complete Guide to Teams, Players, and Key Matches',
-      excerpt: 'Everything you need to know about the upcoming Indian Premier League season with analysis of all ten franchises.',
-      category: 'IPL 2025',
-      imageUrl: 'https://images.unsplash.com/photo-1624555130581-1d9cca783bc0?q=80&w=1200&auto=format&fit=crop',
-      date: 'Mar 14, 2025'
-    },
-    {
-      id: '3',
-      title: 'Rising Stars: The Next Generation of Cricket Superstars',
-      excerpt: 'Meet the talented young cricketers who are making waves internationally and are poised to become the next cricket legends.',
-      category: 'Player Profiles',
-      imageUrl: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1200&auto=format&fit=crop',
-      date: 'Mar 13, 2025'
-    }
-  ];
+  // Fetch top stories from Supabase
+  useEffect(() => {
+    const fetchTopStories = async () => {
+      try {
+        setIsLoading(true);
+        const topStoriesData = await getTopStories();
+        
+        // Filter to get only featured stories and limit to 3
+        const featuredStories = topStoriesData
+          .filter(story => story.featured)
+          .slice(0, 3)
+          .map(story => ({
+            id: story.article_id,
+            title: story.articles.title,
+            excerpt: story.articles.excerpt || 'Read this exciting story...',
+            category: story.articles.category,
+            imageUrl: story.articles.featured_image || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop',
+            date: new Date(story.articles.published_at).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric'
+            })
+          }));
+        
+        // If no featured stories, use fallback data
+        if (featuredStories.length === 0) {
+          setHeroArticles([
+            {
+              id: '1',
+              title: 'India Dominates in Historic Cricket Series Win Against Australia',
+              excerpt: 'Team India secures a remarkable series victory on Australian soil with stellar performances from both senior and emerging players.',
+              category: 'Series',
+              imageUrl: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop',
+              date: 'Mar 15, 2025'
+            },
+            {
+              id: '2',
+              title: 'IPL 2025: Complete Guide to Teams, Players, and Key Matches',
+              excerpt: 'Everything you need to know about the upcoming Indian Premier League season with analysis of all ten franchises.',
+              category: 'IPL 2025',
+              imageUrl: 'https://images.unsplash.com/photo-1624555130581-1d9cca783bc0?q=80&w=1200&auto=format&fit=crop',
+              date: 'Mar 14, 2025'
+            },
+            {
+              id: '3',
+              title: 'Rising Stars: The Next Generation of Cricket Superstars',
+              excerpt: 'Meet the talented young cricketers who are making waves internationally and are poised to become the next cricket legends.',
+              category: 'Player Profiles',
+              imageUrl: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1200&auto=format&fit=crop',
+              date: 'Mar 13, 2025'
+            }
+          ]);
+        } else {
+          setHeroArticles(featuredStories);
+        }
+      } catch (error) {
+        console.error('Error fetching top stories:', error);
+        // Fallback to mock data in case of error
+        setHeroArticles([
+          {
+            id: '1',
+            title: 'India Dominates in Historic Cricket Series Win Against Australia',
+            excerpt: 'Team India secures a remarkable series victory on Australian soil with stellar performances from both senior and emerging players.',
+            category: 'Series',
+            imageUrl: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop',
+            date: 'Mar 15, 2025'
+          },
+          {
+            id: '2',
+            title: 'IPL 2025: Complete Guide to Teams, Players, and Key Matches',
+            excerpt: 'Everything you need to know about the upcoming Indian Premier League season with analysis of all ten franchises.',
+            category: 'IPL 2025',
+            imageUrl: 'https://images.unsplash.com/photo-1624555130581-1d9cca783bc0?q=80&w=1200&auto=format&fit=crop',
+            date: 'Mar 14, 2025'
+          },
+          {
+            id: '3',
+            title: 'Rising Stars: The Next Generation of Cricket Superstars',
+            excerpt: 'Meet the talented young cricketers who are making waves internationally and are poised to become the next cricket legends.',
+            category: 'Player Profiles',
+            imageUrl: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1200&auto=format&fit=crop',
+            date: 'Mar 13, 2025'
+          }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchTopStories();
+  }, []);
   
   useEffect(() => {
+    // Only start carousel if we have articles
+    if (heroArticles.length === 0) return;
+    
     const interval = setInterval(() => {
       setIsAnimating(true);
       setTimeout(() => {
@@ -57,6 +128,33 @@ export const HeroSection = () => {
     
     return () => clearInterval(interval);
   }, [heroArticles.length]);
+  
+  // Show loading state or fallback if no articles
+  if (isLoading) {
+    return (
+      <section className="relative bg-gradient-to-b from-gray-900 to-cricket-dark text-white py-16 overflow-hidden">
+        <div className="container mx-auto px-4 flex justify-center items-center" style={{ minHeight: '400px' }}>
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="h-8 w-32 bg-gray-600 rounded mb-4"></div>
+            <div className="h-6 w-64 bg-gray-600 rounded"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+  
+  if (heroArticles.length === 0) {
+    return (
+      <section className="relative bg-gradient-to-b from-gray-900 to-cricket-dark text-white py-16 overflow-hidden">
+        <div className="container mx-auto px-4 flex justify-center items-center" style={{ minHeight: '400px' }}>
+          <div className="text-center">
+            <h2 className="text-2xl font-heading font-bold mb-2">No Featured Stories</h2>
+            <p className="text-gray-300">Check back later for the latest cricket news and updates</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
   
   const article = heroArticles[currentSlide];
   
