@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, TrendingUp, ChevronRight, Calendar, Users, Trophy, BarChart2 } from 'lucide-react';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -15,7 +15,6 @@ import ArticleCard from '@/components/ArticleCard';
 import Chatbot from '@/components/Chatbot';
 import { cn } from '@/lib/utils';
 
-// Sample data
 const topStories = [
   {
     id: '1',
@@ -172,7 +171,6 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Simulate loading
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 800);
