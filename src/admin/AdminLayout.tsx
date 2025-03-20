@@ -1,5 +1,6 @@
+
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -12,7 +13,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Home,
-  BarChart2
+  BarChart2,
+  Navigation,
+  TrendingUp,
+  Award
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
@@ -48,6 +52,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const authCheckComplete = useRef(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
     let isMounted = true;
@@ -166,38 +171,61 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       icon: <LayoutDashboard size={20} />,
       label: 'Dashboard',
       href: '/admin/dashboard',
-      active: window.location.pathname === '/admin/dashboard'
+      active: location.pathname === '/admin/dashboard'
     },
     {
       icon: <FileText size={20} />,
       label: 'Articles',
       href: '/admin/articles',
-      active: window.location.pathname.includes('/admin/articles')
+      active: location.pathname.includes('/admin/articles')
+    },
+    {
+      icon: <Navigation size={20} />,
+      label: 'Navigation',
+      href: '/admin/navigation',
+      active: location.pathname === '/admin/navigation'
+    },
+    {
+      icon: <TrendingUp size={20} />,
+      label: 'Top Stories',
+      href: '/admin/top-stories',
+      active: location.pathname === '/admin/top-stories'
+    },
+    {
+      icon: <Award size={20} />,
+      label: 'Fantasy Picks',
+      href: '/admin/fantasy-picks',
+      active: location.pathname === '/admin/fantasy-picks'
     },
     {
       icon: <Calendar size={20} />,
       label: 'Match Schedule',
-      href: '/admin/matches'
+      href: '/admin/matches',
+      active: location.pathname === '/admin/matches'
     },
     {
       icon: <Users size={20} />,
       label: 'Player Profiles',
-      href: '/admin/players'
+      href: '/admin/players',
+      active: location.pathname === '/admin/players'
     },
     {
       icon: <Image size={20} />,
       label: 'Media Library',
-      href: '/admin/media'
+      href: '/admin/media',
+      active: location.pathname === '/admin/media'
     },
     {
       icon: <BarChart2 size={20} />,
       label: 'Analytics',
-      href: '/admin/analytics'
+      href: '/admin/analytics',
+      active: location.pathname === '/admin/analytics'
     },
     {
       icon: <Settings size={20} />,
       label: 'Settings',
-      href: '/admin/settings'
+      href: '/admin/settings',
+      active: location.pathname === '/admin/settings'
     }
   ];
   
