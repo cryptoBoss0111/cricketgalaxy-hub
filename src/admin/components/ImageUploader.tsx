@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, uploadImageToStorage } from '@/integrations/supabase/client';
 import { Image, Upload, X, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,49 +30,6 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     
     checkSession();
   }, []);
-  
-  // Upload file function with simplified approach
-  const uploadFile = async (file: File): Promise<string> => {
-    // First check session before uploading
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
-      throw new Error("Authentication required to upload files");
-    }
-    
-    // Generate unique filename
-    const timestamp = new Date().getTime();
-    const randomString = Math.random().toString(36).substring(2, 12);
-    const extension = file.name.split('.').pop();
-    const fileName = `${timestamp}-${randomString}.${extension}`;
-    const bucketName = 'article_images';
-    
-    console.log(`Uploading file ${fileName} to ${bucketName}...`);
-    
-    // Upload directly without checking bucket
-    const { data, error } = await supabase.storage
-      .from(bucketName)
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: true,
-      });
-    
-    if (error) {
-      console.error('Storage upload error:', error);
-      throw error;
-    }
-    
-    if (!data) {
-      throw new Error("Upload failed with no error details");
-    }
-    
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(fileName);
-    
-    console.log("Image uploaded successfully, public URL:", publicUrl);
-    return publicUrl;
-  };
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -118,11 +75,17 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     try {
       console.log("Starting image upload process...");
       
-      // Simplified upload approach
-      const imageUrl = await uploadFile(file);
+      // Check authentication before upload
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("Authentication required to upload files");
+      }
       
+      // Use the uploadImageToStorage utility function
+      const imageUrl = await uploadImageToStorage(file, 'article_images');
+      
+      console.log("Upload successful, image URL:", imageUrl);
       onImageUploaded(imageUrl);
-      setPreviewUrl(imageUrl);
       
       toast({
         title: "Image uploaded",
@@ -151,8 +114,12 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
         duration: 6000,
       });
       
-      // Clear the preview on error
-      setPreviewUrl(existingImageUrl);
+      // Clear the preview on error if no existing image
+      if (!existingImageUrl) {
+        setPreviewUrl(null);
+      } else {
+        setPreviewUrl(existingImageUrl);
+      }
     } finally {
       setIsUploading(false);
     }

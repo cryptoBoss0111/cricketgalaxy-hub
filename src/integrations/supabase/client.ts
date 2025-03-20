@@ -139,15 +139,24 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
     throw new Error('No file provided');
   }
   
-  const uniqueFileName = generateUniqueFileName(file.name);
-  console.log(`Uploading file ${uniqueFileName} to ${bucketName}...`);
+  // First check session before uploading
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    throw new Error("Authentication required to upload files");
+  }
   
-  // Skip bucket checking as it's causing issues
-  // Try direct upload
-  const { data, error } = await supabase
-    .storage
+  // Generate unique filename
+  const timestamp = new Date().getTime();
+  const randomString = Math.random().toString(36).substring(2, 12);
+  const extension = file.name.split('.').pop();
+  const fileName = `${timestamp}-${randomString}.${extension}`;
+  
+  console.log(`Uploading file ${fileName} to ${bucketName}...`);
+  
+  // Directly attempt upload without checking bucket existence
+  const { data, error } = await supabase.storage
     .from(bucketName)
-    .upload(uniqueFileName, file, {
+    .upload(fileName, file, {
       cacheControl: '3600',
       upsert: true,
     });
@@ -162,10 +171,9 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
   }
   
   // Get public URL
-  const { data: { publicUrl } } = supabase
-    .storage
+  const { data: { publicUrl } } = supabase.storage
     .from(bucketName)
-    .getPublicUrl(uniqueFileName);
+    .getPublicUrl(fileName);
   
   console.log("Image uploaded successfully, public URL:", publicUrl);
   return publicUrl;
