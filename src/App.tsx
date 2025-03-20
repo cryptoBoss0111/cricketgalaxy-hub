@@ -14,6 +14,9 @@ import AdminLogin from "./admin/AdminLogin";
 import AdminDashboard from "./admin/Dashboard";
 import ArticleForm from "./admin/ArticleForm";
 import ArticlesList from "./admin/ArticlesList";
+import Analytics from "./admin/Analytics";
+import NavigationManager from "./admin/NavigationManager";
+import TopStoriesManager from "./admin/TopStoriesManager";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,6 +108,23 @@ const App = () => (
               <Route path="/admin/articles/edit/:id" element={
                 <AdminProtectedRoute>
                   <ArticleForm />
+                </AdminProtectedRoute>
+              } />
+              
+              {/* New admin routes for content management */}
+              <Route path="/admin/analytics" element={
+                <AdminProtectedRoute>
+                  <Analytics />
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/navigation" element={
+                <AdminProtectedRoute>
+                  <NavigationManager />
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/top-stories" element={
+                <AdminProtectedRoute>
+                  <TopStoriesManager />
                 </AdminProtectedRoute>
               } />
               

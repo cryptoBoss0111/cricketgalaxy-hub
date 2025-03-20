@@ -1,0 +1,358 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { GripVertical, Plus, Trash2, Edit, Undo2, Save } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import AdminLayout from './AdminLayout';
+
+interface NavItem {
+  id: string;
+  label: string;
+  path: string;
+  order: number;
+  visible: boolean;
+}
+
+const NavigationManager = () => {
+  const [navItems, setNavItems] = useState<NavItem[]>([]);
+  const [originalNavItems, setOriginalNavItems] = useState<NavItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [currentItem, setCurrentItem] = useState<NavItem | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Mock data for initial development - would be replaced with actual DB data
+  const defaultNavItems: NavItem[] = [
+    { id: '1', label: 'Home', path: '/', order: 1, visible: true },
+    { id: '2', label: 'Cricket News', path: '/cricket-news', order: 2, visible: true },
+    { id: '3', label: 'Match Previews', path: '/match-previews', order: 3, visible: true },
+    { id: '4', label: 'Match Reviews', path: '/match-reviews', order: 4, visible: true },
+    { id: '5', label: 'Fantasy Tips', path: '/fantasy-tips', order: 5, visible: true },
+    { id: '6', label: 'Player Profiles', path: '/player-profiles', order: 6, visible: true },
+    { id: '7', label: 'IPL 2025', path: '/ipl-2025', order: 7, visible: true },
+    { id: '8', label: 'Women\'s Cricket', path: '/womens-cricket', order: 8, visible: true },
+    { id: '9', label: 'World Cup & ICC', path: '/world-cup', order: 9, visible: true },
+  ];
+
+  useEffect(() => {
+    const fetchNavItems = async () => {
+      setIsLoading(true);
+      try {
+        // Here we'd fetch from the database. For now using mock data
+        // Example database call:
+        // const { data, error } = await supabase
+        //   .from('navigation')
+        //   .select('*')
+        //   .order('order', { ascending: true });
+        
+        // if (error) throw error;
+        
+        // Using mock data for now
+        const data = defaultNavItems;
+        
+        setNavItems(data);
+        setOriginalNavItems(JSON.parse(JSON.stringify(data))); // Deep copy
+      } catch (error) {
+        console.error('Error fetching navigation items:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load navigation items",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchNavItems();
+  }, [toast]);
+  
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(navItems);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    // Update order values
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      order: index + 1
+    }));
+    
+    setNavItems(updatedItems);
+    setIsEditing(true);
+  };
+  
+  const handleItemVisibilityChange = (id: string, checked: boolean) => {
+    const updatedItems = navItems.map(item => 
+      item.id === id ? { ...item, visible: checked } : item
+    );
+    setNavItems(updatedItems);
+    setIsEditing(true);
+  };
+  
+  const handleEdit = (item: NavItem) => {
+    setCurrentItem(item);
+    setDialogOpen(true);
+  };
+  
+  const handleAddNew = () => {
+    setCurrentItem({
+      id: `new-${Date.now()}`,
+      label: '',
+      path: '',
+      order: navItems.length + 1,
+      visible: true
+    });
+    setDialogOpen(true);
+  };
+  
+  const handleSaveItem = () => {
+    if (!currentItem) return;
+    
+    if (!currentItem.label.trim() || !currentItem.path.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Label and path are required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Ensure path starts with /
+    const path = currentItem.path.startsWith('/') ? currentItem.path : `/${currentItem.path}`;
+    
+    let updatedItems;
+    if (currentItem.id.startsWith('new-')) {
+      // New item
+      const newItem = {
+        ...currentItem,
+        id: currentItem.id.replace('new-', ''),
+        path
+      };
+      updatedItems = [...navItems, newItem];
+    } else {
+      // Existing item
+      updatedItems = navItems.map(item => 
+        item.id === currentItem.id ? { ...currentItem, path } : item
+      );
+    }
+    
+    setNavItems(updatedItems);
+    setDialogOpen(false);
+    setIsEditing(true);
+  };
+  
+  const handleDeleteItem = (id: string) => {
+    const updatedItems = navItems.filter(item => item.id !== id);
+    setNavItems(updatedItems);
+    setIsEditing(true);
+  };
+  
+  const discardChanges = () => {
+    setNavItems(JSON.parse(JSON.stringify(originalNavItems))); // Deep copy
+    setIsEditing(false);
+  };
+  
+  const saveChanges = async () => {
+    setIsLoading(true);
+    try {
+      // Here we'd update the database
+      // Example:
+      // const { error } = await supabase
+      //   .from('navigation')
+      //   .upsert(navItems);
+      
+      // if (error) throw error;
+      
+      // For now, just simulate success
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setOriginalNavItems(JSON.parse(JSON.stringify(navItems))); // Deep copy
+      setIsEditing(false);
+      
+      toast({
+        title: "Success",
+        description: "Navigation items saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving navigation items:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save changes",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return (
+    <AdminLayout>
+      <div className="space-y-8">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-heading font-bold">Navigation Manager</h1>
+          <div className="flex gap-2">
+            {isEditing && (
+              <Button variant="outline" onClick={discardChanges} disabled={isLoading}>
+                <Undo2 className="h-4 w-4 mr-2" />
+                Discard
+              </Button>
+            )}
+            <Button onClick={handleAddNew} disabled={isLoading}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Item
+            </Button>
+            {isEditing && (
+              <Button onClick={saveChanges} disabled={isLoading}>
+                <Save className="h-4 w-4 mr-2" />
+                Save Changes
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        <Card className="p-6">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin h-8 w-8 border-2 border-cricket-accent border-t-transparent rounded-full"></div>
+            </div>
+          ) : (
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="navigation-items">
+                {(provided) => (
+                  <div 
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="space-y-2"
+                  >
+                    <div className="grid grid-cols-12 gap-4 font-semibold text-sm text-gray-500 mb-4 px-2">
+                      <div className="col-span-1"></div>
+                      <div className="col-span-3">Label</div>
+                      <div className="col-span-4">Path</div>
+                      <div className="col-span-1 text-center">Order</div>
+                      <div className="col-span-1 text-center">Visible</div>
+                      <div className="col-span-2 text-center">Actions</div>
+                    </div>
+                    
+                    {navItems.map((item, index) => (
+                      <Draggable key={item.id} draggableId={item.id} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className="grid grid-cols-12 gap-4 items-center bg-white p-3 rounded-md border border-gray-100 hover:border-gray-300 transition-colors"
+                          >
+                            <div className="col-span-1 flex justify-center">
+                              <div {...provided.dragHandleProps} className="cursor-grab">
+                                <GripVertical className="h-5 w-5 text-gray-400" />
+                              </div>
+                            </div>
+                            <div className="col-span-3 font-medium">{item.label}</div>
+                            <div className="col-span-4 text-sm text-gray-600">{item.path}</div>
+                            <div className="col-span-1 text-center">{item.order}</div>
+                            <div className="col-span-1 flex justify-center">
+                              <Checkbox 
+                                checked={item.visible} 
+                                onCheckedChange={(checked) => handleItemVisibilityChange(item.id, checked as boolean)}
+                              />
+                            </div>
+                            <div className="col-span-2 flex justify-center space-x-2">
+                              <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          )}
+        </Card>
+      </div>
+      
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {currentItem && currentItem.id.startsWith('new-') 
+                ? 'Add Navigation Item' 
+                : 'Edit Navigation Item'}
+            </DialogTitle>
+            <DialogDescription>
+              Configure the navigation item details below.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {currentItem && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label htmlFor="nav-label" className="text-sm font-medium">Label</label>
+                <Input 
+                  id="nav-label"
+                  value={currentItem.label} 
+                  onChange={(e) => setCurrentItem({...currentItem, label: e.target.value})}
+                  placeholder="e.g. Cricket News"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="nav-path" className="text-sm font-medium">Path</label>
+                <Input 
+                  id="nav-path"
+                  value={currentItem.path} 
+                  onChange={(e) => setCurrentItem({...currentItem, path: e.target.value})}
+                  placeholder="e.g. /cricket-news"
+                />
+                <p className="text-xs text-gray-500">The URL path for this navigation item (must start with /)</p>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="nav-visible"
+                  checked={currentItem.visible} 
+                  onCheckedChange={(checked) => setCurrentItem({...currentItem, visible: checked as boolean})}
+                />
+                <label htmlFor="nav-visible" className="text-sm font-medium">
+                  Visible in navigation
+                </label>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveItem}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </AdminLayout>
+  );
+};
+
+export default NavigationManager;
