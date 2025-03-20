@@ -1,228 +1,106 @@
-import { useState, useEffect } from 'react';
-import { NavLink, Link } from 'react-router-dom';
-import { Menu, X, Search, Moon, Sun, MessageSquare } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useToast } from '@/hooks/use-toast';
-import { useChatbot } from '@/contexts/ChatbotContext';
-import AdminLoginButton from "./AdminLoginButton";
+import { Link } from "react-router-dom";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useMobile } from "@/hooks/use-mobile";
+import LoginButton from "./LoginButton";
+import UserProfile from "./UserProfile";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { useState } from "react";
+import { siteConfig } from "@/config/site";
+import { Icons } from "./icons";
+import { cn } from "@/lib/utils";
+import { useLocation } from "react-router-dom";
 
-interface NavLinkItem {
-  label: string;
-  path: string;
-}
+function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useMobile();
 
-const navLinks: NavLinkItem[] = [
-  { label: 'Home', path: '/' },
-  { label: 'Cricket News', path: '/cricket-news' },
-  { label: 'Match Previews', path: '/match-previews' },
-  { label: 'Match Reviews', path: '/match-reviews' },
-  { label: 'Fantasy Tips', path: '/fantasy-tips' },
-  { label: 'Player Profiles', path: '/player-profiles' },
-  { label: 'IPL 2025', path: '/ipl-2025' },
-  { label: 'Women\'s Cricket', path: '/womens-cricket' },
-  { label: 'World Cup & ICC', path: '/world-cup' }
-];
-
-export const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const { toast } = useToast();
-  const { toggleChatbot } = useChatbot();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
-    
-    toast({
-      title: isDarkMode ? "Light mode activated" : "Dark mode activated",
-      description: "Your theme preference has been updated.",
-      duration: 2000,
-    });
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      toast({
-        title: "Search initiated",
-        description: `Searching for: ${searchQuery}`,
-        duration: 3000,
-      });
-      setSearchQuery('');
-    }
-  };
+  const location = useLocation();
+
+  const navigationItems = [
+    { name: 'Home', href: '/' },
+    { name: 'News', href: '/cricket-news' },
+    { name: 'Players', href: '/players' },
+    { name: 'Matches', href: '/matches' },
+    { name: 'Fantasy Picks', href: '/fantasy-picks' },
+  ];
 
   return (
-    <header className={cn(
-      "sticky top-12 left-0 right-0 z-40 bg-white transition-all duration-300",
-      isScrolled ? "shadow-md" : "shadow-sm",
-      isDarkMode ? "dark bg-cricket-dark text-white" : ""
-    )}>
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <span className="text-2xl font-heading font-bold bg-gradient-to-r from-cricket-accent to-cricket-secondary bg-clip-text text-transparent">
-                CricketExpress
-              </span>
-            </Link>
-          </div>
-
-          <nav className="hidden lg:flex items-center space-x-1 mx-4">
-            {navLinks.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  cn(
-                    "nav-link",
-                    isActive ? "nav-link-active" : ""
-                  )
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-
-          <div className="flex items-center space-x-3">
-            <form onSubmit={handleSearch} className="hidden md:flex items-center relative">
-              <Input
-                type="search"
-                placeholder="Search..."
-                className="w-[200px] rounded-full bg-muted pr-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Button 
-                type="submit" 
-                variant="ghost" 
-                size="icon" 
-                className="absolute right-0 top-0 h-full rounded-full"
-              >
-                <Search size={18} />
-              </Button>
-            </form>
-
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleTheme}
-              className="hidden md:flex"
-            >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </Button>
-
-            <div className="flex items-center gap-2">
-              <AdminLoginButton />
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={toggleChatbot}
-                className="relative"
-              >
-                <MessageSquare size={20} />
-                <span className="absolute -top-1 -right-1 h-2 w-2 bg-cricket-accent rounded-full animate-pulse-subtle"></span>
-              </Button>
-            </div>
-
+    <nav className="sticky top-0 z-50 w-full bg-white shadow-sm">
+          
+      <div className="container px-4 mx-auto flex h-16 items-center justify-between">
+        <Link to="/" className="flex items-center font-semibold">
+          <Icons.logo className="mr-2 h-6 w-6" />
+          <span className="hidden sm:inline-block">{siteConfig.name}</span>
+        </Link>
+        
+        <div className="flex items-center gap-2">
+          <LoginButton />
+          <UserProfile />
+          {isMobile ? (
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
-                  <Menu size={20} />
+                <Button variant="ghost" size="sm" className="p-2">
+                  <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px]">
-                <div className="flex flex-col space-y-6 py-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <span className="text-xl font-heading font-bold bg-gradient-to-r from-cricket-accent to-cricket-secondary bg-clip-text text-transparent">
-                      CricketExpress
-                    </span>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <X size={18} />
-                      </Button>
-                    </SheetTrigger>
-                  </div>
-                  
-                  <form onSubmit={handleSearch} className="flex items-center relative mb-6">
-                    <Input
-                      type="search"
-                      placeholder="Search..."
-                      className="w-full rounded-full bg-muted pr-8"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <Button 
-                      type="submit" 
-                      variant="ghost" 
-                      size="icon" 
-                      className="absolute right-0 top-0 h-full rounded-full"
-                    >
-                      <Search size={18} />
-                    </Button>
-                  </form>
-                  
-                  <nav className="flex flex-col space-y-1">
-                    {navLinks.map((item) => (
-                      <NavLink
-                        key={item.path}
-                        to={item.path}
-                        className={({ isActive }) =>
-                          cn(
-                            "px-4 py-2 rounded-md transition-colors",
-                            isActive 
-                              ? "bg-cricket-accent text-white"
-                              : "hover:bg-muted"
-                          )
-                        }
-                      >
-                        {item.label}
-                      </NavLink>
-                    ))}
-                  </nav>
-                  
-                  <div className="mt-auto flex items-center">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={toggleTheme}
-                      className="w-full justify-start"
-                    >
-                      {isDarkMode ? (
-                        <>
-                          <Sun size={16} className="mr-2" />
-                          Light Mode
-                        </>
-                      ) : (
-                        <>
-                          <Moon size={16} className="mr-2" />
-                          Dark Mode
-                        </>
+              <SheetContent side="left" className="w-full sm:w-3/4 md:w-2/5">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                  <SheetDescription>
+                    Explore the CricketExpress
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="grid gap-4 py-4">
+                  {navigationItems.map((item) => (
+                    <Button
+                      key={item.name}
+                      variant="ghost"
+                      className={cn(
+                        "justify-start",
+                        location.pathname === item.href ? "font-semibold" : "font-normal"
                       )}
+                      asChild
+                    >
+                      <Link to={item.href}>{item.name}</Link>
                     </Button>
-                  </div>
+                  ))}
                 </div>
               </SheetContent>
             </Sheet>
-          </div>
+          ) : (
+            <div className="hidden md:flex items-center space-x-4">
+              {navigationItems.map((item) => (
+                <Button
+                  key={item.name}
+                  variant="ghost"
+                  className={cn(
+                    location.pathname === item.href ? "font-semibold" : "font-normal"
+                  )}
+                  asChild
+                >
+                  <Link to={item.href}>{item.name}</Link>
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    </header>
+
+      
+    </nav>
   );
-};
+}
 
 export default Navbar;
