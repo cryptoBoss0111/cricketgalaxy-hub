@@ -54,11 +54,14 @@ const TopStoriesManager = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const topStoriesData = await getTopStories();
-        setTopStories(topStoriesData);
-        
-        // Get all published articles for selection
+        // Get all published articles for selection first
         const articlesData = await getPublishedArticles(undefined, 100);
+        console.log("Fetched articles data:", articlesData);
+        
+        // Then get top stories
+        const topStoriesData = await getTopStories();
+        console.log("Fetched top stories data:", topStoriesData);
+        setTopStories(topStoriesData);
         
         // Mark articles that are already in top stories
         const topStoryArticleIds = topStoriesData.map(story => story.article_id);
@@ -75,6 +78,10 @@ const TopStoriesManager = () => {
           description: 'Failed to load top stories',
           variant: 'destructive'
         });
+        
+        // Set empty arrays to ensure UI doesn't break
+        setTopStories([]);
+        setAvailableArticles([]);
       } finally {
         setIsLoading(false);
       }
@@ -195,12 +202,17 @@ const TopStoriesManager = () => {
   
   // Format date for display
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Invalid date";
+    }
   };
   
   return (

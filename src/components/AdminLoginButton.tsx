@@ -28,11 +28,10 @@ const AdminLoginButton = () => {
     
     if (isAdmin) {
       console.log("Navigating to admin dashboard");
-      setLoginAttempted(true);
-      navigate("/admin/dashboard", { replace: false });
+      navigate("/admin/dashboard");
     } else {
       console.log("Navigating to admin login");
-      navigate("/admin/login", { replace: false });
+      navigate("/admin/login");
     }
   };
   

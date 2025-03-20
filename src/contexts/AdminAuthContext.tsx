@@ -80,7 +80,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
       setIsAdmin(false);
       
       if (success) {
-        navigate("/");
+        navigate("/", { replace: true });
         
         toast({
           title: "Logged Out",
@@ -88,7 +88,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
         });
       } else {
         // Even if server signout fails, we've cleared local tokens
-        navigate("/");
+        navigate("/", { replace: true });
         toast({
           title: "Logged Out",
           description: "You have been logged out (local only)",
@@ -101,7 +101,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
       localStorage.removeItem('adminUser');
       setIsAdmin(false);
       
-      navigate("/");
+      navigate("/", { replace: true });
       toast({
         title: "Logged Out",
         description: "Logged out with errors, session cleared",
@@ -111,6 +111,26 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
       setIsChecking(false);
     }
   };
+
+  // Clear auth state when visiting login page
+  useEffect(() => {
+    const handleNavigation = () => {
+      if (window.location.pathname === '/admin/login') {
+        console.log("Cleared authentication state on login page visit");
+        // Don't clear localStorage here, as it may interfere with login
+      }
+    };
+
+    // Check on mount
+    handleNavigation();
+
+    // Listen for route changes
+    window.addEventListener('popstate', handleNavigation);
+    
+    return () => {
+      window.removeEventListener('popstate', handleNavigation);
+    };
+  }, []);
 
   // Check admin status on mount and whenever localStorage changes
   useEffect(() => {
@@ -149,7 +169,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
         console.log("Performing periodic admin check");
         verifyAdmin();
       }
-    }, 15 * 60 * 1000); // Check every 15 minutes instead of 5
+    }, 15 * 60 * 1000); // Check every 15 minutes
     
     return () => clearInterval(interval);
   }, [isChecking]);
