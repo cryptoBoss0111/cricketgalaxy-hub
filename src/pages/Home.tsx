@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, TrendingUp, ChevronRight, Calendar, Users, Trophy, BarChart2 } from 'lucide-react';
@@ -481,8 +482,14 @@ const HomePage = () => {
         </section>
         
         {/* Fantasy Picks Section */}
+        <FantasyPicksSection />
+        
+        {/* Footer section */}
+        <Footer />
+      </main>
+      <Chatbot />
+    </>
+  );
+};
 
-
-
-
-
+export default HomePage;
