@@ -26,7 +26,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Info } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { refreshSession } from "@/integrations/supabase/client";
 
 // Define the schema for article form validation
 const articleSchema = z.object({
@@ -51,7 +50,7 @@ const ArticleForm = () => {
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([]);
   const [activeTab, setActiveTab] = useState('content');
   const [adminId, setAdminId] = useState<string | null>(null);
-  const { isAdmin, verifyAdmin } = useAdminAuth();
+  const { isAdmin, verifyAdmin, refreshAdminSession } = useAdminAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -75,7 +74,10 @@ const ArticleForm = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Verify admin status first
+        // Refresh session first to ensure we have fresh tokens
+        await refreshAdminSession();
+        
+        // Then verify admin status
         const adminStatus = await verifyAdmin();
         
         if (!adminStatus) {
@@ -143,7 +145,7 @@ const ArticleForm = () => {
         }
       }
     });
-  }, [id, navigate, toast, verifyAdmin]);
+  }, [id, navigate, toast, verifyAdmin, refreshAdminSession]);
 
   // Fetch existing categories
   const fetchCategories = async () => {
@@ -215,6 +217,7 @@ const ArticleForm = () => {
     try {
       // Double-check admin status before saving
       if (!adminId || !isAdmin) {
+        console.log("Verifying admin status before saving...");
         const adminCheck = await verifyAdmin();
         if (!adminCheck) {
           toast({
@@ -227,16 +230,34 @@ const ArticleForm = () => {
         }
       }
       
-      // Explicitly refresh the session before saving to prevent expiration
+      // Explicitly refresh the session before saving
       console.log("Refreshing session before saving article...");
-      await refreshSession();
+      const sessionRefreshed = await refreshAdminSession();
       
-      // Get current session to ensure we have fresh tokens
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
+      if (!sessionRefreshed) {
+        console.log("Session refresh failed, trying local admin ID as fallback");
+        // If session refresh fails, check if we have a local admin ID to use as fallback
+        if (!adminId) {
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired and couldn't be refreshed. Please log in again.",
+            variant: "destructive",
+          });
+          navigate('/admin/login');
+          return;
+        }
+        // Otherwise continue with the existing adminId from localStorage
+        console.log("Using cached admin ID:", adminId);
+      } else {
+        console.log("Session refreshed successfully");
+      }
+      
+      // Ensure we have an admin ID
+      const effectiveAdminId = adminId;
+      if (!effectiveAdminId) {
         toast({
-          title: "Session Expired",
-          description: "Your session has expired. Please log in again.",
+          title: "Authentication Error",
+          description: "Could not determine your admin identity. Please log in again.",
           variant: "destructive",
         });
         navigate('/admin/login');
@@ -259,7 +280,7 @@ const ArticleForm = () => {
         tags: tagsArray.length > 0 ? tagsArray : null,
         updated_at: new Date().toISOString(),
         published_at: values.published ? new Date().toISOString() : null,
-        author_id: adminId
+        author_id: effectiveAdminId
       };
       
       console.log("Saving article with data:", { ...articleData, content: "[content truncated]" });
@@ -291,7 +312,7 @@ const ArticleForm = () => {
           .from('articles')
           .insert({
             ...articleData,
-            author_id: adminId
+            author_id: effectiveAdminId
           })
           .select();
         
@@ -304,7 +325,7 @@ const ArticleForm = () => {
         
         toast({
           title: "Article created",
-          description: "The article has been successfully created. Note: To show in Top Stories, add it in the Top Stories manager.",
+          description: "The article has been successfully created. Add it to Top Stories in the admin menu if you want it to appear on the homepage.",
           duration: 6000,
         });
       }
@@ -315,9 +336,18 @@ const ArticleForm = () => {
       navigate('/admin/articles');
     } catch (error: any) {
       console.error('Error saving article:', error);
+      
+      // More descriptive error message
+      let errorMessage = "Failed to save article";
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error_description) {
+        errorMessage = error.error_description;
+      }
+      
       toast({
-        title: "Error",
-        description: error.message || "Failed to save article",
+        title: "Error Saving Article",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -620,6 +650,7 @@ const ArticleForm = () => {
                   <Button 
                     type="submit" 
                     disabled={isSubmitting}
+                    className="bg-green-600 hover:bg-green-700"
                   >
                     {isSubmitting ? 'Saving...' : id ? 'Update Article' : 'Create Article'}
                   </Button>

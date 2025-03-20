@@ -52,44 +52,84 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     
     // Upload to Supabase
     setIsUploading(true);
+    
     try {
       console.log("Starting image upload process...");
       
-      // Try to ensure the bucket exists
-      try {
-        const { data: bucketExists } = await supabase
-          .storage
-          .getBucket('article_images');
-        
-        if (!bucketExists) {
-          console.log("Bucket doesn't exist, attempting to create it...");
+      // Force create the bucket if it doesn't exist (multiple attempts)
+      let bucketCreated = false;
+      const bucketName = 'article_images';
+      
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`Attempt ${attempt} to create/check bucket '${bucketName}'`);
           
-          // This might fail if the user doesn't have permission, but it's worth trying
-          await supabase.storage.createBucket('article_images', {
+          // First try to create the bucket
+          await supabase.storage.createBucket(bucketName, {
             public: true,
             fileSizeLimit: 5242880 // 5MB
           });
+          
+          console.log(`Bucket '${bucketName}' created or already exists`);
+          bucketCreated = true;
+          break; // Exit the loop if successful
+        } catch (bucketError: any) {
+          // If the bucket already exists, consider it a success
+          if (bucketError.message && bucketError.message.includes("already exists")) {
+            console.log(`Bucket '${bucketName}' already exists`);
+            bucketCreated = true;
+            break;
+          }
+          
+          console.warn(`Attempt ${attempt} failed to create bucket:`, bucketError);
+          
+          if (attempt === 3) {
+            console.log("All bucket creation attempts failed, will try upload anyway");
+          }
+          
+          // Short delay before retry
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
-      } catch (bucketError) {
-        console.warn("Unable to check/create bucket, continuing anyway:", bucketError);
-        // Continue anyway - the bucket likely exists but the user might not have permission to check
       }
       
-      // Try to upload
-      const imageUrl = await uploadImageToStorage(file);
+      // Retry upload with multiple attempts
+      let uploadSuccess = false;
+      let imageUrl = '';
       
-      if (imageUrl) {
-        console.log("Upload successful, image URL:", imageUrl);
-        onImageUploaded(imageUrl);
-        setPreviewUrl(imageUrl);
-        
-        toast({
-          title: "Image uploaded",
-          description: "Your image has been uploaded successfully",
-        });
-      } else {
-        throw new Error("Failed to get image URL after upload");
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`Attempt ${attempt} to upload file to ${bucketName}`);
+          
+          imageUrl = await uploadImageToStorage(file);
+          
+          if (imageUrl) {
+            console.log("Upload successful, image URL:", imageUrl);
+            uploadSuccess = true;
+            break; // Exit the loop if successful
+          }
+        } catch (uploadError) {
+          console.error(`Attempt ${attempt} failed to upload:`, uploadError);
+          
+          if (attempt === 3) {
+            throw uploadError; // Re-throw on final attempt
+          }
+          
+          // Short delay before retry
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
+      
+      if (!uploadSuccess) {
+        throw new Error("Failed to upload image after multiple attempts");
+      }
+      
+      onImageUploaded(imageUrl);
+      setPreviewUrl(imageUrl);
+      
+      toast({
+        title: "Image uploaded",
+        description: "Your image has been uploaded successfully",
+      });
     } catch (error: any) {
       console.error('Error uploading image:', error);
       
@@ -103,11 +143,21 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
         errorMessage = `${error.statusText} (${error.status})`;
       }
       
+      // Suggest a workaround if bucket creation failed
+      if (errorMessage.includes("row-level security policy") || 
+          errorMessage.includes("permission denied")) {
+        errorMessage += ". Try refreshing the page or logging in again.";
+      }
+      
       toast({
         title: "Upload failed",
         description: errorMessage,
         variant: "destructive",
+        duration: 6000,
       });
+      
+      // Clear the preview on error
+      setPreviewUrl(null);
     } finally {
       setIsUploading(false);
     }
