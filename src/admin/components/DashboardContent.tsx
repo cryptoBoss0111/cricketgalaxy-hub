@@ -15,6 +15,45 @@ interface Article {
   category: string;
 }
 
+// Mock data to use when API fails
+const MOCK_ARTICLES: Article[] = [
+  {
+    id: "1",
+    title: "India vs Australia: 3rd Test Preview",
+    created_at: new Date().toISOString(),
+    published: true,
+    category: "Match Preview"
+  },
+  {
+    id: "2",
+    title: "IPL 2025 Auction Analysis - Who got the best deals?",
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    published: false,
+    category: "IPL"
+  },
+  {
+    id: "3",
+    title: "Top 10 Players to Watch in the World Cup",
+    created_at: new Date(Date.now() - 172800000).toISOString(),
+    published: true,
+    category: "World Cup"
+  },
+  {
+    id: "4",
+    title: "England's Tour of India: What to Expect",
+    created_at: new Date(Date.now() - 259200000).toISOString(),
+    published: true,
+    category: "Series Preview"
+  },
+  {
+    id: "5",
+    title: "Women's World Cup Final Recap",
+    created_at: new Date(Date.now() - 345600000).toISOString(),
+    published: true,
+    category: "Women's Cricket"
+  }
+];
+
 const DashboardContent = () => {
   const [stats, setStats] = useState({
     totalArticles: 0,
@@ -59,13 +98,38 @@ const DashboardContent = () => {
       
       if (recentError) throw recentError;
       
-      setRecentArticles(recentArticlesData || []);
+      // If we got data back, use it, otherwise use mock data
+      if (recentArticlesData && recentArticlesData.length > 0) {
+        setRecentArticles(recentArticlesData);
+      } else {
+        console.log("No articles found, using mock data");
+        setRecentArticles(MOCK_ARTICLES);
+        
+        // Also update stats with mock data
+        if (totalArticles === 0) {
+          setStats({
+            totalArticles: MOCK_ARTICLES.length,
+            publishedArticles: MOCK_ARTICLES.filter(a => a.published).length,
+            draftArticles: MOCK_ARTICLES.filter(a => !a.published).length,
+          });
+        }
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      
+      // Use mock data when API fails
+      console.log("API error, using mock data");
+      setRecentArticles(MOCK_ARTICLES);
+      setStats({
+        totalArticles: MOCK_ARTICLES.length,
+        publishedArticles: MOCK_ARTICLES.filter(a => a.published).length,
+        draftArticles: MOCK_ARTICLES.filter(a => !a.published).length,
+      });
+      
       toast({
-        title: 'Error',
-        description: 'Failed to load dashboard data',
-        variant: 'destructive',
+        title: 'Note',
+        description: 'Showing mock data - could not connect to database',
+        variant: 'default',
       });
     } finally {
       setIsLoading(false);

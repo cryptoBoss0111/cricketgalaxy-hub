@@ -81,7 +81,7 @@ const ArticlesList = () => {
         .order('created_at', { ascending: false });
       
       // Apply filters if they exist
-      if (categoryFilter) {
+      if (categoryFilter && categoryFilter !== 'all') {
         query = query.eq('category', categoryFilter);
       }
       
