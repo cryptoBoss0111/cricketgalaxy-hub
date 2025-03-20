@@ -4,20 +4,38 @@ import { useNavigate } from "react-router-dom";
 import { LogIn, LockKeyhole } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase, isAdminUser } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminLoginButton = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { toast } = useToast();
   
   useEffect(() => {
     // Check if admin is logged in
     const checkAdminStatus = async () => {
       setIsCheckingAuth(true);
       try {
+        const { data } = await supabase.auth.getSession();
+        console.log("Current session:", data.session ? "Active" : "None");
+        
         const isAdmin = await isAdminUser();
         console.log("Admin status check:", isAdmin);
         setIsLoggedIn(isAdmin);
+        
+        if (!isAdmin && data.session) {
+          // User is logged in but not an admin
+          console.log("User is logged in but not an admin, signing out");
+          await supabase.auth.signOut();
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          toast({
+            title: "Not an Admin",
+            description: "Your account does not have admin privileges",
+            variant: "destructive",
+          });
+        }
       } catch (error) {
         console.error("Error checking admin status:", error);
         setIsLoggedIn(false);
@@ -30,15 +48,26 @@ const AdminLoginButton = () => {
     checkAdminStatus();
     
     // Set up supabase auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
-      console.log("Auth state changed:", event);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, "Session:", session ? "exists" : "none");
+      if (event === 'SIGNED_IN') {
+        console.log("User signed in, checking if admin");
+      } else if (event === 'SIGNED_OUT') {
+        console.log("User signed out, clearing admin status");
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        setIsLoggedIn(false);
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log("Token refreshed, checking admin status");
+      }
+      
       await checkAdminStatus();
     });
     
     // Set up window event listener for storage changes
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'adminToken' || event.key === 'adminUser' || event.key === 'supabase.auth.token') {
-        console.log("Storage change detected, checking admin status");
+      if (event.key === 'adminToken' || event.key === 'adminUser' || event.key?.includes('supabase.auth')) {
+        console.log("Storage change detected:", event.key, "checking admin status");
         checkAdminStatus();
       }
     };
@@ -49,7 +78,7 @@ const AdminLoginButton = () => {
       subscription.unsubscribe();
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [toast]);
 
   const handleAdminAction = () => {
     if (isLoggedIn) {
@@ -64,6 +93,7 @@ const AdminLoginButton = () => {
     
     try {
       console.log("Logging out admin user");
+      setIsCheckingAuth(true);
       
       // Sign out from Supabase
       await supabase.auth.signOut();
@@ -76,9 +106,21 @@ const AdminLoginButton = () => {
       // Redirect to home
       navigate("/");
       
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out",
+      });
+      
       console.log("Logout successful");
     } catch (error) {
       console.error("Error during logout:", error);
+      toast({
+        title: "Logout Error",
+        description: "An error occurred while logging out",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingAuth(false);
     }
   };
 

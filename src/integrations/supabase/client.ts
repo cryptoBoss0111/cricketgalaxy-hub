@@ -13,9 +13,12 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    storageKey: 'supabase.auth.token',
   },
   global: {
-    fetch: (url: RequestInfo | URL, options?: RequestInit) => fetch(url, options),
+    headers: {
+      'Content-Type': 'application/json',
+    },
   },
 });
 
@@ -31,7 +34,7 @@ export const isAdminUser = async (): Promise<boolean> => {
     }
     
     if (sessionData.session) {
-      console.log("Found active session, checking admin status for user:", sessionData.session.user.id);
+      console.log("Found active session with token:", sessionData.session.access_token.substring(0, 10) + "...");
       
       // If we have a session, check if the user ID is in the admins table
       const currentUserId = sessionData.session.user.id;
@@ -98,6 +101,10 @@ export const isAdminUser = async (): Promise<boolean> => {
         
         if (adminCheck) {
           console.log("Legacy admin token verified");
+          
+          // Attempt to refresh the session
+          await supabase.auth.refreshSession();
+          
           return true;
         } else {
           console.log("Legacy admin token invalid, clearing");
