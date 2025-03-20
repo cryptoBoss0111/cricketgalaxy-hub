@@ -42,34 +42,14 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      // First attempt - try using the loginAdmin function that uses Supabase auth
-      const result = await loginAdmin(email, password).catch(err => {
-        console.error('Regular login error:', err);
-        
-        // If using demo credentials, allow local authentication when edge function fails
-        if (email === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password) {
-          console.log("Using demo credentials with local authentication");
-          
-          // Store authentication for demo account
-          localStorage.setItem('adminToken', 'authenticated');
-          localStorage.setItem('adminUser', JSON.stringify({ 
-            username: email, 
-            role: 'admin',
-            id: 'demo-admin-id'
-          }));
-          
-          return { success: true, message: "Demo login successful", demoLogin: true };
-        }
-        
-        // Re-throw for other errors
-        throw err;
-      });
+      // Try using the loginAdmin function (using Supabase auth)
+      const result = await loginAdmin(email, password);
       
       if (result.success) {
         toast({
           title: "Login successful",
           description: result.demoLogin ? 
-            "Welcome to the admin dashboard (local authentication)" : 
+            "Welcome to the admin dashboard (demo login)" : 
             "Welcome to the admin dashboard",
           duration: 3000,
         });

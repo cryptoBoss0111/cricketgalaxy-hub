@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LogIn, LockKeyhole, LogOut } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -10,15 +10,8 @@ const AdminLoginButton = () => {
   const navigate = useNavigate();
   const { isAdmin, isChecking, signOut } = useAdminAuth();
   const buttonClicked = useRef(false);
-  const [loginAttempted, setLoginAttempted] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { toast } = useToast();
-  
-  // Clear login attempted state when admin status changes
-  useEffect(() => {
-    if (isAdmin && loginAttempted) {
-      setLoginAttempted(false);
-    }
-  }, [isAdmin, loginAttempted]);
   
   const handleAdminAction = () => {
     if (buttonClicked.current) return; // Prevent double clicks
@@ -37,9 +30,11 @@ const AdminLoginButton = () => {
   
   const handleLogout = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (buttonClicked.current) return; // Prevent double clicks
+    if (buttonClicked.current || isLoggingOut) return; // Prevent double clicks
     
     buttonClicked.current = true;
+    setIsLoggingOut(true);
+    
     try {
       console.log("Logging out admin user");
       await signOut();
@@ -51,8 +46,10 @@ const AdminLoginButton = () => {
         description: "An error occurred while logging out",
         variant: "destructive",
       });
+    } finally {
+      setIsLoggingOut(false);
+      buttonClicked.current = false;
     }
-    setTimeout(() => { buttonClicked.current = false; }, 1000); // Reset after 1 second
   };
 
   return (
@@ -63,17 +60,17 @@ const AdminLoginButton = () => {
         className={`flex items-center gap-1 ${isAdmin ? 'bg-cricket-accent hover:bg-cricket-accent/90' : 'text-gray-600 hover:text-cricket-accent'} transition-colors`}
         onClick={handleAdminAction}
         aria-label={isAdmin ? "Admin Dashboard" : "Admin Login"}
-        disabled={isChecking || loginAttempted}
+        disabled={isChecking || isLoggingOut}
       >
         {isChecking ? (
           <span className="flex items-center">
             <span className="h-3 w-3 animate-spin rounded-full border-2 border-t-transparent mr-1"></span>
             <span className="hidden md:inline">Checking...</span>
           </span>
-        ) : loginAttempted ? (
+        ) : isLoggingOut ? (
           <span className="flex items-center">
             <span className="h-3 w-3 animate-spin rounded-full border-2 border-t-transparent mr-1"></span>
-            <span className="hidden md:inline">Loading...</span>
+            <span className="hidden md:inline">Logging out...</span>
           </span>
         ) : isAdmin ? (
           <>
@@ -95,6 +92,7 @@ const AdminLoginButton = () => {
             size="sm" 
             className="w-full flex items-center justify-center"
             onClick={handleLogout}
+            disabled={isLoggingOut}
           >
             <LogOut className="h-4 w-4 mr-1" />
             Log Out
