@@ -10,6 +10,7 @@ import CricketNews from "./pages/CricketNews";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./admin/AdminLogin";
 import AdminDashboard from "./admin/Dashboard";
+import ArticleForm from "./admin/ArticleForm";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,8 @@ const App = () => (
             <Route path="/world-cup" element={<CricketNews />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/articles/new" element={<ArticleForm />} />
+            <Route path="/admin/articles/edit/:id" element={<ArticleForm />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

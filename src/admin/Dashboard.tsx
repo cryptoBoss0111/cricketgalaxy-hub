@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import AdminLayout from './AdminLayout';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DashboardStat {
   label: string;
@@ -37,83 +38,122 @@ const AdminDashboard = () => {
     if (!adminToken) {
       navigate('/admin/login');
     } else {
-      // Fetch dashboard data (simulated here)
-      setTimeout(() => {
-        setStats([
-          {
-            label: 'Total Articles',
-            value: '237',
-            icon: <FileText className="h-8 w-8 text-cricket-accent" />,
-            change: '+12%',
-            isPositive: true
-          },
-          {
-            label: 'Monthly Views',
-            value: '1.2M',
-            icon: <Eye className="h-8 w-8 text-green-500" />,
-            change: '+8%',
-            isPositive: true
-          },
-          {
-            label: 'Active Users',
-            value: '48.7K',
-            icon: <Users className="h-8 w-8 text-blue-500" />,
-            change: '+5%',
-            isPositive: true
-          },
-          {
-            label: 'Top Category',
-            value: 'IPL 2025',
-            icon: <TrendingUp className="h-8 w-8 text-purple-500" />,
-            change: '42% of traffic',
-            isPositive: true
-          }
-        ]);
-
-        setRecentArticles([
-          {
-            id: '1',
-            title: 'IPL: Bumrah\'s early absence \'a challenge\', says Jayawardene',
-            category: 'IPL 2025',
-            date: 'Mar 19, 2025',
-            status: 'published'
-          },
-          {
-            id: '2',
-            title: 'India\'s white-ball wizards need a new cheat code for sustained excellence',
-            category: 'Analysis',
-            date: 'Mar 19, 2025',
-            status: 'published'
-          },
-          {
-            id: '3',
-            title: 'IPL: SKY to lead MI in opener with Hardik suspended',
-            category: 'IPL 2025',
-            date: 'Mar 19, 2025',
-            status: 'published'
-          },
-          {
-            id: '4',
-            title: 'Complete tactical breakdown of CSK vs MI opening match',
-            category: 'Match Preview',
-            date: 'Mar 18, 2025',
-            status: 'draft'
-          },
-          {
-            id: '5',
-            title: 'Women\'s T20 World Cup: Team-by-team guide',
-            category: 'Women\'s Cricket',
-            date: 'Mar 18, 2025',
-            status: 'draft'
-          }
-        ]);
-
-        setIsLoading(false);
-      }, 1200);
+      // Fetch dashboard data
+      fetchDashboardData();
     }
   }, [navigate]);
 
-  const handleEdit = (id: string) => {
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch articles from Supabase
+      const { data: articlesData, error: articlesError } = await supabase
+        .from('articles')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (articlesError) throw articlesError;
+      
+      // Transform Supabase data to match our Article interface
+      const formattedArticles = articlesData ? articlesData.map(article => ({
+        id: article.id,
+        title: article.title,
+        category: article.category,
+        date: new Date(article.created_at).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        }),
+        status: article.published ? 'published' : 'draft' as 'published' | 'draft'
+      })) : [];
+      
+      // If no articles are found yet, use sample data
+      const articles = formattedArticles.length > 0 ? formattedArticles : [
+        {
+          id: '1',
+          title: 'IPL: Bumrah\'s early absence \'a challenge\', says Jayawardene',
+          category: 'IPL 2025',
+          date: 'Mar 19, 2025',
+          status: 'published'
+        },
+        {
+          id: '2',
+          title: 'India\'s white-ball wizards need a new cheat code for sustained excellence',
+          category: 'Analysis',
+          date: 'Mar 19, 2025',
+          status: 'published'
+        },
+        {
+          id: '3',
+          title: 'IPL: SKY to lead MI in opener with Hardik suspended',
+          category: 'IPL 2025',
+          date: 'Mar 19, 2025',
+          status: 'published'
+        },
+        {
+          id: '4',
+          title: 'Complete tactical breakdown of CSK vs MI opening match',
+          category: 'Match Preview',
+          date: 'Mar 18, 2025',
+          status: 'draft'
+        },
+        {
+          id: '5',
+          title: 'Women\'s T20 World Cup: Team-by-team guide',
+          category: 'Women\'s Cricket',
+          date: 'Mar 18, 2025',
+          status: 'draft'
+        }
+      ];
+
+      // Set article data
+      setRecentArticles(articles);
+
+      // Set stats data
+      setStats([
+        {
+          label: 'Total Articles',
+          value: articles.length.toString(),
+          icon: <FileText className="h-8 w-8 text-cricket-accent" />,
+          change: '+12%',
+          isPositive: true
+        },
+        {
+          label: 'Monthly Views',
+          value: '1.2M',
+          icon: <Eye className="h-8 w-8 text-green-500" />,
+          change: '+8%',
+          isPositive: true
+        },
+        {
+          label: 'Active Users',
+          value: '48.7K',
+          icon: <Users className="h-8 w-8 text-blue-500" />,
+          change: '+5%',
+          isPositive: true
+        },
+        {
+          label: 'Top Category',
+          value: 'IPL 2025',
+          icon: <TrendingUp className="h-8 w-8 text-purple-500" />,
+          change: '42% of traffic',
+          isPositive: true
+        }
+      ]);
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const handleEdit = async (id: string) => {
     toast({
       title: "Editing article",
       description: `Opening editor for article ID: ${id}`,
@@ -123,14 +163,35 @@ const AdminDashboard = () => {
     // navigate(`/admin/articles/edit/${id}`);
   };
 
-  const handleDelete = (id: string) => {
-    toast({
-      title: "Article deleted",
-      description: "The article has been successfully deleted",
-      duration: 3000,
-    });
-    // Remove from local state for demo purposes
-    setRecentArticles(recentArticles.filter(article => article.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      // Check if this is a UUID (from Supabase) or sample data
+      if (id.length === 36) {
+        // It's a UUID, delete from Supabase
+        const { error } = await supabase
+          .from('articles')
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+      }
+      
+      toast({
+        title: "Article deleted",
+        description: "The article has been successfully deleted",
+        duration: 3000,
+      });
+      
+      // Remove from local state
+      setRecentArticles(recentArticles.filter(article => article.id !== id));
+    } catch (error) {
+      console.error('Error deleting article:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete article",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCreateArticle = () => {

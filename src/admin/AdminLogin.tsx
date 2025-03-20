@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
@@ -24,16 +25,28 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      // In a real app, this would call an API endpoint to verify credentials
-      // For now, we'll just check against the hardcoded values
+      // Call the Supabase function to authenticate admin
+      const { data, error: functionError } = await supabase.rpc(
+        'authenticate_admin',
+        {
+          admin_username: username,
+          admin_password: password
+        }
+      );
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (functionError) {
+        throw functionError;
+      }
       
-      if (username === 'admin@12569' && password === 'admin@2589$') {
-        // Set a token in local storage (in a real app, this would be a JWT from the server)
-        localStorage.setItem('adminToken', 'sample-admin-token');
-        localStorage.setItem('adminUser', JSON.stringify({ username, role: 'admin' }));
+      // Check if authentication was successful (data will be the admin ID if successful)
+      if (data) {
+        // Store admin info in local storage for session management
+        localStorage.setItem('adminToken', 'authenticated');
+        localStorage.setItem('adminUser', JSON.stringify({ 
+          username, 
+          role: 'admin',
+          id: data
+        }));
         
         toast({
           title: "Login successful",
