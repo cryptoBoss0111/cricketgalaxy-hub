@@ -23,7 +23,15 @@ const AdminLogin = () => {
   // Check if already logged in
   useEffect(() => {
     const checkSession = async () => {
+      // If we're already validating, don't start another validation
+      if (localStorage.getItem('validating_admin') === 'true') {
+        setCheckingSession(false);
+        return;
+      }
+      
       setCheckingSession(true);
+      localStorage.setItem('validating_admin', 'true');
+      
       try {
         const { data } = await supabase.auth.getSession();
         if (data.session) {
@@ -49,10 +57,8 @@ const AdminLogin = () => {
             });
           }
         } else if (localStorage.getItem('adminToken') === 'authenticated') {
-          // Legacy auth check - prevent infinite loop
+          // Legacy auth check - strict check to avoid loops
           console.log("Legacy admin token found, validating once...");
-          // Set a flag to avoid recursive checks
-          localStorage.setItem('validating_admin', 'true');
           
           try {
             const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
@@ -84,9 +90,6 @@ const AdminLogin = () => {
             console.error('Error validating legacy admin token:', e);
             localStorage.removeItem('adminToken');
             localStorage.removeItem('adminUser');
-          } finally {
-            // Remove the validation flag
-            localStorage.removeItem('validating_admin');
           }
         }
       } catch (error) {
@@ -96,15 +99,16 @@ const AdminLogin = () => {
         localStorage.removeItem('adminUser');
       } finally {
         setCheckingSession(false);
+        localStorage.removeItem('validating_admin');
       }
     };
     
-    // Only run the check if we're not already validating
-    if (localStorage.getItem('validating_admin') !== 'true') {
-      checkSession();
-    } else {
-      setCheckingSession(false);
-    }
+    checkSession();
+    
+    return () => {
+      // Ensure we clean up the validation flag if the component unmounts
+      localStorage.removeItem('validating_admin');
+    };
   }, [navigate, toast]);
   
   const handleSubmit = async (e: React.FormEvent) => {

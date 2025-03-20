@@ -18,7 +18,45 @@ export const verifyAdminAndRefresh = async () => {
     localStorage.setItem('validating_admin', 'true');
     
     try {
-      // First refresh the session
+      // First check if we have a session at all
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData.session) {
+        // No active session, check for legacy token
+        const adminToken = localStorage.getItem('adminToken');
+        const adminUserStr = localStorage.getItem('adminUser');
+        
+        if (adminToken === 'authenticated' && adminUserStr) {
+          try {
+            const adminUser = JSON.parse(adminUserStr);
+            if (adminUser.id) {
+              const { data: adminCheck } = await supabase
+                .from('admins')
+                .select('id')
+                .eq('id', adminUser.id)
+                .maybeSingle();
+                
+              if (adminCheck) {
+                return { isAdmin: true, message: "Admin authenticated via legacy token", userId: adminUser.id };
+              } else {
+                // Invalid admin data
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                return { isAdmin: false, message: "Invalid admin credentials in storage", userId: null };
+              }
+            }
+          } catch (error) {
+            console.error("Error parsing admin user data:", error);
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminUser');
+            return { isAdmin: false, message: "Error with stored admin data", userId: null };
+          }
+        }
+        
+        return { isAdmin: false, message: "No active session found", userId: null };
+      }
+      
+      // Then refresh the session if we have one
       await refreshSession();
       
       // Then check if the user is an admin
@@ -28,8 +66,7 @@ export const verifyAdminAndRefresh = async () => {
       }
 
       // Get the current user ID
-      const { data } = await supabase.auth.getSession();
-      const userId = data.session?.user?.id;
+      const userId = sessionData.session?.user?.id;
       
       if (!userId) {
         return { isAdmin: false, message: "No user ID found in session", userId: null };
