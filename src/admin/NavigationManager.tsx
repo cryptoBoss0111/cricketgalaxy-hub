@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -15,8 +16,10 @@ interface NavItem {
   id: string;
   label: string;
   path: string;
-  order: number;
+  order_index: number;
   visible: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const NavigationManager = () => {
@@ -29,37 +32,19 @@ const NavigationManager = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Mock data for initial development - would be replaced with actual DB data
-  const defaultNavItems: NavItem[] = [
-    { id: '1', label: 'Home', path: '/', order: 1, visible: true },
-    { id: '2', label: 'Cricket News', path: '/cricket-news', order: 2, visible: true },
-    { id: '3', label: 'Match Previews', path: '/match-previews', order: 3, visible: true },
-    { id: '4', label: 'Match Reviews', path: '/match-reviews', order: 4, visible: true },
-    { id: '5', label: 'Fantasy Tips', path: '/fantasy-tips', order: 5, visible: true },
-    { id: '6', label: 'Player Profiles', path: '/player-profiles', order: 6, visible: true },
-    { id: '7', label: 'IPL 2025', path: '/ipl-2025', order: 7, visible: true },
-    { id: '8', label: 'Women\'s Cricket', path: '/womens-cricket', order: 8, visible: true },
-    { id: '9', label: 'World Cup & ICC', path: '/world-cup', order: 9, visible: true },
-  ];
-
   useEffect(() => {
     const fetchNavItems = async () => {
       setIsLoading(true);
       try {
-        // Here we'd fetch from the database. For now using mock data
-        // Example database call:
-        // const { data, error } = await supabase
-        //   .from('navigation')
-        //   .select('*')
-        //   .order('order', { ascending: true });
+        const { data, error } = await supabase
+          .from('navigation_items')
+          .select('*')
+          .order('order_index', { ascending: true });
         
-        // if (error) throw error;
+        if (error) throw error;
         
-        // Using mock data for now
-        const data = defaultNavItems;
-        
-        setNavItems(data);
-        setOriginalNavItems(JSON.parse(JSON.stringify(data))); // Deep copy
+        setNavItems(data || []);
+        setOriginalNavItems(JSON.parse(JSON.stringify(data || []))); // Deep copy
       } catch (error) {
         console.error('Error fetching navigation items:', error);
         toast({
@@ -85,7 +70,7 @@ const NavigationManager = () => {
     // Update order values
     const updatedItems = items.map((item, index) => ({
       ...item,
-      order: index + 1
+      order_index: index + 1
     }));
     
     setNavItems(updatedItems);
@@ -110,7 +95,7 @@ const NavigationManager = () => {
       id: `new-${Date.now()}`,
       label: '',
       path: '',
-      order: navItems.length + 1,
+      order_index: navItems.length + 1,
       visible: true
     });
     setDialogOpen(true);
@@ -166,18 +151,43 @@ const NavigationManager = () => {
   const saveChanges = async () => {
     setIsLoading(true);
     try {
-      // Here we'd update the database
-      // Example:
-      // const { error } = await supabase
-      //   .from('navigation')
-      //   .upsert(navItems);
+      // Prepare data for upsert
+      const itemsToUpsert = navItems.map(({ id, label, path, order_index, visible }) => ({
+        id: id.startsWith('new-') ? undefined : id, // Let Supabase generate IDs for new items
+        label,
+        path,
+        order_index,
+        visible
+      }));
       
-      // if (error) throw error;
+      // First, delete removed items
+      const originalIds = originalNavItems.map(item => item.id);
+      const currentIds = navItems.map(item => item.id.startsWith('new-') ? '' : item.id).filter(Boolean);
+      const deletedIds = originalIds.filter(id => !currentIds.includes(id));
       
-      // For now, just simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (deletedIds.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('navigation_items')
+          .delete()
+          .in('id', deletedIds);
+          
+        if (deleteError) throw deleteError;
+      }
       
-      setOriginalNavItems(JSON.parse(JSON.stringify(navItems))); // Deep copy
+      // Then, upsert the current items
+      const { data, error } = await supabase
+        .from('navigation_items')
+        .upsert(itemsToUpsert)
+        .select();
+      
+      if (error) throw error;
+      
+      // Update state with the returned data
+      if (data) {
+        setNavItems(data);
+        setOriginalNavItems(JSON.parse(JSON.stringify(data))); // Deep copy
+      }
+      
       setIsEditing(false);
       
       toast({
@@ -259,7 +269,7 @@ const NavigationManager = () => {
                             </div>
                             <div className="col-span-3 font-medium">{item.label}</div>
                             <div className="col-span-4 text-sm text-gray-600">{item.path}</div>
-                            <div className="col-span-1 text-center">{item.order}</div>
+                            <div className="col-span-1 text-center">{item.order_index}</div>
                             <div className="col-span-1 flex justify-center">
                               <Checkbox 
                                 checked={item.visible} 

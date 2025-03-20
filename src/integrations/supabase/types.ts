@@ -95,6 +95,185 @@ export type Database = {
           },
         ]
       }
+      fantasy_picks: {
+        Row: {
+          created_at: string
+          form: string
+          id: string
+          match: string
+          player_name: string
+          points_prediction: number
+          reason: string
+          role: string
+          team: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          form: string
+          id?: string
+          match: string
+          player_name: string
+          points_prediction: number
+          reason: string
+          role: string
+          team: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          form?: string
+          id?: string
+          match?: string
+          player_name?: string
+          points_prediction?: number
+          reason?: string
+          role?: string
+          team?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      navigation_items: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          order_index: number
+          path: string
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          order_index: number
+          path: string
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          order_index?: number
+          path?: string
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: []
+      }
+      player_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string
+          id: string
+          image: string | null
+          name: string
+          role: string
+          stats: Json
+          team: string
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          image?: string | null
+          name: string
+          role: string
+          stats?: Json
+          team: string
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          image?: string | null
+          name?: string
+          role?: string
+          stats?: Json
+          team?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      top_stories: {
+        Row: {
+          article_id: string
+          created_at: string
+          featured: boolean
+          id: string
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          featured?: boolean
+          id?: string
+          order_index: number
+          updated_at?: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          featured?: boolean
+          id?: string
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "top_stories_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      upcoming_matches: {
+        Row: {
+          competition: string
+          created_at: string
+          id: string
+          image: string | null
+          match_time: string
+          match_type: string
+          team1: string
+          team2: string
+          updated_at: string
+          venue: string
+        }
+        Insert: {
+          competition: string
+          created_at?: string
+          id?: string
+          image?: string | null
+          match_time: string
+          match_type: string
+          team1: string
+          team2: string
+          updated_at?: string
+          venue: string
+        }
+        Update: {
+          competition?: string
+          created_at?: string
+          id?: string
+          image?: string | null
+          match_time?: string
+          match_type?: string
+          team1?: string
+          team2?: string
+          updated_at?: string
+          venue?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
