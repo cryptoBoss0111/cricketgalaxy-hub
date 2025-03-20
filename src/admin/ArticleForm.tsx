@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -19,13 +18,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { supabase, isAdminUser } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from './AdminLayout';
 import ImageUploader from './components/ImageUploader';
 import ContentBlockManager, { ContentBlock } from './components/ContentBlockManager';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Info } from 'lucide-react';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 // Define the schema for article form validation
 const articleSchema = z.object({
@@ -50,7 +50,7 @@ const ArticleForm = () => {
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([]);
   const [activeTab, setActiveTab] = useState('content');
   const [adminId, setAdminId] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin, verifyAdmin } = useAdminAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -74,20 +74,43 @@ const ArticleForm = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Get current session
-        const { data: sessionData } = await supabase.auth.getSession();
+        // Verify admin status first
+        const adminStatus = await verifyAdmin();
         
-        // Check if user is an admin
-        const adminCheck = await isAdminUser();
-        setIsAdmin(adminCheck);
-        
-        let userId = sessionData.session?.user?.id;
-        
-        // If not authenticated or not admin, redirect to login
-        if (!userId || !adminCheck) {
+        if (!adminStatus) {
+          console.log("Not authenticated as admin, redirecting to login");
           toast({
             title: "Authentication Required",
             description: "You must be logged in as an admin to access this page",
+            variant: "destructive",
+          });
+          navigate('/admin/login');
+          return false;
+        }
+        
+        // Get current session
+        const { data: sessionData } = await supabase.auth.getSession();
+        let userId = sessionData.session?.user?.id;
+        
+        // Try to get admin info from localStorage if session doesn't have it
+        if (!userId) {
+          const adminUserStr = localStorage.getItem('adminUser');
+          if (adminUserStr) {
+            try {
+              const adminUser = JSON.parse(adminUserStr);
+              userId = adminUser.id;
+              console.log("Using admin ID from localStorage:", userId);
+            } catch (error) {
+              console.error("Error parsing admin user data:", error);
+            }
+          }
+        }
+        
+        // If we still don't have a user ID, redirect to login
+        if (!userId) {
+          toast({
+            title: "Authentication Required",
+            description: "Unable to determine admin identity. Please log in again.",
             variant: "destructive",
           });
           navigate('/admin/login');
@@ -119,7 +142,7 @@ const ArticleForm = () => {
         }
       }
     });
-  }, [id, navigate, toast]);
+  }, [id, navigate, toast, verifyAdmin]);
 
   // Fetch existing categories
   const fetchCategories = async () => {
@@ -191,7 +214,7 @@ const ArticleForm = () => {
     try {
       // Double-check admin status before saving
       if (!adminId || !isAdmin) {
-        const adminCheck = await isAdminUser();
+        const adminCheck = await verifyAdmin();
         if (!adminCheck) {
           toast({
             title: "Permission Denied",
@@ -595,3 +618,4 @@ const ArticleForm = () => {
 };
 
 export default ArticleForm;
+

@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import AdminLayout from './AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 interface Article {
   id: string;
@@ -38,14 +39,16 @@ const ArticlesList = () => {
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isAdmin, verifyAdmin } = useAdminAuth();
 
   useEffect(() => {
     // Check if user is authenticated
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      const adminToken = localStorage.getItem('adminToken');
+      // Verify admin status first
+      const adminStatus = await verifyAdmin();
       
-      if (!data.session && adminToken !== 'authenticated') {
+      if (!adminStatus) {
+        console.log("Not authenticated as admin, redirecting to login");
         navigate('/admin/login');
       } else {
         fetchArticles();
@@ -53,7 +56,7 @@ const ArticlesList = () => {
     };
     
     checkAuth();
-  }, [navigate]);
+  }, [navigate, verifyAdmin]);
 
   const fetchCategories = async () => {
     try {
@@ -120,7 +123,24 @@ const ArticlesList = () => {
   };
 
   const handleCreateArticle = () => {
-    navigate('/admin/articles/new');
+    // Verify admin status before navigating
+    if (isAdmin) {
+      navigate('/admin/articles/new');
+    } else {
+      // Try to verify admin status again
+      verifyAdmin().then(isAuthenticated => {
+        if (isAuthenticated) {
+          navigate('/admin/articles/new');
+        } else {
+          toast({
+            title: "Authentication Required",
+            description: "You must be logged in as an admin to create articles",
+            variant: "destructive",
+          });
+          navigate('/admin/login');
+        }
+      });
+    }
   };
 
   const handleEditArticle = (id: string) => {
