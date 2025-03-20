@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -52,25 +53,23 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     // Upload to Supabase
     setIsUploading(true);
     try {
-      // Check if user is authenticated before upload
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        toast({
-          title: "Authentication required",
-          description: "You must be logged in to upload images",
-          variant: "destructive",
-        });
-        setIsUploading(false);
-        return;
-      }
+      console.log("Starting image upload process...");
       
+      // Try to upload without checking auth first
       const imageUrl = await uploadImageToStorage(file);
-      onImageUploaded(imageUrl);
       
-      toast({
-        title: "Image uploaded",
-        description: "Your image has been uploaded successfully",
-      });
+      if (imageUrl) {
+        console.log("Upload successful, image URL:", imageUrl);
+        onImageUploaded(imageUrl);
+        setPreviewUrl(imageUrl);
+        
+        toast({
+          title: "Image uploaded",
+          description: "Your image has been uploaded successfully",
+        });
+      } else {
+        throw new Error("Failed to get image URL after upload");
+      }
     } catch (error: any) {
       console.error('Error uploading image:', error);
       
@@ -89,9 +88,6 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
         description: errorMessage,
         variant: "destructive",
       });
-      
-      // Clear preview if upload failed
-      setPreviewUrl(null);
     } finally {
       setIsUploading(false);
     }
@@ -127,7 +123,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
           <Card className="border-dashed border-2 p-6 hover:bg-gray-50 transition-colors cursor-pointer">
             <div className="flex flex-col items-center justify-center space-y-2 text-center">
               <div className="bg-gray-100 p-2 rounded-full">
-                <Image className="h-6 w-6 text-gray-500" />
+                <Upload className="h-6 w-6 text-gray-500" />
               </div>
               <div className="text-sm text-gray-500">
                 <span className="font-medium text-primary">Click to upload</span> or drag and drop

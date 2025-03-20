@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FileText, Edit, Trash2, Plus, Search, Filter } from 'lucide-react';
@@ -42,9 +41,7 @@ const ArticlesList = () => {
   const { isAdmin, verifyAdmin } = useAdminAuth();
 
   useEffect(() => {
-    // Check if user is authenticated
     const checkAuth = async () => {
-      // Verify admin status first
       const adminStatus = await verifyAdmin();
       
       if (!adminStatus) {
@@ -67,7 +64,6 @@ const ArticlesList = () => {
       
       if (error) throw error;
       
-      // Extract unique categories
       const uniqueCategories = Array.from(new Set(data?.map(item => item.category).filter(Boolean)));
       setCategories(uniqueCategories);
     } catch (error) {
@@ -83,7 +79,6 @@ const ArticlesList = () => {
         .select('*')
         .order('created_at', { ascending: false });
       
-      // Apply filters if they exist
       if (categoryFilter && categoryFilter !== 'all') {
         query = query.eq('category', categoryFilter);
       }
@@ -96,7 +91,6 @@ const ArticlesList = () => {
       
       if (error) throw error;
       
-      // Filter by search query if it exists
       let filteredData = data || [];
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase();
@@ -108,7 +102,6 @@ const ArticlesList = () => {
       
       setArticles(filteredData);
       
-      // Fetch categories for the filter dropdown
       await fetchCategories();
     } catch (error) {
       console.error('Error fetching articles:', error);
@@ -123,24 +116,8 @@ const ArticlesList = () => {
   };
 
   const handleCreateArticle = () => {
-    // Verify admin status before navigating
-    if (isAdmin) {
-      navigate('/admin/articles/new');
-    } else {
-      // Try to verify admin status again
-      verifyAdmin().then(isAuthenticated => {
-        if (isAuthenticated) {
-          navigate('/admin/articles/new');
-        } else {
-          toast({
-            title: "Authentication Required",
-            description: "You must be logged in as an admin to create articles",
-            variant: "destructive",
-          });
-          navigate('/admin/login');
-        }
-      });
-    }
+    console.log("Create article button clicked");
+    navigate('/admin/articles/new');
   };
 
   const handleEditArticle = (id: string) => {

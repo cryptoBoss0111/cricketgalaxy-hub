@@ -141,14 +141,24 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
   
   const uniqueFileName = generateUniqueFileName(file.name);
   
-  // Check for active session
-  const { data: sessionData } = await supabase.auth.getSession();
-  const isAuthenticated = !!sessionData.session;
-  
-  if (!isAuthenticated && bucketName !== 'public') {
-    // For non-public buckets, ensure we're authenticated
-    console.error("Authentication required for uploads");
-    throw new Error("You must be logged in to upload files");
+  // Create article_images bucket if it doesn't exist
+  try {
+    // Check if bucket exists first by trying to get the bucket info
+    const { data: bucketExists } = await supabase
+      .storage
+      .getBucket(bucketName);
+    
+    if (!bucketExists) {
+      console.log(`Bucket ${bucketName} doesn't exist, creating it...`);
+      await supabase.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 5242880 // 5MB
+      });
+      console.log(`Bucket ${bucketName} created successfully.`);
+    }
+  } catch (error) {
+    console.log("Error checking/creating bucket:", error);
+    // Continue anyway, as the bucket might already exist
   }
   
   try {
@@ -177,6 +187,7 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
       .from(bucketName)
       .getPublicUrl(uniqueFileName);
     
+    console.log("Image uploaded successfully, public URL:", publicUrl);
     return publicUrl;
   } catch (error) {
     console.error("Error uploading image:", error);
