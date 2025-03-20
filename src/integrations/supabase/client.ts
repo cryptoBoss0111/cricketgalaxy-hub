@@ -141,35 +141,63 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
   
   const uniqueFileName = generateUniqueFileName(file.name);
   
+  // Make sure we have a fresh session
+  try {
+    await refreshSession();
+  } catch (error) {
+    console.warn("Could not refresh session before upload:", error);
+    // Continue anyway, as anonymous uploads might still work
+  }
+  
   // Create article_images bucket if it doesn't exist
   try {
     // Check if bucket exists first by trying to get the bucket info
-    const { data: bucketExists } = await supabase
+    const { data: bucketExists, error: bucketError } = await supabase
       .storage
       .getBucket(bucketName);
     
+    if (bucketError) {
+      console.warn("Error checking bucket:", bucketError);
+      // Ignore error and try to continue
+    }
+    
     if (!bucketExists) {
       console.log(`Bucket ${bucketName} doesn't exist, creating it...`);
-      await supabase.storage.createBucket(bucketName, {
+      const { error: createError } = await supabase.storage.createBucket(bucketName, {
         public: true,
         fileSizeLimit: 5242880 // 5MB
       });
-      console.log(`Bucket ${bucketName} created successfully.`);
+      
+      if (createError) {
+        console.warn(`Error creating bucket ${bucketName}:`, createError);
+        // Continue anyway, as the bucket might already exist or be auto-created
+      } else {
+        console.log(`Bucket ${bucketName} created successfully.`);
+      }
     }
   } catch (error) {
-    console.log("Error checking/creating bucket:", error);
+    console.warn("Error checking/creating bucket:", error);
     // Continue anyway, as the bucket might already exist
   }
   
+  // Try upload with specific policy for public uploads
   try {
     console.log(`Uploading file to ${bucketName}/${uniqueFileName}`);
+    
+    // Try to make the bucket public if it's not already
+    try {
+      await supabase.storage.updateBucket(bucketName, { public: true });
+    } catch (updateError) {
+      console.warn("Could not update bucket to public:", updateError);
+      // Continue anyway
+    }
     
     const { data, error } = await supabase
       .storage
       .from(bucketName)
       .upload(uniqueFileName, file, {
         cacheControl: '3600',
-        upsert: false
+        upsert: true,  // Changed to true to avoid conflicts
       });
     
     if (error) {

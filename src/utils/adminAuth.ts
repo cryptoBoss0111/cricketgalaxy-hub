@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Global flag to prevent concurrent validation
@@ -37,7 +36,7 @@ export const checkAdminStatus = async () => {
     
     isValidating = true;
     
-    // Check for an active session
+    // Always check session first and try to refresh if needed
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError) {
@@ -48,6 +47,31 @@ export const checkAdminStatus = async () => {
         session: null,
         message: "Session error: " + sessionError.message
       };
+    }
+    
+    // If session exists but is close to expiry, refresh it
+    if (sessionData.session) {
+      const expiresAt = sessionData.session.expires_at * 1000; // convert to milliseconds
+      const timeToExpiry = expiresAt - now;
+      
+      if (timeToExpiry < 600000) { // less than 10 minutes
+        console.log("Session close to expiry, refreshing...");
+        try {
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError) {
+            console.log("Session refresh failed:", refreshError.message);
+            // Continue with the existing session
+          } else if (refreshData.session) {
+            console.log("Session refreshed successfully");
+            // Use the refreshed session
+            sessionData.session = refreshData.session;
+          }
+        } catch (refreshError) {
+          console.error("Error refreshing session:", refreshError);
+          // Continue with existing session
+        }
+      }
     }
     
     // If we have a session, check if the user is an admin

@@ -26,6 +26,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Info } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { refreshSession } from "@/integrations/supabase/client";
 
 // Define the schema for article form validation
 const articleSchema = z.object({
@@ -226,6 +227,10 @@ const ArticleForm = () => {
         }
       }
       
+      // Explicitly refresh the session before saving to prevent expiration
+      console.log("Refreshing session before saving article...");
+      await refreshSession();
+      
       // Get current session to ensure we have fresh tokens
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
@@ -259,17 +264,22 @@ const ArticleForm = () => {
       
       console.log("Saving article with data:", { ...articleData, content: "[content truncated]" });
       
+      let result;
+      
       if (id) {
         // Update existing article
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('articles')
           .update(articleData)
-          .eq('id', id);
+          .eq('id', id)
+          .select();
         
         if (error) {
           console.error("Error updating article:", error);
           throw error;
         }
+        
+        result = data;
         
         toast({
           title: "Article updated",
@@ -277,23 +287,29 @@ const ArticleForm = () => {
         });
       } else {
         // Create new article
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('articles')
           .insert({
             ...articleData,
             author_id: adminId
-          });
+          })
+          .select();
         
         if (error) {
           console.error("Error creating article:", error);
           throw error;
         }
         
+        result = data;
+        
         toast({
           title: "Article created",
-          description: "The article has been successfully created",
+          description: "The article has been successfully created. Note: To show in Top Stories, add it in the Top Stories manager.",
+          duration: 6000,
         });
       }
+      
+      console.log("Save successful, result:", result);
       
       // Redirect to articles list
       navigate('/admin/articles');
@@ -618,4 +634,3 @@ const ArticleForm = () => {
 };
 
 export default ArticleForm;
-

@@ -1,14 +1,15 @@
-
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { checkAdminStatus, signOutAdmin } from "@/utils/adminAuth";
+import { refreshSession } from "@/integrations/supabase/client";
 
 type AdminAuthContextType = {
   isAdmin: boolean;
   isChecking: boolean;
   signOut: () => Promise<void>;
   verifyAdmin: () => Promise<boolean>;
+  refreshAdminSession: () => Promise<boolean>;
 };
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
@@ -20,6 +21,27 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
   const checkInProgress = useRef(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Add a function to explicitly refresh the session
+  const refreshAdminSession = async (): Promise<boolean> => {
+    try {
+      console.log("Explicitly refreshing admin session...");
+      const refreshed = await refreshSession();
+      
+      if (refreshed) {
+        console.log("Session refreshed successfully");
+        // Re-verify admin status after refresh to update any cached values
+        await verifyAdmin();
+        return true;
+      } else {
+        console.log("Session refresh failed");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error refreshing session:", error);
+      return false;
+    }
+  };
 
   const verifyAdmin = async (): Promise<boolean> => {
     // Prevent multiple simultaneous verifications
@@ -162,20 +184,20 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     };
   }, []);
 
-  // Recheck admin status periodically - but reduce the frequency to avoid too many checks
+  // Recheck admin status more frequently to prevent expiration issues
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isChecking && initialCheckDone.current && !checkInProgress.current) {
         console.log("Performing periodic admin check");
         verifyAdmin();
       }
-    }, 15 * 60 * 1000); // Check every 15 minutes
+    }, 5 * 60 * 1000); // Check every 5 minutes instead of 15
     
     return () => clearInterval(interval);
   }, [isChecking]);
 
   return (
-    <AdminAuthContext.Provider value={{ isAdmin, isChecking, signOut, verifyAdmin }}>
+    <AdminAuthContext.Provider value={{ isAdmin, isChecking, signOut, verifyAdmin, refreshAdminSession }}>
       {children}
     </AdminAuthContext.Provider>
   );
