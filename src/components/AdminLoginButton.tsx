@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { LogIn, LockKeyhole } from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase, isAdminUser } from "@/integrations/supabase/client";
+import { supabase, isAdminUser, refreshSession } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminLoginButton = () => {
@@ -17,8 +17,17 @@ const AdminLoginButton = () => {
     const checkAdminStatus = async () => {
       setIsCheckingAuth(true);
       try {
+        console.log("Checking admin session status...");
+        
+        // First refresh the session if possible
+        await refreshSession();
+        
         const { data } = await supabase.auth.getSession();
         console.log("Current session:", data.session ? "Active" : "None");
+        
+        if (data.session) {
+          console.log("Session found, expires at:", new Date(data.session.expires_at * 1000).toLocaleString());
+        }
         
         const isAdmin = await isAdminUser();
         console.log("Admin status check:", isAdmin);
@@ -52,6 +61,8 @@ const AdminLoginButton = () => {
       console.log("Auth state changed:", event, "Session:", session ? "exists" : "none");
       if (event === 'SIGNED_IN') {
         console.log("User signed in, checking if admin");
+        // Force an immediate check
+        checkAdminStatus();
       } else if (event === 'SIGNED_OUT') {
         console.log("User signed out, clearing admin status");
         localStorage.removeItem('adminToken');
@@ -59,9 +70,12 @@ const AdminLoginButton = () => {
         setIsLoggedIn(false);
       } else if (event === 'TOKEN_REFRESHED') {
         console.log("Token refreshed, checking admin status");
+        // Force an immediate check with the fresh token
+        checkAdminStatus();
+      } else if (event === 'USER_UPDATED') {
+        console.log("User updated, checking admin status");
+        checkAdminStatus();
       }
-      
-      await checkAdminStatus();
     });
     
     // Set up window event listener for storage changes
@@ -74,14 +88,23 @@ const AdminLoginButton = () => {
     
     window.addEventListener('storage', handleStorageChange);
     
+    // Set up periodic session check every 5 minutes
+    const intervalId = setInterval(() => {
+      console.log("Periodic admin status check");
+      checkAdminStatus();
+    }, 300000); // 5 minutes
+    
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('storage', handleStorageChange);
+      clearInterval(intervalId);
     };
   }, [toast]);
 
-  const handleAdminAction = () => {
+  const handleAdminAction = async () => {
     if (isLoggedIn) {
+      // Refresh the session before navigating to admin dashboard
+      await refreshSession();
       navigate("/admin/dashboard");
     } else {
       navigate("/admin/login");

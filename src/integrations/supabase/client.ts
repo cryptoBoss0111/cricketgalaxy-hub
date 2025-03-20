@@ -14,13 +14,42 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     autoRefreshToken: true,
     storageKey: 'supabase.auth.token',
+    detectSessionInUrl: true, // Detect session in URL for OAuth
   },
   global: {
     headers: {
       'Content-Type': 'application/json',
     },
   },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+  },
 });
+
+// Force refresh the session before each major operation
+export const refreshSession = async (): Promise<boolean> => {
+  try {
+    console.log("Attempting to refresh session token...");
+    const { data, error } = await supabase.auth.refreshSession();
+    
+    if (error) {
+      console.error("Failed to refresh session:", error.message);
+      return false;
+    }
+    
+    if (data.session) {
+      console.log("Session refreshed successfully");
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Error refreshing session:", error);
+    return false;
+  }
+};
 
 // Check if current user is an admin
 export const isAdminUser = async (): Promise<boolean> => {
@@ -35,9 +64,22 @@ export const isAdminUser = async (): Promise<boolean> => {
     
     if (sessionData.session) {
       console.log("Found active session with token:", sessionData.session.access_token.substring(0, 10) + "...");
+      console.log("Session expires at:", new Date(sessionData.session.expires_at * 1000).toLocaleString());
+
+      // If token is close to expiry, refresh it
+      const expiresAt = sessionData.session.expires_at * 1000; // convert to milliseconds
+      const now = Date.now();
+      const timeToExpiry = expiresAt - now;
+      
+      if (timeToExpiry < 60000) { // less than 1 minute
+        console.log("Token close to expiry, refreshing session...");
+        await refreshSession();
+      }
       
       // If we have a session, check if the user ID is in the admins table
       const currentUserId = sessionData.session.user.id;
+      console.log("Checking if user ID is admin:", currentUserId);
+      
       const { data: adminData, error: adminError } = await supabase
         .from('admins')
         .select('id')
@@ -87,7 +129,24 @@ export const isAdminUser = async (): Promise<boolean> => {
           return false;
         }
         
+        console.log("Attempting to sign in with stored admin ID:", adminUser.id);
+        
+        // Try to restore the session
+        try {
+          // Attempt to refresh the session
+          const refreshed = await refreshSession();
+          
+          if (refreshed) {
+            console.log("Session refreshed successfully, checking admin status again");
+            // Check admin status with fresh session
+            return await isAdminUser();
+          }
+        } catch (refreshError) {
+          console.error("Error refreshing session:", refreshError);
+        }
+        
         // Verify the admin ID is still valid
+        console.log("Verifying admin ID:", adminUser.id);
         const { data: adminCheck, error: verifyError } = await supabase
           .from('admins')
           .select('id')
@@ -100,12 +159,8 @@ export const isAdminUser = async (): Promise<boolean> => {
         }
         
         if (adminCheck) {
-          console.log("Legacy admin token verified");
-          
-          // Attempt to refresh the session
-          await supabase.auth.refreshSession();
-          
-          return true;
+          console.log("Legacy admin token verified - but user needs to login again");
+          return false;
         } else {
           console.log("Legacy admin token invalid, clearing");
           localStorage.removeItem('adminToken');
