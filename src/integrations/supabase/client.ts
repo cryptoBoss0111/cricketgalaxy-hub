@@ -133,29 +133,10 @@ export const generateUniqueFileName = (fileName: string) => {
   return `${timestamp}-${randomString}.${extension}`;
 };
 
-// Upload file to storage with better error handling and retry logic
-export const uploadImageToStorage = async (file: File, bucketName = 'article_images', useAdminFallback = false) => {
+// Upload file to storage with improved error handling and retry logic
+export const uploadImageToStorage = async (file: File, bucketName = 'article_images') => {
   if (!file) {
     throw new Error('No file provided');
-  }
-  
-  // First check session before uploading
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) {
-    // If no session but useAdminFallback is true, try to use admin token
-    if (useAdminFallback) {
-      console.log("No active session, trying admin fallback...");
-      const adminUserStr = localStorage.getItem('adminUser');
-      const adminToken = localStorage.getItem('adminToken');
-      
-      if (adminToken !== 'authenticated' || !adminUserStr) {
-        throw new Error("Authentication required to upload files");
-      }
-      
-      console.log("Using admin authentication for upload");
-    } else {
-      throw new Error("Authentication required to upload files");
-    }
   }
   
   // Generate unique filename
@@ -174,7 +155,7 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
     attempt++;
     
     try {
-      // Directly attempt upload without checking bucket existence
+      // Directly attempt upload without checking authentication
       const { data, error } = await supabase.storage
         .from(bucketName)
         .upload(fileName, file, {
