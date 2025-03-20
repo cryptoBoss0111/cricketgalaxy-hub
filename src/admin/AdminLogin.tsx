@@ -58,7 +58,7 @@ const AdminLogin = () => {
             id: 'demo-admin-id'
           }));
           
-          return { success: true, message: "Demo login successful", localAuth: true };
+          return { success: true, message: "Demo login successful", demoLogin: true };
         }
         
         // Re-throw for other errors
@@ -68,7 +68,7 @@ const AdminLogin = () => {
       if (result.success) {
         toast({
           title: "Login successful",
-          description: result.localAuth ? 
+          description: result.demoLogin ? 
             "Welcome to the admin dashboard (local authentication)" : 
             "Welcome to the admin dashboard",
           duration: 3000,
