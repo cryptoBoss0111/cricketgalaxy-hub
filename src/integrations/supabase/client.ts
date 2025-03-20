@@ -29,25 +29,51 @@ export const generateUniqueFileName = (fileName: string) => {
 
 // Upload file to storage
 export const uploadImageToStorage = async (file: File, bucketName = 'article_images') => {
-  const uniqueFileName = generateUniqueFileName(file.name);
-  
-  const { data, error } = await supabase
-    .storage
-    .from(bucketName)
-    .upload(uniqueFileName, file, {
-      cacheControl: '3600',
-      upsert: false
-    });
-  
-  if (error) {
-    throw error;
+  if (!file) {
+    throw new Error('No file provided');
   }
   
-  // Get public URL
-  const { data: { publicUrl } } = supabase
-    .storage
-    .from(bucketName)
-    .getPublicUrl(uniqueFileName);
+  const uniqueFileName = generateUniqueFileName(file.name);
   
-  return publicUrl;
+  // Check for active session
+  const { data: sessionData } = await supabase.auth.getSession();
+  const isAuthenticated = !!sessionData.session;
+  
+  if (!isAuthenticated && bucketName !== 'public') {
+    // For non-public buckets, ensure we're authenticated
+    console.error("Authentication required for uploads");
+    throw new Error("You must be logged in to upload files");
+  }
+  
+  try {
+    console.log(`Uploading file to ${bucketName}/${uniqueFileName}`);
+    
+    const { data, error } = await supabase
+      .storage
+      .from(bucketName)
+      .upload(uniqueFileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+    
+    if (error) {
+      console.error("Storage upload error:", error);
+      throw error;
+    }
+    
+    if (!data) {
+      throw new Error("Upload failed with no error details");
+    }
+    
+    // Get public URL
+    const { data: { publicUrl } } = supabase
+      .storage
+      .from(bucketName)
+      .getPublicUrl(uniqueFileName);
+    
+    return publicUrl;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw error;
+  }
 };

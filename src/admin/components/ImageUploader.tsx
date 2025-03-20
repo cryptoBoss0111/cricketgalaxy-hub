@@ -31,6 +31,16 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       return;
     }
     
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Create preview
     const fileReader = new FileReader();
     fileReader.onload = () => {
@@ -52,11 +62,25 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       });
     } catch (error: any) {
       console.error('Error uploading image:', error);
+      
+      // Show more specific error message
+      let errorMessage = "Failed to upload image";
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error_description) {
+        errorMessage = error.error_description;
+      } else if (error.statusText) {
+        errorMessage = `${error.statusText} (${error.status})`;
+      }
+      
       toast({
         title: "Upload failed",
-        description: error.message || "Failed to upload image",
+        description: errorMessage,
         variant: "destructive",
       });
+      
+      // Clear preview if upload failed
+      setPreviewUrl(null);
     } finally {
       setIsUploading(false);
     }

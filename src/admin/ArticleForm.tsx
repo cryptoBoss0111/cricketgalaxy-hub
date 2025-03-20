@@ -49,6 +49,7 @@ const ArticleForm = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([]);
   const [activeTab, setActiveTab] = useState('content');
+  const [adminId, setAdminId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -68,16 +69,35 @@ const ArticleForm = () => {
     }
   });
 
-  // Check authentication
+  // Check authentication and setup admin ID
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      const adminToken = localStorage.getItem('adminToken');
+      // Try to get session from Supabase auth
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
-      if (!data.session && adminToken !== 'authenticated') {
+      // Also check localStorage for adminToken (legacy method)
+      const adminToken = localStorage.getItem('adminToken');
+      const adminUserString = localStorage.getItem('adminUser');
+      let userId = sessionData.session?.user?.id;
+      
+      // If no Supabase auth but have adminToken, use that
+      if (!userId && adminToken === 'authenticated' && adminUserString) {
+        try {
+          const adminUser = JSON.parse(adminUserString);
+          userId = adminUser.id;
+        } catch (e) {
+          console.error('Error parsing adminUser from localStorage:', e);
+        }
+      }
+      
+      // If still no userId, redirect to login
+      if (!userId && adminToken !== 'authenticated') {
         navigate('/admin/login');
         return false;
       }
+      
+      // Set the admin ID for later use
+      setAdminId(userId || null);
       return true;
     };
     
@@ -161,19 +181,7 @@ const ArticleForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Get current user info
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user?.id;
-      
-      // If no supabase auth, try localStorage
-      const adminUserString = localStorage.getItem('adminUser');
-      let adminId = userId;
-      
-      if (!adminId && adminUserString) {
-        const adminUser = JSON.parse(adminUserString);
-        adminId = adminUser.id;
-      }
-      
+      // Make sure we have an admin ID
       if (!adminId) {
         toast({
           title: "Authentication Error",
@@ -199,8 +207,11 @@ const ArticleForm = () => {
         content_blocks: contentBlocks,
         tags: tagsArray.length > 0 ? tagsArray : null,
         updated_at: new Date().toISOString(),
-        published_at: values.published ? new Date().toISOString() : null
+        published_at: values.published ? new Date().toISOString() : null,
+        author_id: adminId
       };
+      
+      console.log("Saving article with data:", { ...articleData, content: "..." });
       
       if (id) {
         // Update existing article
@@ -209,7 +220,10 @@ const ArticleForm = () => {
           .update(articleData)
           .eq('id', id);
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating article:", error);
+          throw error;
+        }
         
         toast({
           title: "Article updated",
@@ -224,7 +238,10 @@ const ArticleForm = () => {
             author_id: adminId
           });
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error creating article:", error);
+          throw error;
+        }
         
         toast({
           title: "Article created",
