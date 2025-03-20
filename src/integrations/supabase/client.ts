@@ -462,46 +462,29 @@ export const getFantasyPicks = async () => {
   const { data, error } = await supabase
     .from('fantasy_picks')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('points_prediction', { ascending: false });
   
   if (error) {
-    console.error("Error fetching fantasy picks:", error);
-    throw error;
+    console.error('Error fetching fantasy picks:', error);
+    throw new Error('Failed to fetch fantasy picks');
   }
   
   return data || [];
 };
 
 // Create or update fantasy pick
-export const upsertFantasyPick = async (pickData: any) => {
-  const { id, ...otherData } = pickData;
-  const method = id ? 'update' : 'insert';
+export const upsertFantasyPick = async (pick: any) => {
+  const { data, error } = await supabase
+    .from('fantasy_picks')
+    .upsert(pick)
+    .select();
   
-  if (method === 'update') {
-    const { data, error } = await supabase
-      .from('fantasy_picks')
-      .update({
-        ...otherData,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select();
-    
-    if (error) throw error;
-    return data;
-  } else {
-    const { data, error } = await supabase
-      .from('fantasy_picks')
-      .insert({
-        ...otherData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select();
-    
-    if (error) throw error;
-    return data;
+  if (error) {
+    console.error('Error upserting fantasy pick:', error);
+    throw new Error('Failed to save fantasy pick');
   }
+  
+  return data?.[0];
 };
 
 // Delete fantasy pick
@@ -511,7 +494,11 @@ export const deleteFantasyPick = async (id: string) => {
     .delete()
     .eq('id', id);
   
-  if (error) throw error;
+  if (error) {
+    console.error('Error deleting fantasy pick:', error);
+    throw new Error('Failed to delete fantasy pick');
+  }
+  
   return true;
 };
 

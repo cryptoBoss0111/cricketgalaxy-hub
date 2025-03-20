@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ interface HeroArticle {
   category: string;
   imageUrl: string;
   date: string;
+  isFeaturedPick?: boolean;
 }
 
 export const HeroSection = () => {
@@ -43,7 +44,8 @@ export const HeroSection = () => {
               month: 'short',
               day: 'numeric',
               year: 'numeric'
-            })
+            }),
+            isFeaturedPick: Math.random() > 0.5 // Randomly mark some articles as featured picks
           }));
         
         // If no featured stories, use fallback data
@@ -55,7 +57,8 @@ export const HeroSection = () => {
               excerpt: 'Team India secures a remarkable series victory on Australian soil with stellar performances from both senior and emerging players.',
               category: 'Series',
               imageUrl: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop',
-              date: 'Mar 15, 2025'
+              date: 'Mar 15, 2025',
+              isFeaturedPick: true
             },
             {
               id: '2',
@@ -71,7 +74,8 @@ export const HeroSection = () => {
               excerpt: 'Meet the talented young cricketers who are making waves internationally and are poised to become the next cricket legends.',
               category: 'Player Profiles',
               imageUrl: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1200&auto=format&fit=crop',
-              date: 'Mar 13, 2025'
+              date: 'Mar 13, 2025',
+              isFeaturedPick: true
             }
           ]);
         } else {
@@ -87,7 +91,8 @@ export const HeroSection = () => {
             excerpt: 'Team India secures a remarkable series victory on Australian soil with stellar performances from both senior and emerging players.',
             category: 'Series',
             imageUrl: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop',
-            date: 'Mar 15, 2025'
+            date: 'Mar 15, 2025',
+            isFeaturedPick: true
           },
           {
             id: '2',
@@ -103,7 +108,8 @@ export const HeroSection = () => {
             excerpt: 'Meet the talented young cricketers who are making waves internationally and are poised to become the next cricket legends.',
             category: 'Player Profiles',
             imageUrl: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1200&auto=format&fit=crop',
-            date: 'Mar 13, 2025'
+            date: 'Mar 13, 2025',
+            isFeaturedPick: true
           }
         ]);
       } finally {
@@ -170,9 +176,17 @@ export const HeroSection = () => {
               "transition-all duration-500",
               isAnimating ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
             )}>
-              <Badge className="bg-cricket-accent hover:bg-cricket-accent/90 mb-4">
-                {article.category}
-              </Badge>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Badge className="bg-cricket-accent hover:bg-cricket-accent/90">
+                  {article.category}
+                </Badge>
+                
+                {article.isFeaturedPick && (
+                  <Badge className="bg-amber-500 hover:bg-amber-600 flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3" /> Fantasy Hot Pick
+                  </Badge>
+                )}
+              </div>
               
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4 leading-tight">
                 {article.title}
