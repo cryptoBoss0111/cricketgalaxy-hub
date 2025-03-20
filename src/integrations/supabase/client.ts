@@ -328,18 +328,37 @@ export const getPublishedArticles = async (category?: string, limit = 10) => {
 
 // Get a specific article by ID (for public viewing)
 export const getArticleById = async (id: string) => {
-  const { data, error } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) {
-    console.error("Error fetching article:", error);
+  try {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error("Error fetching article:", error);
+      throw error;
+    }
+    
+    if (!data) {
+      console.error("No article found with ID:", id);
+      return null;
+    }
+    
+    // Process any data transformations needed
+    return {
+      ...data,
+      // Format dates or other fields if needed
+      published_at: data.published_at || data.created_at,
+      // Ensure featured_image is available (use cover_image as fallback)
+      featured_image: data.featured_image || data.cover_image,
+      // Default excerpt if none is provided
+      excerpt: data.excerpt || data.meta_description || 'Read this exciting cricket article...'
+    };
+  } catch (error) {
+    console.error("Error in getArticleById:", error);
     throw error;
   }
-  
-  return data;
 };
 
 // Get player profiles
@@ -622,13 +641,13 @@ export const getTopStories = async () => {
 // Get articles by category
 export const getArticlesByCategory = async (category: string) => {
   try {
-    const query = supabase
+    let query = supabase
       .from('articles')
       .select('*')
       .eq('published', true);
     
     if (category && category !== 'All Categories') {
-      query.eq('category', category);
+      query = query.eq('category', category);
     }
     
     const { data, error } = await query.order('published_at', { ascending: false });

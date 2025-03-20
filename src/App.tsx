@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import { useState, useEffect } from "react";
 import { AdminAuthProvider, useAdminAuth } from "@/contexts/AdminAuthContext";
 import Home from "./pages/Home";
 import CricketNews from "./pages/CricketNews";
+import ArticleDetail from "./pages/ArticleDetail";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./admin/AdminLogin";
 import AdminDashboard from "./admin/Dashboard";
@@ -119,6 +121,7 @@ const App = () => (
               <Route path="/ipl-2025" element={<CricketNews />} />
               <Route path="/womens-cricket" element={<CricketNews />} />
               <Route path="/world-cup" element={<CricketNews />} />
+              <Route path="/article/:id" element={<ArticleDetail />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               
               {/* Protected admin routes */}

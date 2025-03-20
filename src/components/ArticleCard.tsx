@@ -28,6 +28,9 @@ export const ArticleCard = ({
   className,
   variant = 'default'
 }: ArticleCardProps) => {
+  // Use a default image if none is provided
+  const displayImage = imageUrl || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop';
+  
   return (
     <Link
       to={`/article/${id}`}
@@ -46,7 +49,7 @@ export const ArticleCard = ({
         )}
       >
         <img 
-          src={imageUrl} 
+          src={displayImage} 
           alt={title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
