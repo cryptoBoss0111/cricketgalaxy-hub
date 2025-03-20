@@ -116,7 +116,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
   useEffect(() => {
     const handleNavigation = () => {
       if (window.location.pathname === '/admin/login') {
-        console.log("Cleared authentication state on login page visit");
+        console.log("On login page - not clearing authentication state");
         // Don't clear localStorage here, as it may interfere with login
       }
     };

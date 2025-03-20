@@ -36,12 +36,9 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, isChecking, verifyAdmin } = useAdminAuth();
   const [verified, setVerified] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [authFailed, setAuthFailed] = useState(false);
   
   useEffect(() => {
     let isMounted = true;
-    let retryCount = 0;
-    const maxRetries = 2;
     
     // First check if adminToken exists in localStorage as a quick check
     const adminToken = localStorage.getItem('adminToken');
@@ -49,66 +46,43 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const checkAuth = async () => {
       if (!isMounted) return;
       
-      if (retryCount >= maxRetries) {
-        console.log("Maximum retry attempts reached, authentication failed");
-        if (isMounted) {
-          setAuthFailed(true);
-          setChecking(false);
-        }
-        return;
-      }
-      
       setChecking(true);
       try {
-        console.log(`AdminProtectedRoute: Verifying admin access (attempt ${retryCount + 1})`);
+        console.log('AdminProtectedRoute: Verifying admin access');
+        
+        // If we already know the user is an admin from context, trust it
+        if (isAdmin && !isChecking) {
+          console.log('AdminProtectedRoute: User already verified as admin in context');
+          setVerified(true);
+          setChecking(false);
+          return;
+        }
+        
+        // Otherwise verify admin status
         const adminStatus = await verifyAdmin();
         console.log("AdminProtectedRoute: Admin verification result:", adminStatus);
         
         if (isMounted) {
           setVerified(adminStatus);
           setChecking(false);
-          if (!adminStatus) {
-            retryCount++;
-            // Only retry if we didn't get a definitive "false"
-            if (retryCount < maxRetries) {
-              console.log(`Retry attempt ${retryCount} in 1 second...`);
-              setTimeout(checkAuth, 1000);
-            } else {
-              setAuthFailed(true);
-            }
-          }
         }
       } catch (error) {
         console.error("AdminProtectedRoute: Error verifying admin", error);
         if (isMounted) {
-          retryCount++;
-          if (retryCount < maxRetries) {
-            console.log(`Retry attempt ${retryCount} in 1 second...`);
-            setTimeout(checkAuth, 1000);
-          } else {
-            setVerified(false);
-            setAuthFailed(true);
-            setChecking(false);
-          }
+          setVerified(false);
+          setChecking(false);
         }
       }
     };
     
-    // If isAdmin is already true, we trust it
-    if (isAdmin && !isChecking) {
-      setVerified(true);
-      setChecking(false);
-    } else {
-      // Otherwise check explicitly
-      checkAuth();
-    }
+    checkAuth();
     
     return () => {
       isMounted = false;
     };
   }, [verifyAdmin, isAdmin, isChecking]);
   
-  if (checking) {
+  if (checking || isChecking) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-cricket-accent border-t-transparent rounded-full"></div>
@@ -117,7 +91,7 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  if (authFailed || !verified) {
+  if (!verified && !isAdmin) {
     console.log("AdminProtectedRoute: Access denied, redirecting to login");
     return <Navigate to="/admin/login" replace />;
   }

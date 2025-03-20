@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { loginAdmin, signOutAdmin } from "@/utils/adminAuth";
+import { loginAdmin } from "@/utils/adminAuth";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 
 const AdminLogin = () => {
@@ -22,17 +22,7 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const { isAdmin, isChecking, verifyAdmin } = useAdminAuth();
   
-  // Force logout when visiting login page to prevent login loops
-  useEffect(() => {
-    const clearAuth = async () => {
-      await signOutAdmin();
-      console.log("Cleared authentication state on login page visit");
-    };
-    
-    clearAuth();
-  }, []);
-  
-  // Redirect if already logged in
+  // Check if already logged in
   useEffect(() => {
     if (isAdmin && !isChecking) {
       console.log("Already logged in, redirecting to dashboard");
