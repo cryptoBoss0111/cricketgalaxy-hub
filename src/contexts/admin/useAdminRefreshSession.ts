@@ -1,15 +1,18 @@
 
 import { MutableRefObject } from "react";
 import { refreshSession } from "@/integrations/supabase/client";
+import { checkAdminStatus } from "@/utils/admin/verification";
 
 type UseAdminRefreshSessionProps = {
   setIsAdmin: (value: boolean) => void;
+  setIsChecking: (value: boolean) => void;
   initialCheckDone: MutableRefObject<boolean>;
   checkInProgress: MutableRefObject<boolean>;
 };
 
 export const useAdminRefreshSession = ({
   setIsAdmin,
+  setIsChecking,
   initialCheckDone,
   checkInProgress
 }: UseAdminRefreshSessionProps) => {
@@ -20,18 +23,15 @@ export const useAdminRefreshSession = ({
       
       if (refreshed) {
         console.log("Session refreshed successfully");
-        await verifyAdmin();
-        return true;
+        return await verifyAdmin();
       } else {
         console.log("Session refresh failed, checking admin status directly");
-        const adminStatus = await verifyAdmin();
-        return adminStatus;
+        return await verifyAdmin();
       }
     } catch (error) {
       console.error("Error refreshing session:", error);
       try {
-        const adminStatus = await verifyAdmin();
-        return adminStatus;
+        return await verifyAdmin();
       } catch (verifyError) {
         console.error("Error verifying admin after refresh failure:", verifyError);
         return false;
@@ -47,6 +47,7 @@ export const useAdminRefreshSession = ({
     
     try {
       checkInProgress.current = true;
+      setIsChecking(true);
       console.log("Verifying admin status...");
       
       const storedAdminToken = localStorage.getItem('adminToken');
@@ -54,9 +55,7 @@ export const useAdminRefreshSession = ({
         console.log("Found admin token in localStorage, checking if still valid...");
       }
       
-      const { isAdmin: adminStatus } = await import("@/utils/admin/verification").then(
-        module => module.checkAdminStatus()
-      );
+      const { isAdmin: adminStatus } = await checkAdminStatus();
       
       console.log("Admin verification result:", adminStatus);
       
@@ -89,6 +88,7 @@ export const useAdminRefreshSession = ({
       initialCheckDone.current = true;
       return false;
     } finally {
+      setIsChecking(false);
       checkInProgress.current = false;
     }
   };

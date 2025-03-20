@@ -2,10 +2,7 @@
 import { useState, useEffect, useRef, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { AdminAuthContext, AdminAuthContextType } from "../AdminAuthContext";
-import { checkAdminStatus } from "@/utils/admin/verification";
-import { signOutAdmin } from "@/utils/admin/authentication";
-import { refreshSession } from "@/integrations/supabase/client";
+import { AdminAuthContext } from "../AdminAuthContext";
 import { useAdminRefreshSession } from "./useAdminRefreshSession";
 import { useAdminVerification } from "./useAdminVerification";
 import { useAdminSignOut } from "./useAdminSignOut";
@@ -19,18 +16,19 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
 
   // Custom hooks for admin functionality
-  const { refreshAdminSession } = useAdminRefreshSession({
-    setIsAdmin,
-    initialCheckDone,
-    checkInProgress
-  });
-  
   const { verifyAdmin } = useAdminVerification({
     setIsAdmin,
     setIsChecking,
     initialCheckDone,
     checkInProgress,
     isAdmin
+  });
+  
+  const { refreshAdminSession } = useAdminRefreshSession({
+    setIsAdmin,
+    setIsChecking,
+    initialCheckDone,
+    checkInProgress
   });
   
   const { signOut } = useAdminSignOut({
@@ -84,14 +82,14 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [verifyAdmin]);
 
-  // Periodic check
+  // Periodic check - reduced frequency to prevent excessive checks
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isChecking && initialCheckDone.current && !checkInProgress.current) {
         console.log("Performing periodic admin check");
         verifyAdmin();
       }
-    }, 3 * 60 * 1000);
+    }, 5 * 60 * 1000); // Increased to 5 minutes to reduce load
     
     return () => clearInterval(interval);
   }, [isChecking, verifyAdmin]);
