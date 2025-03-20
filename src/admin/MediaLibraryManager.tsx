@@ -53,8 +53,16 @@ const MediaLibraryManager = () => {
     setIsLoading(true);
     try {
       const files = await getMediaFiles();
-      setMediaFiles(files);
-      setFilteredFiles(files);
+      // Transform data to match MediaFile interface
+      const transformedFiles: MediaFile[] = files.map(file => ({
+        name: file.name,
+        publicUrl: file.publicUrl,
+        size: file.metadata?.size || 0, // Add default size if missing
+        created_at: file.created_at,
+        metadata: file.metadata
+      }));
+      setMediaFiles(transformedFiles);
+      setFilteredFiles(transformedFiles);
     } catch (error) {
       console.error('Error fetching media files:', error);
       toast({

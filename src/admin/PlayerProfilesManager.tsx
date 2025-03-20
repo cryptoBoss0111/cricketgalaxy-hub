@@ -96,11 +96,20 @@ const PlayerProfilesManager = () => {
     setIsLoading(true);
     try {
       const data = await getPlayerProfiles(searchQuery, teamFilter, roleFilter);
-      setProfiles(data);
+      
+      // Transform the data to ensure stats is a Record<string, any>
+      const transformedData = data.map(profile => ({
+        ...profile,
+        stats: typeof profile.stats === 'string' 
+          ? JSON.parse(profile.stats) 
+          : (profile.stats || {})
+      }));
+      
+      setProfiles(transformedData);
       
       // Extract unique teams and roles for filters
-      const uniqueTeams = Array.from(new Set(data.map(profile => profile.team)));
-      const uniqueRoles = Array.from(new Set(data.map(profile => profile.role)));
+      const uniqueTeams = Array.from(new Set(transformedData.map(profile => profile.team)));
+      const uniqueRoles = Array.from(new Set(transformedData.map(profile => profile.role)));
       setTeams(uniqueTeams);
       setRoles(uniqueRoles);
     } catch (error) {
