@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ChatbotProvider } from "@/contexts/ChatbotContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { checkAdminStatus } from "@/utils/adminAuth";
 import Home from "./pages/Home";
 import CricketNews from "./pages/CricketNews";
@@ -28,12 +28,13 @@ const queryClient = new QueryClient({
 const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isChecking, setIsChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const verificationDone = useRef(false);
   
   useEffect(() => {
     let isMounted = true;
     
     const verifyAdmin = async () => {
-      if (!isMounted) return;
+      if (!isMounted || verificationDone.current) return;
       
       try {
         setIsChecking(true);
@@ -41,11 +42,13 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         
         if (isMounted) {
           setIsAdmin(isAdmin);
+          verificationDone.current = true;
         }
       } catch (error) {
         console.error("Admin verification error:", error);
         if (isMounted) {
           setIsAdmin(false);
+          verificationDone.current = true;
         }
       } finally {
         if (isMounted) {
@@ -54,7 +57,10 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       }
     };
     
-    verifyAdmin();
+    // Only verify if not already done
+    if (!verificationDone.current) {
+      verifyAdmin();
+    }
     
     return () => {
       isMounted = false;

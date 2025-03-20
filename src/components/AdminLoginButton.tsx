@@ -12,13 +12,14 @@ const AdminLoginButton = () => {
   const [isChecking, setIsChecking] = useState(true);
   const { toast } = useToast();
   const initialCheckDone = useRef(false);
+  const buttonClicked = useRef(false);
   
-  // Check admin status on component mount, but only once
+  // Only check admin status once on component mount
   useEffect(() => {
     let isMounted = true;
     
     const checkAuth = async () => {
-      if (!isMounted) return;
+      if (!isMounted || initialCheckDone.current) return;
       
       try {
         setIsChecking(true);
@@ -52,6 +53,11 @@ const AdminLoginButton = () => {
   }, []);
 
   const handleAdminAction = () => {
+    if (buttonClicked.current) return; // Prevent double clicks
+    
+    buttonClicked.current = true;
+    setTimeout(() => { buttonClicked.current = false; }, 1000); // Reset after 1 second
+    
     if (isLoggedIn) {
       navigate("/admin/dashboard");
     } else {
@@ -61,6 +67,9 @@ const AdminLoginButton = () => {
   
   const handleLogout = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (buttonClicked.current) return; // Prevent double clicks
+    
+    buttonClicked.current = true;
     setIsChecking(true);
     
     try {
@@ -86,6 +95,7 @@ const AdminLoginButton = () => {
       });
     } finally {
       setIsChecking(false);
+      setTimeout(() => { buttonClicked.current = false; }, 1000); // Reset after 1 second
     }
   };
 
