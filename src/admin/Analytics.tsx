@@ -1,9 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { BarChart, CalendarDays, Flag, ListChecks, Newspaper, LayoutGrid, Eye, Users } from 'lucide-react';
+import { BarChart, Eye, Users, Newspaper, ListFilter } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from './AdminLayout';
@@ -49,10 +48,10 @@ const Analytics = () => {
           ? Array.from(new Set(categoriesData.map(item => item.category))).length 
           : 0;
         
-        // Set stats with mock views for now (would need a views tracking table in real implementation)
+        // Set stats with mock views for now
         setStats({
           articles: articlesCount || 0,
-          views: 12483, // Mock data for page views - would need a real analytics integration
+          views: 12483, // Mock data for page views
           categories: uniqueCategories,
           publishedArticles: publishedCount || 0
         });
@@ -66,47 +65,51 @@ const Analytics = () => {
     fetchStats();
   }, []);
 
-  const contentSections = [
+  // List of content management sections
+  const managementSections = [
     { 
-      name: "Articles", 
-      description: "Manage all articles across the site",
-      icon: <Newspaper className="h-8 w-8 text-cricket-accent" />,
-      action: () => navigate('/admin/articles')
+      title: "Articles Management",
+      description: "Create, edit, and manage all articles",
+      icon: <Newspaper />,
+      route: "/admin/articles",
+      color: "bg-blue-50 text-blue-700",
+      buttonText: "Manage Articles"
     },
     { 
-      name: "Navigation", 
-      description: "Control website navigation bar items",
-      icon: <LayoutGrid className="h-8 w-8 text-indigo-500" />,
-      action: () => navigate('/admin/navigation')
+      title: "Navigation Manager",
+      description: "Control website navigation items",
+      icon: <ListFilter />,
+      route: "/admin/navigation",
+      color: "bg-purple-50 text-purple-700",
+      buttonText: "Manage Navigation"
     },
     { 
-      name: "Top Stories", 
+      title: "Top Stories",
       description: "Feature important stories on homepage",
-      icon: <Flag className="h-8 w-8 text-amber-500" />,
-      action: () => navigate('/admin/top-stories')
+      icon: <BarChart />,
+      route: "/admin/top-stories",
+      color: "bg-amber-50 text-amber-700",
+      buttonText: "Manage Top Stories"
     },
     { 
-      name: "Fantasy Picks", 
-      description: "Manage fantasy cricket recommendations",
-      icon: <ListChecks className="h-8 w-8 text-green-500" />,
-      action: () => navigate('/admin/fantasy-picks')
-    },
-    { 
-      name: "Upcoming Matches", 
-      description: "Update match schedules and details",
-      icon: <CalendarDays className="h-8 w-8 text-blue-500" />,
-      action: () => navigate('/admin/matches')
+      title: "User Activity",
+      description: "View website visitor statistics",
+      icon: <Users />,
+      route: "/admin/analytics",
+      color: "bg-emerald-50 text-emerald-700",
+      buttonText: "View Details"
     }
   ];
 
   return (
     <AdminLayout>
-      <div className="space-y-8">
+      <div className="p-6 space-y-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-heading font-bold">Analytics & Content Management</h1>
+          <h1 className="text-3xl font-heading font-bold">Analytics Dashboard</h1>
           <Button onClick={() => navigate('/admin/articles/new')}>Create New Article</Button>
         </div>
         
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -143,7 +146,7 @@ const Analytics = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Categories</CardTitle>
-              <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+              <ListFilter className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -171,59 +174,32 @@ const Analytics = () => {
           </Card>
         </div>
         
-        <Tabs defaultValue="content" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-6">
-            <TabsTrigger value="content">Content Sections</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="content">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {contentSections.map((section, index) => (
-                <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer" onClick={section.action}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      {section.icon}
-                      <Button variant="ghost" size="sm" onClick={(e) => {
-                        e.stopPropagation();
-                        section.action();
-                      }}>
-                        Manage
-                      </Button>
-                    </div>
-                    <CardTitle className="mt-4">{section.name}</CardTitle>
-                    <CardDescription>{section.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-sm text-muted-foreground">
-                      Click to manage {section.name.toLowerCase()}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="performance">
-            <Card>
-              <CardHeader>
-                <CardTitle>Website Performance</CardTitle>
-                <CardDescription>
-                  Analytics and statistics for your website's performance
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] flex items-center justify-center">
-                  <div className="text-center space-y-4">
-                    <BarChart className="h-16 w-16 text-muted-foreground mx-auto" />
-                    <p className="text-muted-foreground">Detailed analytics dashboard coming soon</p>
-                    <Button variant="outline">Request Feature</Button>
+        {/* Content Management Sections */}
+        <div>
+          <h2 className="text-2xl font-medium mb-4">Content Management</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {managementSections.map((section, index) => (
+              <Card key={index} className="overflow-hidden border border-gray-200 hover:border-gray-300 transition-all">
+                <div className="flex items-start p-6">
+                  <div className={`p-3 rounded-full ${section.color} mr-4`}>
+                    {section.icon}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-medium">{section.title}</h3>
+                    <p className="text-gray-500 mt-1">{section.description}</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4" 
+                      onClick={() => navigate(section.route)}
+                    >
+                      {section.buttonText}
+                    </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );

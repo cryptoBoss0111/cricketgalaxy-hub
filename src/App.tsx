@@ -17,6 +17,11 @@ import ArticlesList from "./admin/ArticlesList";
 import Analytics from "./admin/Analytics";
 import NavigationManager from "./admin/NavigationManager";
 import TopStoriesManager from "./admin/TopStoriesManager";
+import FantasyPicksManager from "./admin/FantasyPicksManager";
+import MatchesManager from "./admin/MatchesManager";
+import PlayerProfilesManager from "./admin/PlayerProfilesManager";
+import MediaLibraryManager from "./admin/MediaLibraryManager";
+import SettingsManager from "./admin/SettingsManager";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -111,7 +116,7 @@ const App = () => (
                 </AdminProtectedRoute>
               } />
               
-              {/* New admin routes for content management */}
+              {/* Admin routes for content management */}
               <Route path="/admin/analytics" element={
                 <AdminProtectedRoute>
                   <Analytics />
@@ -125,6 +130,31 @@ const App = () => (
               <Route path="/admin/top-stories" element={
                 <AdminProtectedRoute>
                   <TopStoriesManager />
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/fantasy-picks" element={
+                <AdminProtectedRoute>
+                  <FantasyPicksManager />
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/matches" element={
+                <AdminProtectedRoute>
+                  <MatchesManager />
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/players" element={
+                <AdminProtectedRoute>
+                  <PlayerProfilesManager />
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/media" element={
+                <AdminProtectedRoute>
+                  <MediaLibraryManager />
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/settings" element={
+                <AdminProtectedRoute>
+                  <SettingsManager />
                 </AdminProtectedRoute>
               } />
               
