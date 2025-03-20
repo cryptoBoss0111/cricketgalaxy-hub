@@ -65,7 +65,7 @@ const ArticlesList = () => {
       if (error) throw error;
       
       // Extract unique categories
-      const uniqueCategories = Array.from(new Set(data?.map(item => item.category)));
+      const uniqueCategories = Array.from(new Set(data?.map(item => item.category).filter(Boolean)));
       setCategories(uniqueCategories);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -201,7 +201,7 @@ const ArticlesList = () => {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
@@ -213,7 +213,7 @@ const ArticlesList = () => {
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Status</SelectItem>
+                  <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="published">Published</SelectItem>
                   <SelectItem value="draft">Draft</SelectItem>
                 </SelectContent>

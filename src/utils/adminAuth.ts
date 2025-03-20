@@ -174,6 +174,8 @@ export const checkAdminStatus = async () => {
 // Helper function to sign out admin
 export const signOutAdmin = async () => {
   try {
+    console.log("Signing out admin...");
+    
     // Clear Supabase session
     const { error } = await supabase.auth.signOut();
     if (error) {

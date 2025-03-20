@@ -23,7 +23,9 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
   const verifyAdmin = async (): Promise<boolean> => {
     try {
       setIsChecking(true);
+      console.log("Verifying admin status...");
       const { isAdmin: adminStatus } = await checkAdminStatus();
+      console.log("Admin verification result:", adminStatus);
       setIsAdmin(adminStatus);
       initialCheckDone.current = true;
       return adminStatus;
@@ -72,13 +74,15 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     const checkAuth = async () => {
       if (!isMounted || initialCheckDone.current) return;
       
+      console.log("Performing initial admin check");
       await verifyAdmin();
     };
     
     // Listen for storage events (in case admin token is changed in another tab)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'adminToken' || e.key === 'adminUser') {
-        checkAuth();
+        console.log("Admin token changed in another tab, rechecking");
+        verifyAdmin();
       }
     };
     
@@ -93,6 +97,18 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
+
+  // Recheck admin status periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isChecking) {
+        console.log("Performing periodic admin check");
+        verifyAdmin();
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+    
+    return () => clearInterval(interval);
+  }, [isChecking]);
 
   return (
     <AdminAuthContext.Provider value={{ isAdmin, isChecking, signOut, verifyAdmin }}>

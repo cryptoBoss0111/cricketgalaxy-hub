@@ -36,6 +36,7 @@ const queryClient = new QueryClient({
 const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAdmin, isChecking, verifyAdmin } = useAdminAuth();
   const [verified, setVerified] = useState(false);
+  const [checking, setChecking] = useState(true);
   
   useEffect(() => {
     let isMounted = true;
@@ -43,22 +44,33 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const checkAuth = async () => {
       if (!isMounted) return;
       
-      const adminStatus = await verifyAdmin();
-      if (isMounted) {
-        setVerified(true);
+      setChecking(true);
+      try {
+        console.log("AdminProtectedRoute: Verifying admin access");
+        const adminStatus = await verifyAdmin();
+        console.log("AdminProtectedRoute: Admin verification result:", adminStatus);
+        
+        if (isMounted) {
+          setVerified(adminStatus);
+          setChecking(false);
+        }
+      } catch (error) {
+        console.error("AdminProtectedRoute: Error verifying admin", error);
+        if (isMounted) {
+          setVerified(false);
+          setChecking(false);
+        }
       }
     };
     
-    if (!verified) {
-      checkAuth();
-    }
+    checkAuth();
     
     return () => {
       isMounted = false;
     };
-  }, [verifyAdmin, verified]);
+  }, [verifyAdmin]);
   
-  if (isChecking && !verified) {
+  if (checking) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-4 border-cricket-accent border-t-transparent rounded-full"></div>
@@ -67,10 +79,12 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  if (!isAdmin) {
+  if (!verified) {
+    console.log("AdminProtectedRoute: Access denied, redirecting to login");
     return <Navigate to="/admin/login" replace />;
   }
   
+  console.log("AdminProtectedRoute: Access granted");
   return <>{children}</>;
 };
 
