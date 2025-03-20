@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { BarChart2, TrendingUp, FileText, Users, Calendar, Award, Eye, Edit, Trash2, Plus } from 'lucide-react';
@@ -53,14 +52,12 @@ const AdminDashboard = () => {
     try {
       setIsLoading(true);
       
-      // Fetch total articles count
       const { count: totalArticles, error: countError } = await supabase
         .from('articles')
         .select('*', { count: 'exact', head: true });
       
       if (countError) throw countError;
       
-      // Fetch recent articles
       const { data: articlesData, error: articlesError } = await supabase
         .from('articles')
         .select('*')
@@ -83,11 +80,9 @@ const AdminDashboard = () => {
       
       setRecentArticles(formattedArticles);
 
-      // Count published vs draft articles
       const publishedArticles = articlesData?.filter(article => article.published).length || 0;
       const draftArticles = (articlesData?.length || 0) - publishedArticles;
       
-      // Category analytics
       const categories = articlesData?.map(article => article.category) || [];
       const categoryCounts: Record<string, number> = {};
       
@@ -95,7 +90,6 @@ const AdminDashboard = () => {
         categoryCounts[category] = (categoryCounts[category] || 0) + 1;
       });
       
-      // Find top category
       let topCategory = 'None';
       let topCategoryCount = 0;
       
@@ -106,7 +100,6 @@ const AdminDashboard = () => {
         }
       });
       
-      // Calculate percentage of top category
       const topCategoryPercentage = articlesData?.length 
         ? Math.round((topCategoryCount / articlesData.length) * 100) 
         : 0;
@@ -150,6 +143,64 @@ const AdminDashboard = () => {
         description: "Failed to load dashboard data",
         variant: "destructive",
       });
+
+      const mockArticles = [
+        {
+          id: "1",
+          title: "India vs Australia: 3rd Test Preview",
+          category: "Match Preview",
+          date: "Mar 20, 2025",
+          status: "published" as "published"
+        },
+        {
+          id: "2",
+          title: "IPL 2025 Auction Analysis - Who got the best deals?",
+          category: "IPL",
+          date: "Mar 19, 2025", 
+          status: "draft" as "draft"
+        },
+        {
+          id: "3",
+          title: "Top 10 Players to Watch in the World Cup",
+          category: "World Cup",
+          date: "Mar 18, 2025",
+          status: "published" as "published"
+        }
+      ];
+      
+      setRecentArticles(mockArticles);
+      
+      setStats([
+        {
+          label: 'Total Articles',
+          value: mockArticles.length,
+          icon: <FileText className="h-8 w-8 text-cricket-accent" />,
+          change: `${mockArticles.filter(a => a.status === "published").length} published, ${mockArticles.filter(a => a.status === "draft").length} drafts`,
+          isPositive: true
+        },
+        {
+          label: 'Monthly Views',
+          value: '1.2M',
+          icon: <Eye className="h-8 w-8 text-green-500" />,
+          change: '+8%',
+          isPositive: true
+        },
+        {
+          label: 'Active Users',
+          value: '48.7K',
+          icon: <Users className="h-8 w-8 text-blue-500" />,
+          change: '+5%',
+          isPositive: true
+        },
+        {
+          label: 'Top Category',
+          value: 'Match Preview',
+          icon: <TrendingUp className="h-8 w-8 text-purple-500" />,
+          change: `33% of content`,
+          isPositive: true
+        }
+      ]);
+      
       setIsLoading(false);
     }
   };
@@ -195,7 +246,7 @@ const AdminDashboard = () => {
   };
 
   const handleCreateArticle = () => {
-    navigate('/admin/articles/new');
+    navigate('/admin/articles/new', { replace: false });
   };
 
   if (isLoading) {

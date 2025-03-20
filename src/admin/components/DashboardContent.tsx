@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, FileText, Clock, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,6 +63,7 @@ const DashboardContent = () => {
   const [recentArticles, setRecentArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDashboardData();
@@ -145,6 +146,11 @@ const DashboardContent = () => {
     });
   };
 
+  // Handler for creating new article with programmatic navigation
+  const handleCreateArticle = () => {
+    navigate('/admin/articles/new');
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -157,11 +163,10 @@ const DashboardContent = () => {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-heading font-bold">Dashboard</h1>
-        <Link to="/admin/articles/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Create New Article
-          </Button>
-        </Link>
+        {/* Use the handler instead of Link component for better navigation */}
+        <Button onClick={handleCreateArticle}>
+          <Plus className="mr-2 h-4 w-4" /> Create New Article
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -210,11 +215,9 @@ const DashboardContent = () => {
             <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-500">No articles yet</h3>
             <p className="text-gray-400 mt-2">Start creating your first article</p>
-            <Link to="/admin/articles/new" className="mt-4 inline-block">
-              <Button variant="outline" className="mt-4">
-                <Plus className="mr-2 h-4 w-4" /> Create Article
-              </Button>
-            </Link>
+            <Button variant="outline" className="mt-4" onClick={handleCreateArticle}>
+              <Plus className="mr-2 h-4 w-4" /> Create Article
+            </Button>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -259,11 +262,13 @@ const DashboardContent = () => {
                       </span>
                     </td>
                     <td className="py-4 text-right">
-                      <Link to={`/admin/articles/edit/${article.id}`}>
-                        <Button variant="ghost" size="sm">
-                          Edit
-                        </Button>
-                      </Link>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => navigate(`/admin/articles/edit/${article.id}`)}
+                      >
+                        Edit
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -274,9 +279,9 @@ const DashboardContent = () => {
         
         {recentArticles.length > 0 && (
           <div className="mt-4 text-right">
-            <Link to="/admin/articles">
-              <Button variant="outline">View All Articles</Button>
-            </Link>
+            <Button variant="outline" onClick={() => navigate('/admin/articles')}>
+              View All Articles
+            </Button>
           </div>
         )}
       </Card>

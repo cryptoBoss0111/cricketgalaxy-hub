@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -43,6 +42,9 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     let isMounted = true;
     let retryCount = 0;
     const maxRetries = 2;
+    
+    // First check if adminToken exists in localStorage as a quick check
+    const adminToken = localStorage.getItem('adminToken');
     
     const checkAuth = async () => {
       if (!isMounted) return;
@@ -92,12 +94,19 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       }
     };
     
-    checkAuth();
+    // If isAdmin is already true, we trust it
+    if (isAdmin && !isChecking) {
+      setVerified(true);
+      setChecking(false);
+    } else {
+      // Otherwise check explicitly
+      checkAuth();
+    }
     
     return () => {
       isMounted = false;
     };
-  }, [verifyAdmin]);
+  }, [verifyAdmin, isAdmin, isChecking]);
   
   if (checking) {
     return (
@@ -126,6 +135,7 @@ const App = () => (
         <BrowserRouter>
           <AdminAuthProvider>
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<Home />} />
               <Route path="/cricket-news" element={<CricketNews />} />
               <Route path="/match-previews" element={<CricketNews />} />

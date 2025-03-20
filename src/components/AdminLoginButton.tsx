@@ -27,10 +27,12 @@ const AdminLoginButton = () => {
     setTimeout(() => { buttonClicked.current = false; }, 1000); // Reset after 1 second
     
     if (isAdmin) {
+      console.log("Navigating to admin dashboard");
       setLoginAttempted(true);
-      navigate("/admin/dashboard");
+      navigate("/admin/dashboard", { replace: false });
     } else {
-      navigate("/admin/login");
+      console.log("Navigating to admin login");
+      navigate("/admin/login", { replace: false });
     }
   };
   
@@ -40,6 +42,7 @@ const AdminLoginButton = () => {
     
     buttonClicked.current = true;
     try {
+      console.log("Logging out admin user");
       await signOut();
       // Toast notification is handled in the signOut function
     } catch (error) {

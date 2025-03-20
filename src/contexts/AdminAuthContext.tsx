@@ -33,14 +33,33 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
       setIsChecking(true);
       console.log("Verifying admin status...");
       
+      // Check if we have an adminToken in localStorage first
+      const storedAdminToken = localStorage.getItem('adminToken');
+      if (storedAdminToken === 'authenticated') {
+        console.log("Found admin token in localStorage, checking if still valid...");
+      }
+      
+      // Always verify with the server
       const { isAdmin: adminStatus } = await checkAdminStatus();
       console.log("Admin verification result:", adminStatus);
       
+      // Update state based on server response
       setIsAdmin(adminStatus);
       initialCheckDone.current = true;
+      
+      // If admin status is false but we had a token, clear it
+      if (!adminStatus && storedAdminToken === 'authenticated') {
+        console.log("Admin token invalid, clearing from localStorage");
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+      }
+      
       return adminStatus;
     } catch (error) {
       console.error("Admin verification error:", error);
+      // Clear tokens on verification error to be safe
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
       setIsAdmin(false);
       initialCheckDone.current = true;
       return false;
@@ -55,8 +74,12 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
       setIsChecking(true);
       const { success } = await signOutAdmin();
       
+      // Always clear local storage items
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      setIsAdmin(false);
+      
       if (success) {
-        setIsAdmin(false);
         navigate("/");
         
         toast({
@@ -64,13 +87,24 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
           description: "You have been successfully logged out",
         });
       } else {
-        throw new Error("Logout failed");
+        // Even if server signout fails, we've cleared local tokens
+        navigate("/");
+        toast({
+          title: "Logged Out",
+          description: "You have been logged out (local only)",
+        });
       }
     } catch (error) {
       console.error("Error during logout:", error);
+      // Clear tokens even if there's an error
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      setIsAdmin(false);
+      
+      navigate("/");
       toast({
-        title: "Logout Error",
-        description: "An error occurred while logging out",
+        title: "Logged Out",
+        description: "Logged out with errors, session cleared",
         variant: "destructive",
       });
     } finally {
@@ -83,7 +117,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     let isMounted = true;
     
     const checkAuth = async () => {
-      if (!isMounted || initialCheckDone.current) return;
+      if (!isMounted || checkInProgress.current) return;
       
       console.log("Performing initial admin check");
       await verifyAdmin();
@@ -111,7 +145,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
   // Recheck admin status periodically - but reduce the frequency to avoid too many checks
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!isChecking && initialCheckDone.current) {
+      if (!isChecking && initialCheckDone.current && !checkInProgress.current) {
         console.log("Performing periodic admin check");
         verifyAdmin();
       }
