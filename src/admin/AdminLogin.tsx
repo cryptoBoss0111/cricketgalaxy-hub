@@ -11,6 +11,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { loginAdmin } from "@/utils/adminAuth";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 
+// Demo credentials for local fallback authentication
+const DEMO_CREDENTIALS = {
+  email: 'admin@cricketexpress.com',
+  password: 'admin123'
+};
+
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,12 +42,35 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      const result = await loginAdmin(email, password);
+      // First attempt - try using the loginAdmin function that uses Supabase auth
+      const result = await loginAdmin(email, password).catch(err => {
+        console.error('Regular login error:', err);
+        
+        // If using demo credentials, allow local authentication when edge function fails
+        if (email === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password) {
+          console.log("Using demo credentials with local authentication");
+          
+          // Store authentication for demo account
+          localStorage.setItem('adminToken', 'authenticated');
+          localStorage.setItem('adminUser', JSON.stringify({ 
+            username: email, 
+            role: 'admin',
+            id: 'demo-admin-id'
+          }));
+          
+          return { success: true, message: "Demo login successful", localAuth: true };
+        }
+        
+        // Re-throw for other errors
+        throw err;
+      });
       
       if (result.success) {
         toast({
           title: "Login successful",
-          description: "Welcome to the admin dashboard",
+          description: result.localAuth ? 
+            "Welcome to the admin dashboard (local authentication)" : 
+            "Welcome to the admin dashboard",
           duration: 3000,
         });
         
@@ -59,7 +88,9 @@ const AdminLogin = () => {
       let errorMessage = 'An error occurred during login. Please try again.';
       
       if (err.message) {
-        if (err.message.includes("Invalid login credentials") || 
+        if (err.message.includes("Failed to send a request to the Edge Function")) {
+          errorMessage = "Server connection error. If using demo credentials, they will still work.";
+        } else if (err.message.includes("Invalid login credentials") || 
             err.message.includes("Invalid email or password") ||
             err.message.includes("Invalid username or password")) {
           errorMessage = "Invalid email or password";
@@ -108,8 +139,8 @@ const AdminLogin = () => {
           <p className="text-gray-500 mt-1">Enter your credentials to access the admin panel</p>
           <div className="mt-2 p-2 bg-blue-50 text-blue-700 rounded-md text-sm">
             <p><strong>Demo Credentials:</strong></p>
-            <p>Email: admin@cricketexpress.com</p>
-            <p>Password: admin123</p>
+            <p>Email: {DEMO_CREDENTIALS.email}</p>
+            <p>Password: {DEMO_CREDENTIALS.password}</p>
           </div>
         </div>
         

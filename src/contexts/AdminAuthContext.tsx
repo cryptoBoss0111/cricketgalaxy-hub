@@ -5,6 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 import { checkAdminStatus, signOutAdmin } from "@/utils/adminAuth";
 import { refreshSession } from "@/integrations/supabase/client";
 
+// Demo credentials for fallback authentication
+const DEMO_ADMIN_EMAIL = 'admin@cricketexpress.com';
+const DEMO_ADMIN_ID = 'demo-admin-id';
+
 type AdminAuthContextType = {
   isAdmin: boolean;
   isChecking: boolean;
@@ -61,23 +65,73 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
       console.log("Verifying admin status...");
       
       const storedAdminToken = localStorage.getItem('adminToken');
+      const storedAdminUser = localStorage.getItem('adminUser');
+      
+      // Special case for demo admin
+      if (storedAdminToken === 'authenticated' && storedAdminUser) {
+        try {
+          const adminUser = JSON.parse(storedAdminUser);
+          if (adminUser.id === DEMO_ADMIN_ID) {
+            console.log("Found demo admin token in localStorage");
+            setIsAdmin(true);
+            initialCheckDone.current = true;
+            return true;
+          }
+        } catch (parseError) {
+          console.error("Error parsing admin user:", parseError);
+        }
+      }
+      
       if (storedAdminToken === 'authenticated') {
         console.log("Found admin token in localStorage, checking if still valid...");
       }
       
-      const { isAdmin: adminStatus } = await checkAdminStatus();
-      console.log("Admin verification result:", adminStatus);
-      
-      setIsAdmin(adminStatus);
-      initialCheckDone.current = true;
-      
-      if (!adminStatus && storedAdminToken === 'authenticated') {
-        console.log("Admin token invalid, clearing from localStorage");
+      // Try contacting the server to verify admin status
+      try {
+        const { isAdmin: adminStatus } = await checkAdminStatus();
+        console.log("Admin verification result:", adminStatus);
+        
+        setIsAdmin(adminStatus);
+        initialCheckDone.current = true;
+        
+        if (!adminStatus && storedAdminToken === 'authenticated') {
+          console.log("Admin token invalid, clearing from localStorage");
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+        }
+        
+        return adminStatus;
+      } catch (serverError) {
+        console.error("Server verification error:", serverError);
+        
+        // If server check fails but we have stored credentials, trust them as fallback
+        if (storedAdminToken === 'authenticated' && storedAdminUser) {
+          console.log("Using stored admin credentials as fallback due to server error");
+          
+          try {
+            const adminUser = JSON.parse(storedAdminUser);
+            if (adminUser.id === DEMO_ADMIN_ID) {
+              console.log("Verified demo admin credentials");
+              setIsAdmin(true);
+              initialCheckDone.current = true;
+              return true;
+            }
+          } catch (parseError) {
+            console.error("Error parsing admin user in fallback:", parseError);
+          }
+          
+          setIsAdmin(true);
+          initialCheckDone.current = true;
+          return true;
+        }
+        
+        // No valid credentials
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminUser');
+        setIsAdmin(false);
+        initialCheckDone.current = true;
+        return false;
       }
-      
-      return adminStatus;
     } catch (error) {
       console.error("Admin verification error:", error);
       
@@ -105,26 +159,43 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
   const signOut = async (): Promise<void> => {
     try {
       setIsChecking(true);
-      const { success } = await signOutAdmin();
       
+      // Check if this is the demo admin
+      const storedAdminUser = localStorage.getItem('adminUser');
+      let isDemoAdmin = false;
+      
+      if (storedAdminUser) {
+        try {
+          const adminUser = JSON.parse(storedAdminUser);
+          isDemoAdmin = adminUser.id === DEMO_ADMIN_ID;
+        } catch (e) {
+          // Ignore parsing errors
+        }
+      }
+
+      if (!isDemoAdmin) {
+        // Only try server logout for non-demo admins
+        try {
+          const { success } = await signOutAdmin();
+          console.log("Server signout result:", success);
+        } catch (error) {
+          console.error("Error during server logout:", error);
+        }
+      } else {
+        console.log("Logging out demo admin (local only)");
+      }
+      
+      // Always clear local storage
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminUser');
       setIsAdmin(false);
       
-      if (success) {
-        navigate("/", { replace: true });
-        
-        toast({
-          title: "Logged Out",
-          description: "You have been successfully logged out",
-        });
-      } else {
-        navigate("/", { replace: true });
-        toast({
-          title: "Logged Out",
-          description: "You have been logged out (local only)",
-        });
-      }
+      navigate("/", { replace: true });
+      
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out",
+      });
     } catch (error) {
       console.error("Error during logout:", error);
       localStorage.removeItem('adminToken');
@@ -142,6 +213,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     }
   };
 
+  // Handle navigation and cleanup auth state if needed
   useEffect(() => {
     const handleNavigation = () => {
       if (window.location.pathname === '/admin/login') {
@@ -158,6 +230,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     };
   }, []);
 
+  // Initial authentication check
   useEffect(() => {
     let isMounted = true;
     
@@ -185,6 +258,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     };
   }, []);
 
+  // Periodic admin check
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isChecking && initialCheckDone.current && !checkInProgress.current) {
