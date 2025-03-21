@@ -32,39 +32,37 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
-  // Define a fixed placeholder image path
+  // Define a fixed placeholder image that we know exists in the public folder
   const DEFAULT_PLACEHOLDER = '/placeholder.svg';
   
   // States to manage image loading
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [bestImageUrl, setBestImageUrl] = useState<string | null>(null);
   
-  // Function to validate if a URL is valid
-  const isValidUrl = (url: string | undefined): boolean => {
-    if (!url) return false;
-    try {
-      new URL(url);
-      return true;
-    } catch (e) {
-      return false;
-    }
+  // Function to extract URL and check if it is potentially valid
+  const sanitizeUrl = (url: string | undefined): string | null => {
+    if (!url) return null;
+    // Remove any query parameters or fragments that might cause issues
+    return url.split('?')[0].split('#')[0];
   };
   
-  // Determine the best image to use
+  // Find the best available image
   useEffect(() => {
-    const images = [featured_image, cover_image, imageUrl]
-      .filter(url => isValidUrl(url)) as string[];
+    // Try images in order of preference
+    const possibleImages = [featured_image, cover_image, imageUrl]
+      .map(sanitizeUrl)
+      .filter(Boolean) as string[];
     
-    if (images.length > 0) {
-      // We have at least one valid image URL
-      setImageSrc(images[0]);
-      console.log(`Using image for "${title}":`, images[0]);
+    if (possibleImages.length > 0) {
+      // Use the first available image
+      const chosenImage = possibleImages[0];
+      setBestImageUrl(chosenImage);
+      console.log(`Selected image for "${title}":`, chosenImage);
     } else {
-      // No valid images, use placeholder
-      setImageSrc(null);
-      setImageError(true);
-      console.log(`No valid images found for "${title}", using placeholder`);
+      // No valid images found, we'll use the placeholder
+      setBestImageUrl(null);
+      console.log(`No valid images found for "${title}", will use placeholder`);
     }
   }, [featured_image, cover_image, imageUrl, title]);
   
@@ -76,7 +74,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   
   // Handle image load error
   const handleImageError = () => {
-    console.error(`Failed to load image for article: ${title}`, imageSrc);
+    console.error(`Failed to load image for article "${title}":`, bestImageUrl);
     setIsLoading(false);
     setImageError(true);
   };
@@ -92,9 +90,9 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           <Skeleton className="w-full h-48 object-cover" />
         )}
         
-        {/* Image display with error handling */}
+        {/* Image element */}
         <img 
-          src={!imageError && imageSrc ? imageSrc : DEFAULT_PLACEHOLDER}
+          src={!imageError && bestImageUrl ? bestImageUrl : DEFAULT_PLACEHOLDER}
           alt={title}
           className={cn(
             "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
@@ -103,6 +101,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           onLoad={handleImageLoad}
           onError={handleImageError}
           loading="lazy"
+          crossOrigin="anonymous" // Add crossOrigin to handle CORS
         />
         
         <div className="absolute top-3 left-3">
