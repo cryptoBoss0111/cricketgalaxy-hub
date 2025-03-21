@@ -23,7 +23,7 @@ const HeroImageComponent: FC<HeroImageProps> = ({
       <img 
         src={imageUrl}
         alt={title}
-        className="w-full h-80 md:h-96 object-cover transition-transform duration-700 ease-in-out"
+        className="w-full h-80 md:h-96 object-cover transition-transform duration-700 ease-in-out hover:scale-105"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
     </div>

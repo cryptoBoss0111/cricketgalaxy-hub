@@ -30,17 +30,17 @@ const HeroControlsComponent: FC<HeroControlsProps> = ({
   };
 
   return (
-    <div className="flex justify-center mt-8 space-x-2 transition-opacity duration-300" style={{ opacity: isAnimating ? 0.5 : 1 }}>
+    <div className="flex justify-center mt-8 space-x-2 transition-all duration-500" style={{ opacity: isAnimating ? 0.5 : 1 }}>
       {articles.map((_, idx) => (
         <button
           key={idx}
           onClick={() => handleSlideChange(idx)}
           disabled={isAnimating}
           className={cn(
-            "w-3 h-3 rounded-full transition-all duration-500",
+            "w-3 h-3 rounded-full transition-all duration-500 ease-in-out transform",
             idx === currentSlide 
               ? "bg-cricket-accent w-6" 
-              : "bg-white/30 hover:bg-white/50"
+              : "bg-white/30 hover:bg-white/50 hover:scale-110"
           )}
           aria-label={`Go to slide ${idx + 1}`}
         />

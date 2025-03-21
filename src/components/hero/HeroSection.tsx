@@ -77,9 +77,9 @@ export const HeroSection = () => {
         setCurrentSlide(prev => (prev + 1) % heroArticles.length);
         setTimeout(() => {
           setIsAnimating(false);
-        }, 100);
-      }, 700);
-    }, 10000); // Increased interval for better user experience
+        }, 150); // Slightly longer delay before removing animation state
+      }, 700); // Keep transition timing consistent
+    }, 10000); // Interval between slides
     
     return () => clearInterval(interval);
   }, [heroArticles.length]);
@@ -115,8 +115,8 @@ export const HeroSection = () => {
   
   return (
     <section className="relative bg-gradient-to-b from-gray-900 to-cricket-dark text-white py-16 overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#ffffff33_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+      {/* Background pattern with subtle animation */}
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#ffffff33_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)] animate-pulse-subtle" />
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-screen-xl mx-auto">
