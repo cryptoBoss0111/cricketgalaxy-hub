@@ -32,77 +32,69 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
-  // Define a fixed placeholder image path that exists in the public folder
   const DEFAULT_PLACEHOLDER = '/placeholder.svg';
-  
-  // States to manage image loading
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [bestImageUrl, setBestImageUrl] = useState<string | null>(null);
+  const [imageSource, setImageSource] = useState<string>(DEFAULT_PLACEHOLDER);
   
-  // Function to check if a URL is valid
-  const isValidUrl = (url: string | undefined): boolean => {
-    if (!url) return false;
-    
-    // Check if it's a complete URL with protocol
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return true;
-    }
-    
-    // Check if it's a relative path starting with /
-    if (url.startsWith('/')) {
-      return true;
-    }
-    
-    return false;
-  };
-  
-  // Find the best available image
+  // This effect runs once when component mounts and sets the image source
   useEffect(() => {
-    console.log(`Checking images for article "${title}": `, {
+    // Log all received image URLs for debugging
+    console.log(`ArticleCard for "${title}" received these image URLs:`, {
       featured_image,
       cover_image,
       imageUrl
     });
     
-    // Try featured_image first (from Supabase)
-    if (isValidUrl(featured_image)) {
+    // Check featured_image first (from admin panel)
+    if (featured_image && featured_image.trim() !== '') {
+      setImageSource(featured_image);
       console.log(`Using featured_image for "${title}": ${featured_image}`);
-      setBestImageUrl(featured_image);
       return;
     }
     
-    // Then try cover_image (from Supabase)
-    if (isValidUrl(cover_image)) {
+    // Then try cover_image (from admin panel)
+    if (cover_image && cover_image.trim() !== '') {
+      setImageSource(cover_image);
       console.log(`Using cover_image for "${title}": ${cover_image}`);
-      setBestImageUrl(cover_image);
       return;
     }
     
-    // Finally try imageUrl (legacy or other source)
-    if (isValidUrl(imageUrl)) {
+    // Then try imageUrl (legacy field)
+    if (imageUrl && imageUrl.trim() !== '') {
+      setImageSource(imageUrl);
       console.log(`Using imageUrl for "${title}": ${imageUrl}`);
-      setBestImageUrl(imageUrl);
       return;
     }
     
-    // No valid images found
-    console.log(`No valid images found for "${title}", will use placeholder`);
-    setBestImageUrl(null);
-  }, [featured_image, cover_image, imageUrl, title]);
+    // If no images provided, use placeholder
+    console.log(`No valid images found for "${title}", using placeholder`);
+    setImageSource(DEFAULT_PLACEHOLDER);
+  }, [title, featured_image, cover_image, imageUrl]);
   
-  // Handle image load success
   const handleImageLoad = () => {
-    console.log(`Image loaded successfully for "${title}": ${bestImageUrl}`);
+    console.log(`✅ Image loaded successfully for "${title}": ${imageSource}`);
     setIsLoading(false);
     setImageError(false);
   };
   
-  // Handle image load error
   const handleImageError = () => {
-    console.error(`Failed to load image for article "${title}": ${bestImageUrl}`);
+    console.error(`❌ Failed to load image for article "${title}": ${imageSource}`);
+    
+    // If the current image fails, try fallback images or use placeholder
+    if (imageSource === featured_image && cover_image) {
+      console.log(`Trying fallback to cover_image for "${title}"`);
+      setImageSource(cover_image);
+    } else if ((imageSource === featured_image || imageSource === cover_image) && imageUrl) {
+      console.log(`Trying fallback to imageUrl for "${title}"`);
+      setImageSource(imageUrl);
+    } else if (imageSource !== DEFAULT_PLACEHOLDER) {
+      console.log(`Using placeholder for "${title}" after all image attempts failed`);
+      setImageSource(DEFAULT_PLACEHOLDER);
+    }
+    
     setIsLoading(false);
-    setImageError(true);
+    setImageError(imageSource === DEFAULT_PLACEHOLDER);
   };
   
   return (
@@ -116,9 +108,9 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           <Skeleton className="w-full h-48 object-cover" />
         )}
         
-        {/* Image element */}
+        {/* Display the image with error handling */}
         <img 
-          src={!imageError && bestImageUrl ? bestImageUrl : DEFAULT_PLACEHOLDER}
+          src={imageSource}
           alt={title}
           className={cn(
             "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
