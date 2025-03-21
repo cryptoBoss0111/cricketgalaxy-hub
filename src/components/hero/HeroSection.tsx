@@ -75,9 +75,11 @@ export const HeroSection = () => {
       setIsAnimating(true);
       setTimeout(() => {
         setCurrentSlide(prev => (prev + 1) % heroArticles.length);
-        setIsAnimating(false);
-      }, 500);
-    }, 8000);
+        setTimeout(() => {
+          setIsAnimating(false);
+        }, 100);
+      }, 700);
+    }, 10000); // Increased interval for better user experience
     
     return () => clearInterval(interval);
   }, [heroArticles.length]);

@@ -15,13 +15,15 @@ const HeroImageComponent: FC<HeroImageProps> = ({
 }) => {
   return (
     <div className={cn(
-      "relative rounded-xl overflow-hidden shadow-2xl transition-all duration-500",
-      isAnimating ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
+      "relative rounded-xl overflow-hidden shadow-2xl transition-all duration-700 ease-in-out transform",
+      isAnimating 
+        ? "opacity-0 translate-y-8 scale-95" 
+        : "opacity-100 translate-y-0 scale-100"
     )}>
       <img 
         src={imageUrl}
         alt={title}
-        className="w-full h-80 md:h-96 object-cover"
+        className="w-full h-80 md:h-96 object-cover transition-transform duration-700 ease-in-out"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
     </div>

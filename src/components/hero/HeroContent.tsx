@@ -20,10 +20,12 @@ const HeroContentComponent: FC<HeroContentProps> = ({
 }) => {
   return (
     <div className={cn(
-      "transition-all duration-500",
-      isAnimating ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
+      "transition-all duration-700 ease-in-out transform",
+      isAnimating 
+        ? "opacity-0 translate-y-8" 
+        : "opacity-100 translate-y-0"
     )}>
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4 transition-all duration-500 delay-100">
         <Link to={`/${getCategoryUrl(article.category)}`}>
           <Badge className="bg-cricket-accent hover:bg-cricket-accent/90">
             {article.category}
@@ -41,11 +43,11 @@ const HeroContentComponent: FC<HeroContentProps> = ({
         {article.title}
       </h1>
       
-      <p className="text-gray-300 text-lg mb-6">
+      <p className="text-gray-300 text-lg mb-6 transition-all duration-500 delay-200">
         {article.excerpt}
       </p>
       
-      <div className="flex items-center mb-8">
+      <div className="flex items-center mb-8 transition-all duration-500 delay-300">
         <span className="text-sm text-gray-400">{article.date}</span>
         <span className="mx-3 text-gray-500">•</span>
         <Link to={`/article/${article.id}`} className="text-cricket-accent hover:underline flex items-center text-sm font-medium">
@@ -53,7 +55,7 @@ const HeroContentComponent: FC<HeroContentProps> = ({
         </Link>
       </div>
       
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 transition-all duration-500 delay-400">
         <Button asChild className="bg-cricket-accent hover:bg-cricket-accent/90">
           <Link to={`/article/${article.id}`}>
             Read More

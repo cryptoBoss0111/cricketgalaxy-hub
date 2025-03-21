@@ -18,21 +18,26 @@ const HeroControlsComponent: FC<HeroControlsProps> = ({
   setIsAnimating
 }) => {
   const handleSlideChange = (idx: number) => {
+    if (isAnimating || idx === currentSlide) return;
+    
     setIsAnimating(true);
     setTimeout(() => {
       onSlideChange(idx);
-      setIsAnimating(false);
-    }, 500);
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, 100);
+    }, 400);
   };
 
   return (
-    <div className="flex justify-center mt-8 space-x-2">
+    <div className="flex justify-center mt-8 space-x-2 transition-opacity duration-300" style={{ opacity: isAnimating ? 0.5 : 1 }}>
       {articles.map((_, idx) => (
         <button
           key={idx}
           onClick={() => handleSlideChange(idx)}
+          disabled={isAnimating}
           className={cn(
-            "w-3 h-3 rounded-full transition-all duration-300",
+            "w-3 h-3 rounded-full transition-all duration-500",
             idx === currentSlide 
               ? "bg-cricket-accent w-6" 
               : "bg-white/30 hover:bg-white/50"
