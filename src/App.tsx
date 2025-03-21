@@ -8,7 +8,7 @@ import { ChatbotProvider } from "@/contexts/ChatbotContext";
 import { useState, useEffect } from "react";
 import { AdminAuthProvider, useAdminAuth } from "@/contexts/AdminAuthContext";
 import Home from "./pages/Home";
-import CricketNews from "./pages/CricketNews";
+import CricketNews from "./pages/cricket-news";
 import ArticleDetail from "./pages/ArticleDetail";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./admin/AdminLogin";
