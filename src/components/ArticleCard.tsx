@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,103 +32,117 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
-  // Use a static local placeholder image rather than an external service
-  const placeholderImage = '/lovable-uploads/78bd8ca1-c0b1-430c-814b-d38fbaf2ef0c.png';
+  // Local placeholder image (static asset in public folder)
+  const DEFAULT_PLACEHOLDER = '/lovable-uploads/59a2c89e-ced1-42c5-b6a5-59527e647419.png';
   
   const [isImageLoading, setIsImageLoading] = useState(true);
-  const [displayedImage, setDisplayedImage] = useState<string>(placeholderImage);
+  const [displayedImage, setDisplayedImage] = useState<string>(DEFAULT_PLACEHOLDER);
+  const isMounted = useRef(true);
   
-  // Log available image sources for debugging
-  const availableSources = [imageUrl, featured_image, cover_image].filter(Boolean);
-  
-  console.log(`Article ${id} - Image URLs:`, {
+  // Collect all possible image sources, filtering out undefined/null values
+  const imageSources = [
     imageUrl,
-    cover_image,
-    featured_image,
-    availableSources
-  });
+    featured_image, 
+    cover_image
+  ].filter(Boolean) as string[];
   
+  console.log(`Article ${id} - Original image sources for "${title}":`, {
+    imageUrl,
+    featured_image,
+    cover_image,
+    availableSources: imageSources
+  });
+
   useEffect(() => {
-    let isMounted = true;
+    // Set isMounted ref to true when component mounts
+    isMounted.current = true;
     
+    // Function to load the image
     const loadImage = async () => {
-      // Skip loading if no sources available
-      if (!availableSources.length) {
-        if (isMounted) {
-          console.log(`No image sources available for article: ${title}`);
-          setDisplayedImage(placeholderImage);
-          setIsImageLoading(false);
-        }
+      // If no sources are available, use the default placeholder
+      if (!imageSources.length) {
+        console.log(`No image sources available for article: ${title}`);
+        setDisplayedImage(DEFAULT_PLACEHOLDER);
+        setIsImageLoading(false);
         return;
       }
       
-      let imageLoaded = false;
-      
-      // Try loading each image with simplified approach
-      for (const src of availableSources) {
-        if (!isMounted) return;
+      // Try each source in sequence
+      for (let i = 0; i < imageSources.length; i++) {
+        const src = imageSources[i];
         
         try {
-          // Create a new image for testing
-          const img = new Image();
+          // Break if component unmounted during execution
+          if (!isMounted.current) return;
           
-          // Create a promise for image loading with timeout
           await new Promise<void>((resolve, reject) => {
+            // Create a new image element for testing
+            const img = new Image();
+            
+            // Set a timeout to avoid hanging forever
             const timeoutId = setTimeout(() => {
               reject(new Error(`Timeout loading image from ${src}`));
-            }, 5000);
+            }, 3000);
             
-            // Configure CORS attributes to help with cross-origin issues
-            img.crossOrigin = "anonymous";
-            
+            // Success handler
             img.onload = () => {
               clearTimeout(timeoutId);
-              if (isMounted) {
+              if (isMounted.current) {
+                console.log(`Successfully loaded image for article "${title}" from source: ${src}`);
                 setDisplayedImage(src);
                 setIsImageLoading(false);
-                imageLoaded = true;
               }
               resolve();
             };
             
+            // Error handler
             img.onerror = () => {
               clearTimeout(timeoutId);
-              console.error(`Failed to load image at ${src} for article: ${title}`);
+              console.error(`Failed to load image from source ${i+1}/${imageSources.length} for article "${title}": ${src}`);
               reject(new Error(`Failed to load image from ${src}`));
             };
             
-            // Set cache-busting parameter to prevent caching issues
-            img.src = `${src}?t=${new Date().getTime()}`;
+            // Set source with cache-busting parameter and specific flags for cross-origin issues
+            img.crossOrigin = "anonymous";
+            img.referrerPolicy = "no-referrer";
+            
+            // Add random parameter to bypass cache
+            const cacheBuster = Math.random().toString(36).substring(7);
+            img.src = `${src}?v=${cacheBuster}`;
           });
           
-          // If we successfully loaded the image, exit the loop
-          if (imageLoaded) {
-            console.log(`Successfully loaded image for article: ${title} from ${src}`);
-            break;
-          }
+          // If we reach here, the image loaded successfully
+          return;
+          
         } catch (error) {
-          console.log(`Error loading image from ${availableSources.indexOf(src) + 1}/${availableSources.length} sources for article "${title}":`, error);
-          // Continue to the next source
+          console.log(`Error loading image from ${i+1}/${imageSources.length} sources for article "${title}":`, error);
+          // Continue to next source on failure
         }
       }
       
-      // If no image was loaded, use the placeholder
-      if (!imageLoaded && isMounted) {
-        console.log(`Using placeholder image for article: ${title}`);
-        setDisplayedImage(placeholderImage);
+      // If we've tried all sources and none worked, use the placeholder
+      if (isMounted.current) {
+        console.log(`Using default placeholder image for article: ${title}`);
+        setDisplayedImage(DEFAULT_PLACEHOLDER);
         setIsImageLoading(false);
       }
     };
     
     // Attempt to load the image
     setIsImageLoading(true);
-    loadImage();
+    loadImage().catch(err => {
+      console.error('Unhandled error in image loading:', err);
+      if (isMounted.current) {
+        setDisplayedImage(DEFAULT_PLACEHOLDER);
+        setIsImageLoading(false);
+      }
+    });
     
-    // Cleanup function
+    // Cleanup function to prevent state updates after unmount
     return () => {
-      isMounted = false;
+      isMounted.current = false;
     };
-  }, [id, title, availableSources, placeholderImage]);
+  }, [id, title, imageSources, DEFAULT_PLACEHOLDER]);
   
   return (
     <article className={cn(
@@ -148,6 +162,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
             isImageLoading ? "opacity-0" : "opacity-100"
           )}
           loading="lazy"
+          onError={(e) => {
+            console.error(`Final image display error for ${title}:`, e);
+            (e.target as HTMLImageElement).src = DEFAULT_PLACEHOLDER;
+          }}
         />
         
         <div className="absolute top-3 left-3">
