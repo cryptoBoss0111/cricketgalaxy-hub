@@ -25,6 +25,7 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
   const {
     imageSource,
     isLoading,
+    imageError,
     handleImageLoad,
     handleImageError
   } = useArticleImage(title, featured_image, cover_image, imageUrl);

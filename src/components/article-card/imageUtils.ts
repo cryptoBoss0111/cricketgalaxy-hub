@@ -27,6 +27,9 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
   const [imageSource, setImageSource] = useState<string>(DEFAULT_PLACEHOLDER);
   
   useEffect(() => {
+    setIsLoading(true);
+    setImageError(false);
+    
     const fullFeaturedImage = getFullImageUrl(featured_image);
     const fullCoverImage = getFullImageUrl(cover_image);
     const fullImageUrl = getFullImageUrl(imageUrl);
