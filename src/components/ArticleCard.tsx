@@ -30,27 +30,34 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
+  // Use the first available image source in this priority order
   const image = imageUrl || cover_image || featured_image;
+  
+  // Placeholder image to use if no image is provided
+  const placeholderImage = 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop';
   
   return (
     <article className={cn(
       "article-card flex flex-col h-full bg-white dark:bg-cricket-dark/80 border border-gray-100 dark:border-gray-800 shadow-soft hover:shadow-lg transition-all duration-300",
       className
     )}>
-      {image && (
-        <Link to={`/article/${id}`} className="block relative">
-          <img 
-            src={image} 
-            alt={title}
-            className="w-full h-48 object-cover"
-          />
-          <div className="absolute top-3 left-3">
-            <span className="inline-block px-2 py-1 text-xs font-medium bg-cricket-accent text-white rounded">
-              {category}
-            </span>
-          </div>
-        </Link>
-      )}
+      <Link to={`/article/${id}`} className="block relative overflow-hidden aspect-video">
+        <img 
+          src={image || placeholderImage}
+          alt={title}
+          className="w-full h-48 object-cover transition-transform duration-500 hover:scale-110"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null; // Prevent infinite loop
+            target.src = placeholderImage;
+          }}
+        />
+        <div className="absolute top-3 left-3">
+          <span className="inline-block px-2 py-1 text-xs font-medium bg-cricket-accent text-white rounded">
+            {category}
+          </span>
+        </div>
+      </Link>
       
       <div className="flex flex-col flex-grow p-4">
         <div className="flex-grow">

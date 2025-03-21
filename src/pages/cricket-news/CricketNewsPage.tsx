@@ -48,6 +48,7 @@ const CricketNewsPage = () => {
       setIsLoading(true);
       
       try {
+        console.log('Fetching articles from Supabase');
         const { data: articlesData, error } = await supabase
           .from('articles')
           .select('*')
@@ -65,25 +66,35 @@ const CricketNewsPage = () => {
           return;
         }
         
+        console.log('Fetched articles:', articlesData);
+        
         if (articlesData && articlesData.length > 0) {
           const uniqueCategories = [...new Set(articlesData.map(article => article.category))];
           setCategories(['All Categories', ...uniqueCategories]);
           
-          const transformedArticles: Article[] = articlesData.map((article: Tables<'articles'>) => ({
-            id: article.id,
-            title: article.title,
-            excerpt: article.excerpt || article.meta_description || 'Read this exciting story...',
-            imageUrl: article.featured_image || 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop',
-            category: article.category,
-            author: 'CricketExpress Staff',
-            date: new Date(article.published_at || article.created_at).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric'
-            }),
-            timeToRead: `${Math.ceil(article.content.length / 1000)} min read`
-          }));
+          const transformedArticles: Article[] = articlesData.map((article: Tables<'articles'>) => {
+            console.log('Article image data:', {
+              featured_image: article.featured_image,
+              cover_image: article.cover_image
+            });
+            
+            return {
+              id: article.id,
+              title: article.title,
+              excerpt: article.excerpt || article.meta_description || 'Read this exciting story...',
+              imageUrl: article.featured_image || article.cover_image || 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop',
+              category: article.category,
+              author: 'CricketExpress Staff',
+              date: new Date(article.published_at || article.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              }),
+              timeToRead: `${Math.ceil(article.content.length / 1000)} min read`
+            };
+          });
           
+          console.log('Transformed articles:', transformedArticles);
           setArticles(transformedArticles);
         } else {
           console.log('No articles found, using mock data');

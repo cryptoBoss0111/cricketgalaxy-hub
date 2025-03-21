@@ -27,8 +27,8 @@ export const TopStoriesSection = () => {
               title={story.title}
               excerpt={story.excerpt}
               imageUrl={story.imageUrl}
-              cover_image={story.imageUrl}
-              featured_image={story.imageUrl}
+              cover_image={story.imageUrl} // Provide the same image in multiple props for compatibility
+              featured_image={story.imageUrl} // Provide the same image in multiple props for compatibility
               category={story.category}
               author={story.author}
               date={story.date}

@@ -34,7 +34,7 @@ const FantasyPicksGrid: React.FC<FantasyPicksGridProps> = ({ picks, isLoading })
       </div>
       
       <div className="mt-10 text-center">
-        <Button asChild className="bg-cricket-accent hover:bg-cricket-accent/90">
+        <Button asChild className="bg-cricket-accent hover:bg-cricket-accent/90 text-white">
           <Link to="/fantasy-tips" className="flex items-center">
             Build Your Fantasy Team <ArrowRight size={16} className="ml-2" />
           </Link>
