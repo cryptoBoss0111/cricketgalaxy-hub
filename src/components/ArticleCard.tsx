@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,116 +33,39 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   className,
 }) => {
   // Local placeholder image (static asset in public folder)
-  const DEFAULT_PLACEHOLDER = '/lovable-uploads/59a2c89e-ced1-42c5-b6a5-59527e647419.png';
+  const DEFAULT_PLACEHOLDER = '/lovable-uploads/71896ba4-b0bc-405b-a224-34e3fa673d5e.png';
   
-  const [isImageLoading, setIsImageLoading] = useState(true);
-  const [displayedImage, setDisplayedImage] = useState<string>(DEFAULT_PLACEHOLDER);
-  const isMounted = useRef(true);
+  // Use state to track loading status and final image URL
+  const [isLoading, setIsLoading] = useState(true);
+  const [displayImage, setDisplayImage] = useState(DEFAULT_PLACEHOLDER);
   
-  // Collect all possible image sources, filtering out undefined/null values
-  const imageSources = [
-    imageUrl,
-    featured_image, 
-    cover_image
-  ].filter(Boolean) as string[];
+  // Get all possible image sources, prioritizing in order (most important first)
+  const imageSources = [imageUrl, featured_image, cover_image].filter(Boolean);
   
-  console.log(`Article ${id} - Original image sources for "${title}":`, {
-    imageUrl,
-    featured_image,
-    cover_image,
-    availableSources: imageSources
-  });
-
-  useEffect(() => {
-    // Set isMounted ref to true when component mounts
-    isMounted.current = true;
-    
-    // Function to load the image
-    const loadImage = async () => {
-      // If no sources are available, use the default placeholder
-      if (!imageSources.length) {
-        console.log(`No image sources available for article: ${title}`);
-        setDisplayedImage(DEFAULT_PLACEHOLDER);
-        setIsImageLoading(false);
-        return;
-      }
-      
-      // Try each source in sequence
-      for (let i = 0; i < imageSources.length; i++) {
-        const src = imageSources[i];
-        
-        try {
-          // Break if component unmounted during execution
-          if (!isMounted.current) return;
-          
-          await new Promise<void>((resolve, reject) => {
-            // Create a new image element for testing
-            const img = new Image();
-            
-            // Set a timeout to avoid hanging forever
-            const timeoutId = setTimeout(() => {
-              reject(new Error(`Timeout loading image from ${src}`));
-            }, 3000);
-            
-            // Success handler
-            img.onload = () => {
-              clearTimeout(timeoutId);
-              if (isMounted.current) {
-                console.log(`Successfully loaded image for article "${title}" from source: ${src}`);
-                setDisplayedImage(src);
-                setIsImageLoading(false);
-              }
-              resolve();
-            };
-            
-            // Error handler
-            img.onerror = () => {
-              clearTimeout(timeoutId);
-              console.error(`Failed to load image from source ${i+1}/${imageSources.length} for article "${title}": ${src}`);
-              reject(new Error(`Failed to load image from ${src}`));
-            };
-            
-            // Set source with cache-busting parameter and specific flags for cross-origin issues
-            img.crossOrigin = "anonymous";
-            img.referrerPolicy = "no-referrer";
-            
-            // Add random parameter to bypass cache
-            const cacheBuster = Math.random().toString(36).substring(7);
-            img.src = `${src}?v=${cacheBuster}`;
-          });
-          
-          // If we reach here, the image loaded successfully
-          return;
-          
-        } catch (error) {
-          console.log(`Error loading image from ${i+1}/${imageSources.length} sources for article "${title}":`, error);
-          // Continue to next source on failure
-        }
-      }
-      
-      // If we've tried all sources and none worked, use the placeholder
-      if (isMounted.current) {
-        console.log(`Using default placeholder image for article: ${title}`);
-        setDisplayedImage(DEFAULT_PLACEHOLDER);
-        setIsImageLoading(false);
-      }
-    };
-    
-    // Attempt to load the image
-    setIsImageLoading(true);
-    loadImage().catch(err => {
-      console.error('Unhandled error in image loading:', err);
-      if (isMounted.current) {
-        setDisplayedImage(DEFAULT_PLACEHOLDER);
-        setIsImageLoading(false);
-      }
-    });
-    
-    // Cleanup function to prevent state updates after unmount
-    return () => {
-      isMounted.current = false;
-    };
-  }, [id, title, imageSources, DEFAULT_PLACEHOLDER]);
+  // Handle the image load event
+  const handleImageLoad = () => {
+    setIsLoading(false);
+  };
+  
+  // Handle image error - display the default placeholder
+  const handleImageError = () => {
+    console.log(`Failed to load image for article: ${title}`);
+    setDisplayImage(DEFAULT_PLACEHOLDER);
+    setIsLoading(false);
+  };
+  
+  // Choose the best available image or fall back to placeholder
+  React.useEffect(() => {
+    // If we have any sources to try, use the first one, otherwise use placeholder
+    if (imageSources.length > 0) {
+      // Set the first available source as our display image
+      setDisplayImage(imageSources[0]);
+    } else {
+      // If no sources, use the placeholder and end loading state
+      setDisplayImage(DEFAULT_PLACEHOLDER);
+      setIsLoading(false);
+    }
+  }, [imageSources]);
   
   return (
     <article className={cn(
@@ -150,22 +73,20 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
       className
     )}>
       <Link to={`/article/${id}`} className="block relative overflow-hidden aspect-video">
-        {isImageLoading && (
+        {isLoading && (
           <Skeleton className="w-full h-48 object-cover" />
         )}
         
         <img 
-          src={displayedImage}
+          src={displayImage}
           alt={title}
           className={cn(
             "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
-            isImageLoading ? "opacity-0" : "opacity-100"
+            isLoading ? "opacity-0" : "opacity-100"
           )}
           loading="lazy"
-          onError={(e) => {
-            console.error(`Final image display error for ${title}:`, e);
-            (e.target as HTMLImageElement).src = DEFAULT_PLACEHOLDER;
-          }}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
         />
         
         <div className="absolute top-3 left-3">
