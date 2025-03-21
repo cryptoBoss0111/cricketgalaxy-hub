@@ -34,7 +34,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   
   return (
     <article className={cn(
-      "article-card flex flex-col h-full bg-white dark:bg-cricket-dark/80 dark:border-gray-800 shadow-soft hover:shadow-lg transition-all duration-300",
+      "article-card flex flex-col h-full bg-white dark:bg-cricket-dark/80 border border-gray-100 dark:border-gray-800 shadow-soft hover:shadow-lg transition-all duration-300",
       className
     )}>
       {image && (

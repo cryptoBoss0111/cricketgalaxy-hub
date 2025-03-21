@@ -28,7 +28,7 @@ export const FanPollSection = () => {
       </div>
       
       <div className="mt-4 text-center">
-        <Button variant="accent" className="w-full text-white">
+        <Button variant="accent" className="w-full">
           Cast Your Vote
         </Button>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">12,845 votes so far</p>
