@@ -26,19 +26,19 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
   const [imageError, setImageError] = useState(false);
   const [imageSource, setImageSource] = useState<string>(DEFAULT_PLACEHOLDER);
   
-  // This effect sets the initial image source when the component mounts
   useEffect(() => {
     const fullFeaturedImage = getFullImageUrl(featured_image);
     const fullCoverImage = getFullImageUrl(cover_image);
     const fullImageUrl = getFullImageUrl(imageUrl);
     
+    // For debugging, log all potential image sources
     console.log(`ArticleCard for "${title}" - Available images:`, {
       featured_image: fullFeaturedImage,
       cover_image: fullCoverImage,
       imageUrl: fullImageUrl
     });
     
-    // Try featured_image first (from admin panel)
+    // Try featured_image first
     if (isValidImageUrl(fullFeaturedImage)) {
       console.log(`Setting primary image source to featured_image: ${fullFeaturedImage}`);
       setImageSource(fullFeaturedImage!);
@@ -52,7 +52,7 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
       return;
     }
     
-    // Then try imageUrl (legacy field)
+    // Then try imageUrl
     if (isValidImageUrl(fullImageUrl)) {
       console.log(`Setting primary image source to imageUrl: ${fullImageUrl}`);
       setImageSource(fullImageUrl!);
@@ -96,7 +96,7 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
       return;
     }
     
-    // If we've tried all images and they've failed, use placeholder
+    // If all have failed, use placeholder
     if (imageSource !== DEFAULT_PLACEHOLDER) {
       console.log(`All image attempts failed for "${title}", using placeholder`);
       setImageSource(DEFAULT_PLACEHOLDER);
