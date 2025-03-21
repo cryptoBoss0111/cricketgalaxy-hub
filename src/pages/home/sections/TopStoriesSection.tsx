@@ -7,12 +7,12 @@ import { topStories } from '../data/homeData';
 
 export const TopStoriesSection = () => {
   return (
-    <section className="py-12 bg-gray-50">
+    <section className="py-12 bg-gray-50 dark:bg-cricket-dark/90">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center space-x-3">
             <TrendingUp className="text-cricket-accent h-6 w-6" />
-            <h2 className="text-2xl md:text-3xl font-heading font-bold">Top Stories</h2>
+            <h2 className="text-2xl md:text-3xl font-heading font-bold dark:text-white">Top Stories</h2>
           </div>
           <Link to="/cricket-news" className="flex items-center text-sm font-medium text-cricket-accent hover:underline">
             See All <ChevronRight size={16} className="ml-1" />

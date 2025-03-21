@@ -1,12 +1,12 @@
 
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 
 interface ArticleCardProps {
-  id: string;
+  id: string | number;
   title: string;
-  excerpt: string;
+  excerpt?: string;
   imageUrl?: string;
   cover_image?: string;
   featured_image?: string;
@@ -15,10 +15,9 @@ interface ArticleCardProps {
   date: string;
   timeToRead?: string;
   className?: string;
-  variant?: 'default' | 'featured' | 'horizontal';
 }
 
-export const ArticleCard = ({
+const ArticleCard: React.FC<ArticleCardProps> = ({
   id,
   title,
   excerpt,
@@ -30,73 +29,61 @@ export const ArticleCard = ({
   date,
   timeToRead,
   className,
-  variant = 'default'
-}: ArticleCardProps) => {
-  // Prioritize cover_image, then featured_image, then imageUrl, then fallback to default
-  const displayImage = cover_image || featured_image || imageUrl || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop';
+}) => {
+  const image = imageUrl || cover_image || featured_image;
   
   return (
-    <Link
-      to={`/article/${id}`}
-      className={cn(
-        "group block overflow-hidden transition-all duration-300",
-        variant === 'featured' ? 'article-card h-full' : 'article-card',
-        variant === 'horizontal' ? 'flex flex-col md:flex-row' : '',
-        className
+    <article className={cn(
+      "article-card flex flex-col h-full bg-white dark:bg-cricket-dark/80 dark:border-gray-800 shadow-soft hover:shadow-lg transition-all duration-300",
+      className
+    )}>
+      {image && (
+        <Link to={`/article/${id}`} className="block relative">
+          <img 
+            src={image} 
+            alt={title}
+            className="w-full h-48 object-cover"
+          />
+          <div className="absolute top-3 left-3">
+            <span className="inline-block px-2 py-1 text-xs font-medium bg-cricket-accent text-white rounded">
+              {category}
+            </span>
+          </div>
+        </Link>
       )}
-    >
-      <div 
-        className={cn(
-          "relative overflow-hidden",
-          variant === 'horizontal' ? 'md:w-1/3 h-48 md:h-auto' : 'h-48 md:h-56',
-          variant === 'featured' ? 'h-56 md:h-64' : ''
-        )}
-      >
-        <img 
-          src={displayImage} 
-          alt={title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        <Badge 
-          className="absolute top-3 left-3 bg-cricket-accent hover:bg-cricket-accent/90 text-xs font-medium"
-        >
-          {category}
-        </Badge>
-      </div>
       
-      <div 
-        className={cn(
-          "p-5",
-          variant === 'horizontal' ? 'md:w-2/3' : '',
-          variant === 'featured' ? 'p-6' : ''
-        )}
-      >
-        <h3 
-          className={cn(
-            "font-heading font-semibold text-gray-900 transition-colors group-hover:text-cricket-accent line-clamp-2 mb-2",
-            variant === 'featured' ? 'text-xl md:text-2xl' : 'text-lg md:text-xl'
-          )}
-        >
-          {title}
-        </h3>
-        
-        <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-          {excerpt}
-        </p>
-        
-        <div className="flex items-center text-xs text-gray-500">
-          <span className="mr-3">{author}</span>
-          <span className="mr-3">•</span>
-          <span className="mr-3">{date}</span>
-          {timeToRead && (
-            <>
-              <span className="mr-3">•</span>
-              <span>{timeToRead}</span>
-            </>
+      <div className="flex flex-col flex-grow p-4">
+        <div className="flex-grow">
+          <Link to={`/article/${id}`} className="block mb-2">
+            <h3 className="text-lg font-heading font-semibold leading-tight hover:text-cricket-accent dark:text-white dark:hover:text-cricket-accent">
+              {title}
+            </h3>
+          </Link>
+          
+          {excerpt && (
+            <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
+              {excerpt}
+            </p>
           )}
         </div>
+        
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+          <span className="text-gray-500 dark:text-gray-400 text-xs">
+            {date}
+          </span>
+          <div className="flex items-center">
+            <span className="text-gray-600 dark:text-gray-400 text-xs">
+              By {author}
+            </span>
+            {timeToRead && (
+              <span className="text-gray-500 dark:text-gray-400 text-xs ml-2">
+                • {timeToRead} min read
+              </span>
+            )}
+          </div>
+        </div>
       </div>
-    </Link>
+    </article>
   );
 };
 
