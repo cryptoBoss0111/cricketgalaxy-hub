@@ -37,44 +37,60 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   const [imageError, setImageError] = useState(false);
   const [imageSource, setImageSource] = useState<string>(DEFAULT_PLACEHOLDER);
   
-  // Helper function to validate URL format
+  // Helper function to validate URL format - accepting any non-empty string
   const isValidImageUrl = (url?: string): boolean => {
     if (!url || url.trim() === '') return false;
     return true;
   };
   
+  // Function to get full URL if it's a relative path from Supabase storage
+  const getFullImageUrl = (url?: string): string | undefined => {
+    if (!url) return undefined;
+    
+    // If it's already a full URL, return as is
+    if (url.startsWith('http')) return url;
+    
+    // Handle relative URLs if needed
+    return url;
+  };
+  
   // This effect sets the initial image source when the component mounts
   useEffect(() => {
-    console.log(`ArticleCard for "${title}" - Received image URLs:`, {
-      featured_image,
-      cover_image,
-      imageUrl
+    const fullFeaturedImage = getFullImageUrl(featured_image);
+    const fullCoverImage = getFullImageUrl(cover_image);
+    const fullImageUrl = getFullImageUrl(imageUrl);
+    
+    console.log(`ArticleCard for "${title}" - Available images:`, {
+      featured_image: fullFeaturedImage,
+      cover_image: fullCoverImage,
+      imageUrl: fullImageUrl
     });
     
     // Try featured_image first (from admin panel)
-    if (isValidImageUrl(featured_image)) {
-      console.log(`Setting primary image source to featured_image: ${featured_image}`);
-      setImageSource(featured_image!);
+    if (isValidImageUrl(fullFeaturedImage)) {
+      console.log(`Setting primary image source to featured_image: ${fullFeaturedImage}`);
+      setImageSource(fullFeaturedImage!);
       return;
     }
     
     // Then try cover_image
-    if (isValidImageUrl(cover_image)) {
-      console.log(`Setting primary image source to cover_image: ${cover_image}`);
-      setImageSource(cover_image!);
+    if (isValidImageUrl(fullCoverImage)) {
+      console.log(`Setting primary image source to cover_image: ${fullCoverImage}`);
+      setImageSource(fullCoverImage!);
       return;
     }
     
     // Then try imageUrl (legacy field)
-    if (isValidImageUrl(imageUrl)) {
-      console.log(`Setting primary image source to imageUrl: ${imageUrl}`);
-      setImageSource(imageUrl!);
+    if (isValidImageUrl(fullImageUrl)) {
+      console.log(`Setting primary image source to imageUrl: ${fullImageUrl}`);
+      setImageSource(fullImageUrl!);
       return;
     }
     
     // Default to placeholder if no valid images found
     console.log(`No valid image found for "${title}", using placeholder`);
     setImageSource(DEFAULT_PLACEHOLDER);
+    setIsLoading(false);
   }, [title, featured_image, cover_image, imageUrl]);
   
   const handleImageLoad = () => {
@@ -87,25 +103,29 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
     console.error(`❌ Image load failed for "${title}": ${imageSource}`);
     
     // Track which sources we've already tried
-    const isFeaturedImage = imageSource === featured_image;
-    const isCoverImage = imageSource === cover_image;
-    const isImageUrl = imageSource === imageUrl;
+    const fullFeaturedImage = getFullImageUrl(featured_image);
+    const fullCoverImage = getFullImageUrl(cover_image);
+    const fullImageUrl = getFullImageUrl(imageUrl);
+    
+    const isFeaturedImage = imageSource === fullFeaturedImage;
+    const isCoverImage = imageSource === fullCoverImage;
+    const isImageUrl = imageSource === fullImageUrl;
     
     // Try fallback images in sequence
-    if (isFeaturedImage && isValidImageUrl(cover_image)) {
-      console.log(`Trying fallback to cover_image for "${title}": ${cover_image}`);
-      setImageSource(cover_image!);
+    if (isFeaturedImage && isValidImageUrl(fullCoverImage)) {
+      console.log(`Trying fallback to cover_image for "${title}": ${fullCoverImage}`);
+      setImageSource(fullCoverImage!);
       return;
     } 
     
-    if ((isFeaturedImage || isCoverImage) && isValidImageUrl(imageUrl)) {
-      console.log(`Trying fallback to imageUrl for "${title}": ${imageUrl}`);
-      setImageSource(imageUrl!);
+    if ((isFeaturedImage || isCoverImage) && isValidImageUrl(fullImageUrl)) {
+      console.log(`Trying fallback to imageUrl for "${title}": ${fullImageUrl}`);
+      setImageSource(fullImageUrl!);
       return;
     }
     
     // If we've tried all images and they've failed, use placeholder
-    if (!isImageUrl || imageSource !== DEFAULT_PLACEHOLDER) {
+    if (imageSource !== DEFAULT_PLACEHOLDER) {
       console.log(`All image attempts failed for "${title}", using placeholder`);
       setImageSource(DEFAULT_PLACEHOLDER);
       setIsLoading(false);
@@ -135,7 +155,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           onLoad={handleImageLoad}
           onError={handleImageError}
           loading="lazy"
-          crossOrigin="anonymous"
         />
         
         <div className="absolute top-3 left-3">
