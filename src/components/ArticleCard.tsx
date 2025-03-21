@@ -37,38 +37,43 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   const [imageError, setImageError] = useState(false);
   const [imageSource, setImageSource] = useState<string>(DEFAULT_PLACEHOLDER);
   
-  // This effect runs once when component mounts and sets the image source
+  // Helper function to validate URL format
+  const isValidImageUrl = (url?: string): boolean => {
+    if (!url || url.trim() === '') return false;
+    return true;
+  };
+  
+  // This effect sets the initial image source when the component mounts
   useEffect(() => {
-    // Log all received image URLs for debugging
-    console.log(`ArticleCard for "${title}" received these image URLs:`, {
+    console.log(`ArticleCard for "${title}" - Received image URLs:`, {
       featured_image,
       cover_image,
       imageUrl
     });
     
-    // Check featured_image first (from admin panel)
-    if (featured_image && featured_image.trim() !== '') {
-      setImageSource(featured_image);
-      console.log(`Using featured_image for "${title}": ${featured_image}`);
+    // Try featured_image first (from admin panel)
+    if (isValidImageUrl(featured_image)) {
+      console.log(`Setting primary image source to featured_image: ${featured_image}`);
+      setImageSource(featured_image!);
       return;
     }
     
-    // Then try cover_image (from admin panel)
-    if (cover_image && cover_image.trim() !== '') {
-      setImageSource(cover_image);
-      console.log(`Using cover_image for "${title}": ${cover_image}`);
+    // Then try cover_image
+    if (isValidImageUrl(cover_image)) {
+      console.log(`Setting primary image source to cover_image: ${cover_image}`);
+      setImageSource(cover_image!);
       return;
     }
     
     // Then try imageUrl (legacy field)
-    if (imageUrl && imageUrl.trim() !== '') {
-      setImageSource(imageUrl);
-      console.log(`Using imageUrl for "${title}": ${imageUrl}`);
+    if (isValidImageUrl(imageUrl)) {
+      console.log(`Setting primary image source to imageUrl: ${imageUrl}`);
+      setImageSource(imageUrl!);
       return;
     }
     
-    // If no images provided, use placeholder
-    console.log(`No valid images found for "${title}", using placeholder`);
+    // Default to placeholder if no valid images found
+    console.log(`No valid image found for "${title}", using placeholder`);
     setImageSource(DEFAULT_PLACEHOLDER);
   }, [title, featured_image, cover_image, imageUrl]);
   
@@ -79,22 +84,33 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   };
   
   const handleImageError = () => {
-    console.error(`❌ Failed to load image for article "${title}": ${imageSource}`);
+    console.error(`❌ Image load failed for "${title}": ${imageSource}`);
     
-    // If the current image fails, try fallback images or use placeholder
-    if (imageSource === featured_image && cover_image) {
-      console.log(`Trying fallback to cover_image for "${title}"`);
-      setImageSource(cover_image);
-    } else if ((imageSource === featured_image || imageSource === cover_image) && imageUrl) {
-      console.log(`Trying fallback to imageUrl for "${title}"`);
-      setImageSource(imageUrl);
-    } else if (imageSource !== DEFAULT_PLACEHOLDER) {
-      console.log(`Using placeholder for "${title}" after all image attempts failed`);
-      setImageSource(DEFAULT_PLACEHOLDER);
+    // Track which sources we've already tried
+    const isFeaturedImage = imageSource === featured_image;
+    const isCoverImage = imageSource === cover_image;
+    const isImageUrl = imageSource === imageUrl;
+    
+    // Try fallback images in sequence
+    if (isFeaturedImage && isValidImageUrl(cover_image)) {
+      console.log(`Trying fallback to cover_image for "${title}": ${cover_image}`);
+      setImageSource(cover_image!);
+      return;
+    } 
+    
+    if ((isFeaturedImage || isCoverImage) && isValidImageUrl(imageUrl)) {
+      console.log(`Trying fallback to imageUrl for "${title}": ${imageUrl}`);
+      setImageSource(imageUrl!);
+      return;
     }
     
-    setIsLoading(false);
-    setImageError(imageSource === DEFAULT_PLACEHOLDER);
+    // If we've tried all images and they've failed, use placeholder
+    if (!isImageUrl || imageSource !== DEFAULT_PLACEHOLDER) {
+      console.log(`All image attempts failed for "${title}", using placeholder`);
+      setImageSource(DEFAULT_PLACEHOLDER);
+      setIsLoading(false);
+      setImageError(true);
+    }
   };
   
   return (
