@@ -3,6 +3,7 @@ import { Filter, ChevronDown, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import ArticleCard from '@/components/ArticleCard';
@@ -30,6 +31,9 @@ const NewsContent = ({
   filteredArticles,
   searchQuery
 }: NewsContentProps) => {
+  // Log articles for debugging
+  console.log(`NewsContent - filteredArticles (${filteredArticles.length}):`, filteredArticles);
+  
   return (
     <section className="py-12">
       <div className="container mx-auto px-4">
@@ -113,29 +117,37 @@ const LoadingArticles = () => (
   </div>
 );
 
-const ArticleGrid = ({ articles }: { articles: Article[] }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {articles.map((article, index) => (
-      <ArticleCard
-        key={article.id}
-        id={article.id}
-        title={article.title}
-        excerpt={article.excerpt || ''}
-        imageUrl={article.imageUrl}
-        category={article.category}
-        author={article.author}
-        date={article.date}
-        timeToRead={article.timeToRead}
-        className={cn(
-          "animate-fade-in",
-          index % 3 === 0 ? "animate-delay-100" : "",
-          index % 3 === 1 ? "animate-delay-200" : "",
-          index % 3 === 2 ? "animate-delay-300" : ""
-        )}
-      />
-    ))}
-  </div>
-);
+const ArticleGrid = ({ articles }: { articles: Article[] }) => {
+  console.log('Rendering article grid with articles:', articles);
+  
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {articles.map((article, index) => {
+        console.log(`Article ${index} image URL:`, article.imageUrl);
+        
+        return (
+          <ArticleCard
+            key={article.id}
+            id={article.id}
+            title={article.title}
+            excerpt={article.excerpt || ''}
+            imageUrl={article.imageUrl}
+            category={article.category}
+            author={article.author}
+            date={article.date}
+            timeToRead={article.timeToRead}
+            className={cn(
+              "animate-fade-in",
+              index % 3 === 0 ? "animate-delay-100" : "",
+              index % 3 === 1 ? "animate-delay-200" : "",
+              index % 3 === 2 ? "animate-delay-300" : ""
+            )}
+          />
+        );
+      })}
+    </div>
+  );
+};
 
 const NoResults = ({ setSelectedCategory }: { setSelectedCategory: (category: string) => void }) => (
   <div className="text-center py-16">

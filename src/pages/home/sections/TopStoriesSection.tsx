@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 import { topStories } from '../data/homeData';
 
 export const TopStoriesSection = () => {
+  console.log('Top stories data:', topStories);
+  
   return (
     <section className="py-12 bg-gray-50 dark:bg-cricket-dark/90">
       <div className="container mx-auto px-4">
@@ -20,28 +22,36 @@ export const TopStoriesSection = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {topStories.map((story, index) => (
-            <ArticleCard
-              key={story.id}
-              id={story.id}
-              title={story.title}
-              excerpt={story.excerpt}
-              imageUrl={story.imageUrl}
-              cover_image={story.imageUrl} // Provide the same image in multiple props for compatibility
-              featured_image={story.imageUrl} // Provide the same image in multiple props for compatibility
-              category={story.category}
-              author={story.author}
-              date={story.date}
-              timeToRead={story.timeToRead}
-              className={cn(
-                "animate-fade-in",
-                index === 0 ? "animate-delay-100" : "",
-                index === 1 ? "animate-delay-200" : "",
-                index === 2 ? "animate-delay-300" : "",
-                index === 3 ? "animate-delay-400" : ""
-              )}
-            />
-          ))}
+          {topStories.map((story, index) => {
+            console.log(`Story ${index} image URLs:`, {
+              imageUrl: story.imageUrl,
+              coverImage: story.cover_image,
+              featuredImage: story.featured_image
+            });
+            
+            return (
+              <ArticleCard
+                key={story.id}
+                id={story.id}
+                title={story.title}
+                excerpt={story.excerpt}
+                imageUrl={story.imageUrl}
+                cover_image={story.cover_image || story.imageUrl} 
+                featured_image={story.featured_image || story.imageUrl}
+                category={story.category}
+                author={story.author}
+                date={story.date}
+                timeToRead={story.timeToRead}
+                className={cn(
+                  "animate-fade-in",
+                  index === 0 ? "animate-delay-100" : "",
+                  index === 1 ? "animate-delay-200" : "",
+                  index === 2 ? "animate-delay-300" : "",
+                  index === 3 ? "animate-delay-400" : ""
+                )}
+              />
+            );
+          })}
         </div>
       </div>
     </section>

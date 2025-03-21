@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,11 @@ import Chatbot from '@/components/Chatbot';
 import Footer from '@/components/Footer';
 
 const Index = () => {
+  // Effect to log articles data for debugging image issues
+  useEffect(() => {
+    console.log("Fetching articles from Supabase");
+  }, []);
+  
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-cricket-dark">
       <LiveMatchesBar />

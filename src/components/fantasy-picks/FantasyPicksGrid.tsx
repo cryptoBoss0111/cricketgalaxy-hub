@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import FantasyPickCard, { FantasyPick } from './FantasyPickCard';
 
 interface FantasyPicksGridProps {
@@ -11,6 +12,9 @@ interface FantasyPicksGridProps {
 }
 
 const FantasyPicksGrid: React.FC<FantasyPicksGridProps> = ({ picks, isLoading }) => {
+  // Log fantasy picks data for debugging
+  console.log('Fantasy picks data:', picks);
+  
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
