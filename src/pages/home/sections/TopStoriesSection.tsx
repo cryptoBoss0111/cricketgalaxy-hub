@@ -5,6 +5,20 @@ import ArticleCard from '@/components/ArticleCard';
 import { cn } from '@/lib/utils';
 import { topStories } from '../data/homeData';
 
+// Update the topStories interface to include the missing properties
+interface TopStory {
+  id: string;
+  title: string;
+  excerpt: string;
+  imageUrl: string;
+  cover_image?: string;
+  featured_image?: string;
+  category: string;
+  author: string;
+  date: string;
+  timeToRead: string;
+}
+
 export const TopStoriesSection = () => {
   console.log('Top stories data:', topStories);
   
@@ -22,7 +36,7 @@ export const TopStoriesSection = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {topStories.map((story, index) => {
+          {(topStories as TopStory[]).map((story, index) => {
             console.log(`Story ${index} image URLs:`, {
               imageUrl: story.imageUrl,
               coverImage: story.cover_image,
@@ -36,8 +50,8 @@ export const TopStoriesSection = () => {
                 title={story.title}
                 excerpt={story.excerpt}
                 imageUrl={story.imageUrl}
-                cover_image={story.cover_image || story.imageUrl} 
-                featured_image={story.featured_image || story.imageUrl}
+                cover_image={story.cover_image}
+                featured_image={story.featured_image}
                 category={story.category}
                 author={story.author}
                 date={story.date}
