@@ -48,6 +48,7 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
         onLoad={handleImageLoad}
         onError={handleImageError}
         loading="lazy"
+        crossOrigin="anonymous" // Add this to help with CORS issues
       />
       
       <div className="absolute top-3 left-3">
