@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,74 +32,30 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
-  // Define a local placeholder image path
-  const DEFAULT_PLACEHOLDER = '/lovable-uploads/f0bea2fb-5aa7-404a-b434-d153984a2dbf.png';
+  // Define a fixed placeholder image path
+  const DEFAULT_PLACEHOLDER = '/lovable-uploads/bcc5d946-527c-4ff2-babf-036bb6813482.png';
   
-  // Use state to track loading status and final image URL
+  // States to manage image loading
   const [isLoading, setIsLoading] = useState(true);
-  const [displayImage, setDisplayImage] = useState(DEFAULT_PLACEHOLDER);
+  const [imageError, setImageError] = useState(false);
   
-  // Attempt to load image when component mounts
-  useEffect(() => {
-    // Use a direct approach - start with the placeholder
-    setDisplayImage(DEFAULT_PLACEHOLDER);
+  // Determine which image URL to use
+  const primaryImageUrl = imageUrl || featured_image || cover_image;
+  
+  // Handle image load success
+  const handleImageLoad = () => {
+    setIsLoading(false);
+    setImageError(false);
+  };
+  
+  // Handle image load error
+  const handleImageError = () => {
+    setIsLoading(false);
+    setImageError(true);
     
-    // Create simple image loader helper
-    const tryLoadImage = (src: string) => {
-      return new Promise<string>((resolve, reject) => {
-        const img = new Image();
-        
-        // Set a timeout to reject if image takes too long
-        const timeoutId = setTimeout(() => {
-          reject(new Error(`Image load timeout: ${src}`));
-        }, 5000);
-        
-        img.onload = () => {
-          clearTimeout(timeoutId);
-          resolve(src);
-        };
-        
-        img.onerror = () => {
-          clearTimeout(timeoutId);
-          reject(new Error(`Failed to load image: ${src}`));
-        };
-        
-        // Add cache-busting parameter
-        img.src = `${src}?t=${new Date().getTime()}`;
-      });
-    };
-    
-    // Create array of potential image sources, remove any undefined/null
-    const potentialSources = [imageUrl, featured_image, cover_image].filter(Boolean) as string[];
-    
-    // If we have no sources, just use the placeholder and end loading
-    if (potentialSources.length === 0) {
-      setIsLoading(false);
-      return;
-    }
-    
-    // Try to load images in sequence
-    const loadImages = async () => {
-      for (const source of potentialSources) {
-        try {
-          // Try to load this image
-          const validatedSource = await tryLoadImage(source);
-          setDisplayImage(validatedSource);
-          setIsLoading(false);
-          return; // Success! Exit the function
-        } catch (err) {
-          console.log(`Image load failed for source: ${source}`);
-          // Continue to next source
-        }
-      }
-      
-      // If we get here, all sources failed
-      console.log(`Using default image for article: ${title}`);
-      setIsLoading(false);
-    };
-    
-    loadImages();
-  }, [imageUrl, featured_image, cover_image, title]);
+    // Log once rather than continuously
+    console.log(`Failed to load image for article: ${title}`);
+  };
   
   return (
     <article className={cn(
@@ -107,19 +63,36 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
       className
     )}>
       <Link to={`/article/${id}`} className="block relative overflow-hidden aspect-video">
+        {/* Show skeleton while loading */}
         {isLoading && (
           <Skeleton className="w-full h-48 object-cover" />
         )}
         
-        <img 
-          src={displayImage}
-          alt={title}
-          className={cn(
-            "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
-            isLoading ? "opacity-0" : "opacity-100"
-          )}
-          loading="lazy"
-        />
+        {/* Primary image attempt */}
+        {primaryImageUrl && !imageError && (
+          <img 
+            src={primaryImageUrl}
+            alt={title}
+            className={cn(
+              "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
+              isLoading ? "opacity-0" : "opacity-100"
+            )}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+            loading="lazy"
+          />
+        )}
+        
+        {/* Fallback image */}
+        {(imageError || !primaryImageUrl) && (
+          <img 
+            src={DEFAULT_PLACEHOLDER}
+            alt={title}
+            className="w-full h-48 object-cover transition-transform duration-500 hover:scale-110"
+            onLoad={() => setIsLoading(false)}
+            loading="lazy"
+          />
+        )}
         
         <div className="absolute top-3 left-3">
           <span className="inline-block px-2 py-1 text-xs font-medium bg-cricket-accent text-white rounded">

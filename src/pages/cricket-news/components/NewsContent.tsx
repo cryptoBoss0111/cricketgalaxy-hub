@@ -121,7 +121,11 @@ const ArticleGrid = ({ articles }: { articles: Article[] }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {articles.map((article, index) => {
-        console.log(`Article ${index} image URL:`, article.imageUrl);
+        console.log(`Article ${index} image URLs:`, {
+          imageUrl: article.imageUrl,
+          coverImage: article.cover_image,
+          featuredImage: article.featured_image
+        });
         
         return (
           <ArticleCard
