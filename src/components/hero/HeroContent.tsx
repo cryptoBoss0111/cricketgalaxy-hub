@@ -1,5 +1,5 @@
 
-import { FC } from 'react';
+import { FC, memo } from 'react';
 import { ChevronRight, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -13,7 +13,7 @@ interface HeroContentProps {
   getCategoryUrl: (category: string) => string;
 }
 
-export const HeroContent: FC<HeroContentProps> = ({ 
+const HeroContentComponent: FC<HeroContentProps> = ({ 
   article, 
   isAnimating,
   getCategoryUrl
@@ -69,3 +69,5 @@ export const HeroContent: FC<HeroContentProps> = ({
     </div>
   );
 };
+
+export const HeroContent = memo(HeroContentComponent);

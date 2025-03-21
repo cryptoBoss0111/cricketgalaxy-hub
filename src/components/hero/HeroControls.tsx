@@ -1,5 +1,5 @@
 
-import { FC } from 'react';
+import { FC, memo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface HeroControlsProps {
@@ -10,7 +10,7 @@ interface HeroControlsProps {
   setIsAnimating: (value: boolean) => void;
 }
 
-export const HeroControls: FC<HeroControlsProps> = ({
+const HeroControlsComponent: FC<HeroControlsProps> = ({
   articles,
   currentSlide,
   onSlideChange,
@@ -43,3 +43,5 @@ export const HeroControls: FC<HeroControlsProps> = ({
     </div>
   );
 };
+
+export const HeroControls = memo(HeroControlsComponent);

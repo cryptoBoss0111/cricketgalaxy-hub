@@ -1,5 +1,5 @@
 
-import { FC } from 'react';
+import { FC, memo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface HeroImageProps {
@@ -8,7 +8,7 @@ interface HeroImageProps {
   isAnimating: boolean;
 }
 
-export const HeroImage: FC<HeroImageProps> = ({ 
+const HeroImageComponent: FC<HeroImageProps> = ({ 
   imageUrl, 
   title,
   isAnimating
@@ -27,3 +27,5 @@ export const HeroImage: FC<HeroImageProps> = ({
     </div>
   );
 };
+
+export const HeroImage = memo(HeroImageComponent);
