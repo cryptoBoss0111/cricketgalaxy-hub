@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,19 +32,41 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
-  // Define a fixed placeholder image path - using a direct import to ensure it exists
+  // Define a fixed placeholder image path
   const DEFAULT_PLACEHOLDER = '/placeholder.svg';
   
   // States to manage image loading
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   
-  // Create an array of possible image URLs, from highest to lowest priority
-  const possibleImages = [
-    featured_image,
-    cover_image,
-    imageUrl,
-  ].filter(Boolean) as string[];
+  // Function to validate if a URL is valid
+  const isValidUrl = (url: string | undefined): boolean => {
+    if (!url) return false;
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+  
+  // Determine the best image to use
+  useEffect(() => {
+    const images = [featured_image, cover_image, imageUrl]
+      .filter(url => isValidUrl(url)) as string[];
+    
+    if (images.length > 0) {
+      // We have at least one valid image URL
+      setImageSrc(images[0]);
+      console.log(`Using image for "${title}":`, images[0]);
+    } else {
+      // No valid images, use placeholder
+      setImageSrc(null);
+      setImageError(true);
+      console.log(`No valid images found for "${title}", using placeholder`);
+    }
+  }, [featured_image, cover_image, imageUrl, title]);
   
   // Handle image load success
   const handleImageLoad = () => {
@@ -54,6 +76,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   
   // Handle image load error
   const handleImageError = () => {
+    console.error(`Failed to load image for article: ${title}`, imageSrc);
     setIsLoading(false);
     setImageError(true);
   };
@@ -69,9 +92,9 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           <Skeleton className="w-full h-48 object-cover" />
         )}
         
-        {/* Render image - either the primary image if available and not errored, or the fallback */}
+        {/* Image display with error handling */}
         <img 
-          src={!imageError && possibleImages.length > 0 ? possibleImages[0] : DEFAULT_PLACEHOLDER}
+          src={!imageError && imageSrc ? imageSrc : DEFAULT_PLACEHOLDER}
           alt={title}
           className={cn(
             "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
