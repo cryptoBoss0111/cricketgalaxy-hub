@@ -32,15 +32,19 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
-  // Define a fixed placeholder image path
-  const DEFAULT_PLACEHOLDER = '/lovable-uploads/bcc5d946-527c-4ff2-babf-036bb6813482.png';
+  // Define a fixed placeholder image path - using a direct import to ensure it exists
+  const DEFAULT_PLACEHOLDER = '/placeholder.svg';
   
   // States to manage image loading
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   
-  // Determine which image URL to use
-  const primaryImageUrl = imageUrl || featured_image || cover_image;
+  // Create an array of possible image URLs, from highest to lowest priority
+  const possibleImages = [
+    featured_image,
+    cover_image,
+    imageUrl,
+  ].filter(Boolean) as string[];
   
   // Handle image load success
   const handleImageLoad = () => {
@@ -52,9 +56,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   const handleImageError = () => {
     setIsLoading(false);
     setImageError(true);
-    
-    // Log once rather than continuously
-    console.log(`Failed to load image for article: ${title}`);
   };
   
   return (
@@ -68,31 +69,18 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           <Skeleton className="w-full h-48 object-cover" />
         )}
         
-        {/* Primary image attempt */}
-        {primaryImageUrl && !imageError && (
-          <img 
-            src={primaryImageUrl}
-            alt={title}
-            className={cn(
-              "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
-              isLoading ? "opacity-0" : "opacity-100"
-            )}
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-            loading="lazy"
-          />
-        )}
-        
-        {/* Fallback image */}
-        {(imageError || !primaryImageUrl) && (
-          <img 
-            src={DEFAULT_PLACEHOLDER}
-            alt={title}
-            className="w-full h-48 object-cover transition-transform duration-500 hover:scale-110"
-            onLoad={() => setIsLoading(false)}
-            loading="lazy"
-          />
-        )}
+        {/* Render image - either the primary image if available and not errored, or the fallback */}
+        <img 
+          src={!imageError && possibleImages.length > 0 ? possibleImages[0] : DEFAULT_PLACEHOLDER}
+          alt={title}
+          className={cn(
+            "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
+            isLoading ? "opacity-0" : "opacity-100"
+          )}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+          loading="lazy"
+        />
         
         <div className="absolute top-3 left-3">
           <span className="inline-block px-2 py-1 text-xs font-medium bg-cricket-accent text-white rounded">

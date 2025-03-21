@@ -116,39 +116,29 @@ const LoadingArticles = () => (
 );
 
 const ArticleGrid = ({ articles }: { articles: Article[] }) => {
-  console.log("Rendering article grid with articles:", articles);
-  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {articles.map((article, index) => {
-        console.log(`Article ${index} image URLs:`, {
-          imageUrl: article.imageUrl,
-          coverImage: article.cover_image,
-          featuredImage: article.featured_image
-        });
-        
-        return (
-          <ArticleCard
-            key={article.id}
-            id={article.id}
-            title={article.title}
-            excerpt={article.excerpt || ''}
-            imageUrl={article.imageUrl}
-            cover_image={article.cover_image}
-            featured_image={article.featured_image}
-            category={article.category}
-            author={article.author}
-            date={article.date}
-            timeToRead={article.timeToRead}
-            className={cn(
-              "animate-fade-in",
-              index % 3 === 0 ? "animate-delay-100" : "",
-              index % 3 === 1 ? "animate-delay-200" : "",
-              index % 3 === 2 ? "animate-delay-300" : ""
-            )}
-          />
-        );
-      })}
+      {articles.map((article, index) => (
+        <ArticleCard
+          key={article.id}
+          id={article.id}
+          title={article.title}
+          excerpt={article.excerpt || ''}
+          imageUrl={article.imageUrl}
+          cover_image={article.cover_image}
+          featured_image={article.featured_image}
+          category={article.category}
+          author={article.author}
+          date={article.date}
+          timeToRead={article.timeToRead}
+          className={cn(
+            "animate-fade-in",
+            index % 3 === 0 ? "animate-delay-100" : "",
+            index % 3 === 1 ? "animate-delay-200" : "",
+            index % 3 === 2 ? "animate-delay-300" : ""
+          )}
+        />
+      ))}
     </div>
   );
 };
