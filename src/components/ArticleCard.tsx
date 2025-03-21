@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,40 +32,74 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
-  // Local placeholder image (static asset in public folder)
-  const DEFAULT_PLACEHOLDER = '/lovable-uploads/71896ba4-b0bc-405b-a224-34e3fa673d5e.png';
+  // Define a local placeholder image path
+  const DEFAULT_PLACEHOLDER = '/lovable-uploads/f0bea2fb-5aa7-404a-b434-d153984a2dbf.png';
   
   // Use state to track loading status and final image URL
   const [isLoading, setIsLoading] = useState(true);
   const [displayImage, setDisplayImage] = useState(DEFAULT_PLACEHOLDER);
   
-  // Get all possible image sources, prioritizing in order (most important first)
-  const imageSources = [imageUrl, featured_image, cover_image].filter(Boolean);
-  
-  // Handle the image load event
-  const handleImageLoad = () => {
-    setIsLoading(false);
-  };
-  
-  // Handle image error - display the default placeholder
-  const handleImageError = () => {
-    console.log(`Failed to load image for article: ${title}`);
+  // Attempt to load image when component mounts
+  useEffect(() => {
+    // Use a direct approach - start with the placeholder
     setDisplayImage(DEFAULT_PLACEHOLDER);
-    setIsLoading(false);
-  };
-  
-  // Choose the best available image or fall back to placeholder
-  React.useEffect(() => {
-    // If we have any sources to try, use the first one, otherwise use placeholder
-    if (imageSources.length > 0) {
-      // Set the first available source as our display image
-      setDisplayImage(imageSources[0]);
-    } else {
-      // If no sources, use the placeholder and end loading state
-      setDisplayImage(DEFAULT_PLACEHOLDER);
+    
+    // Create simple image loader helper
+    const tryLoadImage = (src: string) => {
+      return new Promise<string>((resolve, reject) => {
+        const img = new Image();
+        
+        // Set a timeout to reject if image takes too long
+        const timeoutId = setTimeout(() => {
+          reject(new Error(`Image load timeout: ${src}`));
+        }, 5000);
+        
+        img.onload = () => {
+          clearTimeout(timeoutId);
+          resolve(src);
+        };
+        
+        img.onerror = () => {
+          clearTimeout(timeoutId);
+          reject(new Error(`Failed to load image: ${src}`));
+        };
+        
+        // Add cache-busting parameter
+        img.src = `${src}?t=${new Date().getTime()}`;
+      });
+    };
+    
+    // Create array of potential image sources, remove any undefined/null
+    const potentialSources = [imageUrl, featured_image, cover_image].filter(Boolean) as string[];
+    
+    // If we have no sources, just use the placeholder and end loading
+    if (potentialSources.length === 0) {
       setIsLoading(false);
+      return;
     }
-  }, [imageSources]);
+    
+    // Try to load images in sequence
+    const loadImages = async () => {
+      for (const source of potentialSources) {
+        try {
+          // Try to load this image
+          const validatedSource = await tryLoadImage(source);
+          setDisplayImage(validatedSource);
+          setIsLoading(false);
+          return; // Success! Exit the function
+        } catch (err) {
+          console.log(`Image load failed for source: ${source}`);
+          // Continue to next source
+        }
+      }
+      
+      // If we get here, all sources failed
+      console.log(`Using default image for article: ${title}`);
+      setIsLoading(false);
+    };
+    
+    loadImages();
+  }, [imageUrl, featured_image, cover_image, title]);
   
   return (
     <article className={cn(
@@ -85,8 +119,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
             isLoading ? "opacity-0" : "opacity-100"
           )}
           loading="lazy"
-          onLoad={handleImageLoad}
-          onError={handleImageError}
         />
         
         <div className="absolute top-3 left-3">
