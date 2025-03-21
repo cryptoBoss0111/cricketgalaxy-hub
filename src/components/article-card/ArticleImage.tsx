@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,6 +14,13 @@ interface ArticleImageProps {
   category: string;
 }
 
+// Working fallback images from Unsplash
+const RELIABLE_FALLBACKS = [
+  '/placeholder.svg',
+  'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop'
+];
+
 export const ArticleImage: React.FC<ArticleImageProps> = ({
   id,
   title,
@@ -22,26 +29,57 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
   featured_image,
   category
 }) => {
-  const {
-    imageSource,
-    isLoading,
-    imageError,
-    handleImageLoad,
-    handleImageError
-  } = useArticleImage(title, featured_image, cover_image, imageUrl);
+  // Use a direct approach to image handling
+  const [currentImage, setCurrentImage] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [fallbackIndex, setFallbackIndex] = useState(-1); // Start with -1 to try actual images first
 
-  // Use a reliable fallback image
-  const FALLBACK_IMAGES = [
-    '/placeholder.svg',
-    'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop'
-  ];
-  
-  const [fallbackIndex, setFallbackIndex] = useState(0);
-  
-  // Handle last resort fallback if even the placeholder fails
-  const handleLastResortError = () => {
-    if (fallbackIndex < FALLBACK_IMAGES.length - 1) {
-      setFallbackIndex(fallbackIndex + 1);
+  // Setup all possible image sources in priority order
+  const allPossibleSources = [
+    featured_image,
+    cover_image, 
+    imageUrl,
+    ...RELIABLE_FALLBACKS
+  ].filter(Boolean) as string[];
+
+  useEffect(() => {
+    // Reset when props change
+    setIsLoading(true);
+    setFallbackIndex(-1);
+    
+    // Try the first real image
+    if (allPossibleSources.length > 0) {
+      console.log(`Setting initial image for "${title}" to:`, allPossibleSources[0]);
+      setCurrentImage(allPossibleSources[0]);
+    } else {
+      // Fallback to placeholder if no sources at all
+      console.log(`No image sources for "${title}", using default placeholder`);
+      setCurrentImage('/placeholder.svg');
+      setIsLoading(false);
+    }
+  }, [featured_image, cover_image, imageUrl, title]);
+
+  const handleImageLoad = () => {
+    console.log(`✅ Image loaded successfully: ${currentImage}`);
+    setIsLoading(false);
+  };
+
+  const handleImageError = () => {
+    console.error(`❌ Image load failed: ${currentImage}`);
+    
+    // Calculate the next fallback index
+    const nextIndex = fallbackIndex + 1;
+    
+    // Check if we have more fallbacks to try
+    if (nextIndex < allPossibleSources.length) {
+      console.log(`Trying next fallback: ${allPossibleSources[nextIndex]}`);
+      setFallbackIndex(nextIndex);
+      setCurrentImage(allPossibleSources[nextIndex]);
+    } else {
+      // We've tried all possibilities, show the last fallback
+      console.log('All fallbacks exhausted, using final placeholder');
+      setCurrentImage('/placeholder.svg');
+      setIsLoading(false);
     }
   };
 
@@ -53,30 +91,19 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
       )}
       
       {/* Display the image with error handling */}
-      {imageError ? (
-        // Fallback image if original fails
-        <img 
-          src={FALLBACK_IMAGES[fallbackIndex]}
-          alt={title}
-          className="w-full h-48 object-cover"
-          onError={handleLastResortError}
-          loading="lazy"
-        />
-      ) : (
-        <img 
-          src={imageSource}
-          alt={title}
-          className={cn(
-            "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
-            isLoading ? "opacity-0" : "opacity-100"
-          )}
-          onLoad={handleImageLoad}
-          onError={handleImageError}
-          loading="lazy"
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
-        />
-      )}
+      <img 
+        src={currentImage}
+        alt={title}
+        className={cn(
+          "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
+          isLoading ? "opacity-0" : "opacity-100"
+        )}
+        onLoad={handleImageLoad}
+        onError={handleImageError}
+        loading="lazy"
+        crossOrigin="anonymous"
+        referrerPolicy="no-referrer"
+      />
       
       <div className="absolute top-3 left-3">
         <span className="inline-block px-2 py-1 text-xs font-medium bg-cricket-accent text-white rounded">

@@ -2,7 +2,10 @@
 import { useState, useEffect } from 'react';
 
 const DEFAULT_PLACEHOLDER = '/placeholder.svg';
-const UNSPLASH_FALLBACK = 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop';
+const RELIABLE_FALLBACKS = [
+  'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=600&auto=format&fit=crop'
+];
 
 // Helper function to validate URL format - accepting any non-empty string
 export const isValidImageUrl = (url?: string): boolean => {
@@ -14,39 +17,17 @@ export const isValidImageUrl = (url?: string): boolean => {
 export const getFullImageUrl = (url?: string): string | undefined => {
   if (!url) return undefined;
   
-  // For debugging
-  console.log(`Processing image URL: ${url}`);
-  
   try {
-    // Remove any query parameters which might cause issues
-    const cleanUrl = url.split('?')[0];
+    // Add public URL directly accessable via CORS
+    const publicUrl = url.replace(
+      'https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/',
+      'https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/public/'
+    );
     
-    // Handle Supabase URLs with proper transformation
-    if (cleanUrl.includes('supabase.co/storage/v1/')) {
-      // Make sure the URL contains 'object/public' for proper access
-      if (!cleanUrl.includes('/object/public/')) {
-        // Convert from API format to public URL format
-        const correctedUrl = cleanUrl.replace(
-          '/storage/v1/',
-          '/storage/v1/object/public/'
-        );
-        console.log(`Corrected Supabase URL: ${correctedUrl}`);
-        return correctedUrl;
-      }
-      console.log(`URL already in correct format: ${cleanUrl}`);
-      return cleanUrl;
-    }
+    // For debugging
+    console.log(`Processing image URL: ${url} -> ${publicUrl}`);
     
-    // If it's already a full URL but not a Supabase one, return as is
-    if (cleanUrl.startsWith('http')) {
-      console.log(`Using external URL as is: ${cleanUrl}`);
-      return cleanUrl;
-    }
-    
-    // For relative paths, construct the full Supabase public URL
-    const fullUrl = `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${cleanUrl}`;
-    console.log(`Created full URL from relative path: ${fullUrl}`);
-    return fullUrl;
+    return publicUrl;
   } catch (error) {
     console.error(`Error processing URL ${url}:`, error);
     return undefined;
@@ -66,12 +47,9 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
     setImageError(false);
     setFallbacksAttempted([]);
     
-    // Add unsplash fallback to the mix
-    const externalFallback = UNSPLASH_FALLBACK;
-    
-    const fullFeaturedImage = getFullImageUrl(featured_image);
-    const fullCoverImage = getFullImageUrl(cover_image);
-    const fullImageUrl = getFullImageUrl(imageUrl);
+    const fullFeaturedImage = featured_image;
+    const fullCoverImage = cover_image;
+    const fullImageUrl = imageUrl;
     
     // For debugging, log all potential image sources
     console.log(`ArticleCard for "${title}" - Available images:`, {
@@ -102,11 +80,11 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
     }
     
     // Try external fallback if none of the others work
-    console.log(`Using external fallback image for "${title}"`);
-    setImageSource(externalFallback);
+    console.log(`Using reliable fallback for "${title}"`);
+    setImageSource(RELIABLE_FALLBACKS[0]);
     
     // Default to placeholder if everything else fails
-    if (!externalFallback) {
+    if (!RELIABLE_FALLBACKS[0]) {
       console.log(`No valid image found for "${title}", using placeholder`);
       setImageSource(DEFAULT_PLACEHOLDER);
       setIsLoading(false);
@@ -126,17 +104,11 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
     setFallbacksAttempted(prev => [...prev, imageSource]);
     
     // Get all available image sources
-    const fullFeaturedImage = getFullImageUrl(featured_image);
-    const fullCoverImage = getFullImageUrl(cover_image);
-    const fullImageUrl = getFullImageUrl(imageUrl);
-    const externalFallback = UNSPLASH_FALLBACK;
-    
-    // Create an array of available sources that we haven't tried yet
     const availableSources = [
-      fullFeaturedImage,
-      fullCoverImage,
-      fullImageUrl,
-      externalFallback
+      featured_image,
+      cover_image,
+      imageUrl,
+      ...RELIABLE_FALLBACKS
     ].filter(source => 
       source && 
       source !== imageSource && 
