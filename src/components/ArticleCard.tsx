@@ -32,107 +32,95 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
-  // Define fallback image - using a reliable source
-  const placeholderImage = 'https://placehold.co/600x400/cricket/white?text=Cricket+Express';
+  // Define a reliable and persistent placeholder image that won't change
+  const placeholderImage = 'https://placehold.co/600x400/e0e0e0/333333?text=Cricket+News';
   
   const [isImageLoading, setIsImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
-  const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null);
+  const [displayedImage, setDisplayedImage] = useState<string>(placeholderImage);
   
-  // Use effect to determine the best image to display with cross-origin support
   useEffect(() => {
-    // Use all possible image sources
-    const imageSources = [
-      imageUrl, 
-      featured_image, 
-      cover_image
-    ].filter(Boolean) as string[];
+    let isMounted = true;
     
-    if (imageSources.length === 0) {
-      console.log(`No image sources available for article: ${title}`);
-      setFinalImageUrl(placeholderImage);
-      setIsImageLoading(false);
-      return;
-    }
-    
-    // Make the image URLs more reliable by using the placehold service as fallback
-    const tryLoadImage = (currentIndex = 0) => {
-      if (currentIndex >= imageSources.length) {
-        // If all sources fail, use placeholder
-        console.log(`Using placeholder image for article: ${title}`);
-        setFinalImageUrl(placeholderImage);
-        setIsImageLoading(false);
+    const loadImage = async () => {
+      // Create array of potential image sources, filter out undefined/null values
+      const imageSources = [imageUrl, featured_image, cover_image].filter(Boolean) as string[];
+      
+      if (imageSources.length === 0) {
+        console.log(`No image sources available for article: ${title}`);
+        if (isMounted) {
+          setDisplayedImage(placeholderImage);
+          setIsImageLoading(false);
+        }
         return;
       }
-
-      const img = new Image();
-      const currentUrl = imageSources[currentIndex];
       
-      img.crossOrigin = "anonymous"; // Add cross-origin support
-      
-      img.onload = () => {
-        console.log(`Successfully loaded image for article: ${title} from ${currentUrl}`);
-        setFinalImageUrl(currentUrl);
-        setIsImageLoading(false);
-        setImageError(false);
-      };
-      
-      img.onerror = () => {
-        console.error(`Failed to load image at ${currentUrl} for article: ${title}`);
-        // Try next image source
-        tryLoadImage(currentIndex + 1);
-      };
-      
-      // Set a timeout to handle very slow image loads
-      const timeout = setTimeout(() => {
-        if (img.complete === false) {
-          console.log(`Image loading timeout for ${currentUrl}`);
-          img.src = ''; // Cancel the current load
-          tryLoadImage(currentIndex + 1);
+      // Try loading each image source in sequence
+      for (const src of imageSources) {
+        try {
+          // Create a promise that resolves when the image loads or rejects after timeout
+          const imageLoaded = await new Promise<boolean>((resolve, reject) => {
+            const img = new Image();
+            
+            // Set a timeout to reject if image takes too long to load
+            const timeoutId = setTimeout(() => {
+              console.log(`Image loading timeout for ${src}`);
+              reject(new Error('Image load timeout'));
+            }, 5000);
+            
+            img.onload = () => {
+              clearTimeout(timeoutId);
+              resolve(true);
+            };
+            
+            img.onerror = () => {
+              clearTimeout(timeoutId);
+              reject(new Error(`Failed to load image from ${src}`));
+            };
+            
+            // Start loading the image
+            img.src = src;
+          });
+          
+          // If we get here, the image loaded successfully
+          if (isMounted) {
+            console.log(`Successfully loaded image for article: ${title} from ${src}`);
+            setDisplayedImage(src);
+            setIsImageLoading(false);
+          }
+          return; // Exit after first successful image load
+          
+        } catch (error) {
+          console.error(`Error loading image from ${imageSources.indexOf(src) + 1}/${imageSources.length} sources for article "${title}":`, error);
+          // Continue to the next image source
         }
-      }, 5000); // 5 second timeout
+      }
       
-      img.src = currentUrl;
-      
-      // Clear timeout if image loads or errors out before timeout
-      img.onload = () => {
-        clearTimeout(timeout);
-        console.log(`Successfully loaded image for article: ${title} from ${currentUrl}`);
-        setFinalImageUrl(currentUrl);
+      // If all image sources failed, use the placeholder
+      if (isMounted) {
+        console.log(`Using placeholder image for article: ${title}`);
+        setDisplayedImage(placeholderImage);
         setIsImageLoading(false);
-        setImageError(false);
-      };
-      
-      img.onerror = () => {
-        clearTimeout(timeout);
-        console.error(`Failed to load image at ${currentUrl} for article: ${title}`);
-        tryLoadImage(currentIndex + 1);
-      };
+      }
     };
     
-    // Start trying the images
-    tryLoadImage();
+    // Start the image loading process
+    loadImage();
     
-    // Log available image URLs for debugging
-    console.log(`Article ${id} - Image URLs:`, { 
-      imageUrl, 
-      cover_image, 
-      featured_image, 
-      availableSources: imageSources
-    });
-    
-  }, [id, imageUrl, cover_image, featured_image, title, placeholderImage]);
+    // Cleanup function to prevent state updates if component unmounts
+    return () => {
+      isMounted = false;
+    };
+  }, [title, imageUrl, cover_image, featured_image, placeholderImage]);
   
-  // Manual image load handling for visible image element
+  // Handle manual image loading events for the visible image element
   const handleImageLoad = () => {
     setIsImageLoading(false);
   };
   
   const handleImageError = () => {
-    console.error(`Failed to load image for article: ${title}`);
-    setFinalImageUrl(placeholderImage); // Set to placeholder immediately on error
+    console.error(`Failed to load displayed image for article: ${title}`);
+    setDisplayedImage(placeholderImage);
     setIsImageLoading(false);
-    setImageError(true);
   };
   
   return (
@@ -146,7 +134,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
         )}
         
         <img 
-          src={finalImageUrl || placeholderImage}
+          src={displayedImage}
           alt={title}
           className={cn(
             "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
