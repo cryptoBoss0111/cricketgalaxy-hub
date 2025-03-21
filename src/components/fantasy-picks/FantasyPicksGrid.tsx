@@ -15,7 +15,7 @@ const FantasyPicksGrid: React.FC<FantasyPicksGridProps> = ({ picks, isLoading })
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="shadow-md animate-pulse h-64 rounded-lg bg-gray-100"></div>
+          <div key={i} className="shadow-md animate-pulse h-64 rounded-lg bg-gray-100 dark:bg-gray-800/50"></div>
         ))}
       </div>
     );
@@ -39,7 +39,7 @@ const FantasyPicksGrid: React.FC<FantasyPicksGridProps> = ({ picks, isLoading })
             Build Your Fantasy Team <ArrowRight size={16} className="ml-2" />
           </Link>
         </Button>
-        <p className="text-sm text-gray-500 mt-3">Updated daily with fresh picks from our cricket experts</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">Updated daily with fresh picks from our cricket experts</p>
       </div>
     </>
   );

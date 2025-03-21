@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
 @tailwind base;
@@ -140,7 +139,7 @@
   }
 
   .feature-card {
-    @apply relative overflow-hidden rounded-xl p-6 shadow-soft bg-white hover:shadow-lg transition-all duration-300 border border-gray-100;
+    @apply relative overflow-hidden rounded-xl p-6 shadow-soft bg-white hover:shadow-lg transition-all duration-300 border border-gray-100 dark:bg-cricket-dark/80 dark:border-gray-800 dark:hover:shadow-lg;
   }
   
   .cricket-button {

@@ -6,10 +6,10 @@ import { quickStats } from '../data/homeData';
 
 export const QuickStatsSection = () => {
   return (
-    <div className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
+    <div className="bg-white dark:bg-cricket-dark/80 rounded-xl shadow-soft p-6 border border-gray-100 dark:border-gray-800">
       <div className="flex items-center space-x-3 mb-6">
         <BarChart2 className="text-cricket-accent h-6 w-6" />
-        <h2 className="text-xl font-heading font-bold">Quick Stats</h2>
+        <h2 className="text-xl font-heading font-bold dark:text-white">Quick Stats</h2>
       </div>
       
       <div className="space-y-4">
@@ -17,16 +17,16 @@ export const QuickStatsSection = () => {
           <div 
             key={index}
             className={cn(
-              "p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors animate-fade-in",
+              "p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors animate-fade-in",
               index === 0 ? "animate-delay-100" : "",
               index === 1 ? "animate-delay-200" : "",
               index === 2 ? "animate-delay-300" : "",
               index === 3 ? "animate-delay-400" : ""
             )}
           >
-            <div className="text-gray-500 text-xs mb-1">{stat.label}</div>
+            <div className="text-gray-500 dark:text-gray-400 text-xs mb-1">{stat.label}</div>
             <div className="flex justify-between items-center">
-              <span className="font-semibold">{stat.value}</span>
+              <span className="font-semibold dark:text-white">{stat.value}</span>
               <span className="text-cricket-accent text-sm">{stat.detail}</span>
             </div>
           </div>

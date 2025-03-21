@@ -27,15 +27,15 @@ interface FantasyPickCardProps {
 const getFormColor = (form: string) => {
   switch (form) {
     case 'Excellent':
-      return 'text-green-600';
+      return 'text-green-600 dark:text-green-400';
     case 'Good':
-      return 'text-blue-600';
+      return 'text-blue-600 dark:text-blue-400';
     case 'Average':
-      return 'text-yellow-600';
+      return 'text-yellow-600 dark:text-yellow-400';
     case 'Poor':
-      return 'text-red-600';
+      return 'text-red-600 dark:text-red-400';
     default:
-      return 'text-gray-600';
+      return 'text-gray-600 dark:text-gray-400';
   }
 };
 
@@ -43,7 +43,7 @@ const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
   return (
     <Card 
       className={cn(
-        "overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border-t-4 relative animate-fade-in",
+        "overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border-t-4 relative animate-fade-in dark:bg-cricket-dark/80 dark:border-gray-800 dark:border-t-4",
         index === 0 ? "border-t-yellow-500 animate-delay-100" : 
         index === 1 ? "border-t-blue-500 animate-delay-200" : 
         "border-t-green-500 animate-delay-300"
@@ -65,17 +65,17 @@ const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
           <img 
             src={pick.image_url} 
             alt={pick.player_name}
-            className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-gray-200"
+            className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-gray-200 dark:border-gray-700"
           />
           <div>
-            <h3 className="font-semibold text-lg">{pick.player_name}</h3>
-            <p className="text-gray-500 text-sm">{pick.team} • {pick.role}</p>
+            <h3 className="font-semibold text-lg dark:text-white">{pick.player_name}</h3>
+            <p className="text-gray-500 text-sm dark:text-gray-400">{pick.team} • {pick.role}</p>
           </div>
         </div>
         
         <div className="mb-4">
           <div className="flex justify-between mb-2">
-            <span className="text-gray-500 text-sm">Form:</span>
+            <span className="text-gray-500 text-sm dark:text-gray-400">Form:</span>
             <span className={cn(
               "text-sm font-medium",
               getFormColor(pick.form)
@@ -85,17 +85,17 @@ const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
           </div>
           
           <div className="flex justify-between mb-2">
-            <span className="text-gray-500 text-sm">Predicted Points:</span>
+            <span className="text-gray-500 text-sm dark:text-gray-400">Predicted Points:</span>
             <span className="text-sm font-bold text-cricket-accent">{pick.points_prediction} pts</span>
           </div>
           
           <div className="flex justify-between mb-2">
-            <span className="text-gray-500 text-sm">Match:</span>
-            <span className="text-sm">{pick.match_details}</span>
+            <span className="text-gray-500 text-sm dark:text-gray-400">Match:</span>
+            <span className="text-sm dark:text-gray-300">{pick.match_details}</span>
           </div>
         </div>
         
-        <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-md">
+        <div className="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-md">
           <strong>Why Pick:</strong> {pick.selection_reason}
         </div>
       </CardContent>

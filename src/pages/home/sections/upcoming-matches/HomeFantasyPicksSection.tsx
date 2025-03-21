@@ -32,7 +32,7 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
           <div 
             key={player.id} 
             className={cn(
-              "feature-card animate-fade-in", 
+              "feature-card animate-fade-in bg-white dark:bg-cricket-dark/80 dark:border-gray-800", 
               index === 0 ? "animate-delay-100" : "",
               index === 1 ? "animate-delay-200" : "",
               index === 2 ? "animate-delay-300" : ""
@@ -75,7 +75,7 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
       </div>
       
       <div className="mt-6 text-center">
-        <Button variant="accent" asChild className="text-white">
+        <Button variant="accent" asChild>
           <Link to="/fantasy-tips">
             View Complete Fantasy Guide
           </Link>
