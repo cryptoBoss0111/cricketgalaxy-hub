@@ -32,96 +32,103 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
-  // Define a reliable and persistent placeholder image that won't change
-  const placeholderImage = 'https://placehold.co/600x400/e0e0e0/333333?text=Cricket+News';
+  // Use a static local placeholder image rather than an external service
+  const placeholderImage = '/lovable-uploads/78bd8ca1-c0b1-430c-814b-d38fbaf2ef0c.png';
   
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [displayedImage, setDisplayedImage] = useState<string>(placeholderImage);
+  
+  // Log available image sources for debugging
+  const availableSources = [imageUrl, featured_image, cover_image].filter(Boolean);
+  
+  console.log(`Article ${id} - Image URLs:`, {
+    imageUrl,
+    cover_image,
+    featured_image,
+    availableSources
+  });
   
   useEffect(() => {
     let isMounted = true;
     
     const loadImage = async () => {
-      // Create array of potential image sources, filter out undefined/null values
-      const imageSources = [imageUrl, featured_image, cover_image].filter(Boolean) as string[];
-      
-      if (imageSources.length === 0) {
-        console.log(`No image sources available for article: ${title}`);
+      // Skip loading if no sources available
+      if (!availableSources.length) {
         if (isMounted) {
+          console.log(`No image sources available for article: ${title}`);
           setDisplayedImage(placeholderImage);
           setIsImageLoading(false);
         }
         return;
       }
       
-      // Try loading each image source in sequence
-      for (const src of imageSources) {
+      let imageLoaded = false;
+      
+      // Try loading each image with simplified approach
+      for (const src of availableSources) {
+        if (!isMounted) return;
+        
         try {
-          // Create a promise that resolves when the image loads or rejects after timeout
-          const imageLoaded = await new Promise<boolean>((resolve, reject) => {
-            const img = new Image();
-            
-            // Set a timeout to reject if image takes too long to load
+          // Create a new image for testing
+          const img = new Image();
+          
+          // Create a promise for image loading with timeout
+          await new Promise<void>((resolve, reject) => {
             const timeoutId = setTimeout(() => {
-              console.log(`Image loading timeout for ${src}`);
-              reject(new Error('Image load timeout'));
+              reject(new Error(`Timeout loading image from ${src}`));
             }, 5000);
+            
+            // Configure CORS attributes to help with cross-origin issues
+            img.crossOrigin = "anonymous";
             
             img.onload = () => {
               clearTimeout(timeoutId);
-              resolve(true);
+              if (isMounted) {
+                setDisplayedImage(src);
+                setIsImageLoading(false);
+                imageLoaded = true;
+              }
+              resolve();
             };
             
             img.onerror = () => {
               clearTimeout(timeoutId);
+              console.error(`Failed to load image at ${src} for article: ${title}`);
               reject(new Error(`Failed to load image from ${src}`));
             };
             
-            // Start loading the image
-            img.src = src;
+            // Set cache-busting parameter to prevent caching issues
+            img.src = `${src}?t=${new Date().getTime()}`;
           });
           
-          // If we get here, the image loaded successfully
-          if (isMounted) {
+          // If we successfully loaded the image, exit the loop
+          if (imageLoaded) {
             console.log(`Successfully loaded image for article: ${title} from ${src}`);
-            setDisplayedImage(src);
-            setIsImageLoading(false);
+            break;
           }
-          return; // Exit after first successful image load
-          
         } catch (error) {
-          console.error(`Error loading image from ${imageSources.indexOf(src) + 1}/${imageSources.length} sources for article "${title}":`, error);
-          // Continue to the next image source
+          console.log(`Error loading image from ${availableSources.indexOf(src) + 1}/${availableSources.length} sources for article "${title}":`, error);
+          // Continue to the next source
         }
       }
       
-      // If all image sources failed, use the placeholder
-      if (isMounted) {
+      // If no image was loaded, use the placeholder
+      if (!imageLoaded && isMounted) {
         console.log(`Using placeholder image for article: ${title}`);
         setDisplayedImage(placeholderImage);
         setIsImageLoading(false);
       }
     };
     
-    // Start the image loading process
+    // Attempt to load the image
+    setIsImageLoading(true);
     loadImage();
     
-    // Cleanup function to prevent state updates if component unmounts
+    // Cleanup function
     return () => {
       isMounted = false;
     };
-  }, [title, imageUrl, cover_image, featured_image, placeholderImage]);
-  
-  // Handle manual image loading events for the visible image element
-  const handleImageLoad = () => {
-    setIsImageLoading(false);
-  };
-  
-  const handleImageError = () => {
-    console.error(`Failed to load displayed image for article: ${title}`);
-    setDisplayedImage(placeholderImage);
-    setIsImageLoading(false);
-  };
+  }, [id, title, availableSources, placeholderImage]);
   
   return (
     <article className={cn(
@@ -140,8 +147,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
             "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
             isImageLoading ? "opacity-0" : "opacity-100"
           )}
-          onLoad={handleImageLoad}
-          onError={handleImageError}
           loading="lazy"
         />
         
