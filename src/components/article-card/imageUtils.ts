@@ -14,16 +14,22 @@ export const getFullImageUrl = (url?: string): string | undefined => {
   if (!url) return undefined;
   
   // If it's already a full URL, return as is
-  if (url.startsWith('http')) return url;
-  
-  // If it's a Supabase storage URL that might be relative
-  if (url.includes('index-')) {
-    // Construct the full Supabase storage URL
-    return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/${url}`;
+  if (url.startsWith('http')) {
+    // Check if this is a Supabase URL that needs to be corrected
+    if (url.includes('supabase.co/storage/v1/object/public')) {
+      return url; // Already a properly formatted public URL
+    } else if (url.includes('supabase.co/storage/v1/')) {
+      // Fix the URL format - convert from API format to public URL format
+      return url.replace(
+        'supabase.co/storage/v1/',
+        'supabase.co/storage/v1/object/public/'
+      );
+    }
+    return url;
   }
   
-  // Return as is for other cases
-  return url;
+  // For relative paths, construct the full Supabase public URL
+  return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
 };
 
 // Custom hook to handle image sources and fallbacks
