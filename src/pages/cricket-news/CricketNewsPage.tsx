@@ -78,22 +78,22 @@ const CricketNewsPage = () => {
               cover_image: article.cover_image
             });
             
-            // Find the best available image for this article
-            const bestImageUrl = article.featured_image || article.cover_image || 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop';
-            
             return {
               id: article.id,
               title: article.title,
               excerpt: article.excerpt || article.meta_description || 'Read this exciting story...',
-              imageUrl: bestImageUrl,
+              imageUrl: article.featured_image || article.cover_image || null,
+              cover_image: article.cover_image || null,
+              featured_image: article.featured_image || null,
               category: article.category,
-              author: 'CricketExpress Staff',
+              author: article.author || 'CricketExpress Staff',
               date: new Date(article.published_at || article.created_at).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric'
               }),
-              timeToRead: `${Math.ceil(article.content.length / 1000)} min read`
+              timeToRead: `${Math.ceil((article.content?.length || 0) / 1000)} min read`,
+              content: article.content
             };
           });
           
@@ -177,12 +177,14 @@ const CricketNewsPage = () => {
 };
 
 // Export mock news articles for fallback
-const mockNewsArticles = [
+const mockNewsArticles: Article[] = [
   {
     id: '1',
     title: 'IPL: Bumrah\'s early absence \'a challenge\', says Jayawardene',
     excerpt: 'Mumbai Indians head coach discusses the impact of missing their star bowler for the initial matches.',
     imageUrl: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop',
+    cover_image: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop',
+    featured_image: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop',
     category: 'IPL 2025',
     author: 'Vishal Dikshit',
     date: 'Mar 19, 2025',

@@ -1,11 +1,14 @@
 
 export interface Article {
-  id: string;
+  id: string | number;
   title: string;
-  excerpt: string | null;
-  imageUrl: string;
+  excerpt?: string;
+  imageUrl?: string;
+  cover_image?: string;
+  featured_image?: string;
   category: string;
   author: string;
   date: string;
-  timeToRead: string;
+  timeToRead?: string;
+  content?: string;
 }

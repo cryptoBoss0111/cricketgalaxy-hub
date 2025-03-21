@@ -1,4 +1,3 @@
-
 import { Filter, ChevronDown, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -100,7 +99,6 @@ const NewsContent = ({
   );
 };
 
-// Sub-components for different states
 const LoadingArticles = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {[1, 2, 3, 4, 5, 6].map((_, index) => (
@@ -132,6 +130,8 @@ const ArticleGrid = ({ articles }: { articles: Article[] }) => {
             title={article.title}
             excerpt={article.excerpt || ''}
             imageUrl={article.imageUrl}
+            cover_image={article.cover_image}
+            featured_image={article.featured_image}
             category={article.category}
             author={article.author}
             date={article.date}

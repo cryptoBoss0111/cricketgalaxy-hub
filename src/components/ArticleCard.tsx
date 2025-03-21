@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/components/ui/use-toast';
 
 interface ArticleCardProps {
   id: string | number;
@@ -31,15 +32,68 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
-  // Use the first available image source in this priority order
-  const image = imageUrl || cover_image || featured_image;
-  
-  // Placeholder image to use if no image is provided
+  // Define fallback image
   const placeholderImage = 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop';
   
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null);
   
+  // Use effect to determine the best image to display
+  useEffect(() => {
+    // Try all possible image sources in order of preference
+    const imageSources = [imageUrl, cover_image, featured_image].filter(Boolean);
+    
+    if (imageSources.length === 0) {
+      console.log(`No image sources available for article: ${title}`);
+      setFinalImageUrl(placeholderImage);
+      setIsImageLoading(false);
+      return;
+    }
+    
+    // Check if the first image is loadable
+    const checkImage = (url: string, index: number) => {
+      const img = new Image();
+      
+      img.onload = () => {
+        console.log(`Successfully loaded image for article: ${title}`);
+        setFinalImageUrl(url);
+        setIsImageLoading(false);
+        setImageError(false);
+      };
+      
+      img.onerror = () => {
+        console.error(`Failed to load image at ${url} for article: ${title}`);
+        
+        // Try the next image if available
+        if (index < imageSources.length - 1) {
+          checkImage(imageSources[index + 1] as string, index + 1);
+        } else {
+          // If all images fail, use placeholder
+          console.log(`Using placeholder image for article: ${title}`);
+          setFinalImageUrl(placeholderImage);
+          setIsImageLoading(false);
+          setImageError(true);
+        }
+      };
+      
+      img.src = url;
+    };
+    
+    // Start checking with the first available image
+    checkImage(imageSources[0] as string, 0);
+    
+    // Log available image URLs for debugging
+    console.log(`Article ${id} - Image URLs:`, { 
+      imageUrl, 
+      cover_image, 
+      featured_image, 
+      availableSources: imageSources
+    });
+    
+  }, [id, imageUrl, cover_image, featured_image, title, placeholderImage]);
+  
+  // Manual image load handling for visible image element
   const handleImageLoad = () => {
     setIsImageLoading(false);
   };
@@ -49,9 +103,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
     setIsImageLoading(false);
     setImageError(true);
   };
-  
-  // Log image URLs for debugging
-  console.log(`Article ${id} - Image URLs:`, { imageUrl, cover_image, featured_image, finalImage: image || placeholderImage });
   
   return (
     <article className={cn(
@@ -63,17 +114,19 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           <Skeleton className="w-full h-48 object-cover" />
         )}
         
-        <img 
-          src={imageError ? placeholderImage : (image || placeholderImage)}
-          alt={title}
-          className={cn(
-            "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
-            isImageLoading ? "opacity-0" : "opacity-100"
-          )}
-          onLoad={handleImageLoad}
-          onError={handleImageError}
-          loading="lazy"
-        />
+        {finalImageUrl && (
+          <img 
+            src={finalImageUrl}
+            alt={title}
+            className={cn(
+              "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
+              isImageLoading ? "opacity-0" : "opacity-100"
+            )}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+            loading="lazy"
+          />
+        )}
         
         <div className="absolute top-3 left-3">
           <span className="inline-block px-2 py-1 text-xs font-medium bg-cricket-accent text-white rounded">
@@ -107,7 +160,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
             </span>
             {timeToRead && (
               <span className="text-gray-500 dark:text-gray-400 text-xs ml-2">
-                • {timeToRead} min read
+                • {timeToRead}
               </span>
             )}
           </div>
