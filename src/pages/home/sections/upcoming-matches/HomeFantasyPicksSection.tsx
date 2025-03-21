@@ -21,10 +21,10 @@ interface HomeFantasyPicksSectionProps {
 
 const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks }) => {
   return (
-    <div>
+    <div className="mt-8">
       <div className="flex items-center space-x-3 mb-6">
         <Trophy className="text-cricket-accent h-6 w-6" />
-        <h2 className="text-2xl font-heading font-bold">Fantasy Picks</h2>
+        <h2 className="text-2xl font-heading font-bold dark:text-white">Fantasy Picks</h2>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -45,29 +45,29 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
                 className="w-16 h-16 rounded-full object-cover mr-4"
               />
               <div>
-                <h3 className="font-semibold text-lg">{player.player}</h3>
-                <p className="text-gray-500 text-sm">{player.team}</p>
+                <h3 className="font-semibold text-lg dark:text-white">{player.player}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{player.team}</p>
               </div>
             </div>
             
             <div className="text-sm space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-500">Role:</span>
-                <span className="font-medium">{player.role}</span>
+                <span className="text-gray-500 dark:text-gray-400">Role:</span>
+                <span className="font-medium dark:text-white">{player.role}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Form:</span>
+                <span className="text-gray-500 dark:text-gray-400">Form:</span>
                 <span className={cn(
                   "font-medium",
-                  player.form === 'Excellent' ? "text-green-600" :
-                  player.form === 'Good' ? "text-blue-600" : "text-yellow-600"
+                  player.form === 'Excellent' ? "text-green-600 dark:text-green-400" :
+                  player.form === 'Good' ? "text-blue-600 dark:text-blue-400" : "text-yellow-600 dark:text-yellow-400"
                 )}>
                   {player.form}
                 </span>
               </div>
-              <div className="border-t border-gray-100 pt-2 mt-2">
-                <span className="text-gray-500 block mb-1">Recent Performance:</span>
-                <span className="font-medium text-gray-700">{player.stats}</span>
+              <div className="border-t border-gray-100 dark:border-gray-700 pt-2 mt-2">
+                <span className="text-gray-500 dark:text-gray-400 block mb-1">Recent Performance:</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">{player.stats}</span>
               </div>
             </div>
           </div>
@@ -75,7 +75,7 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
       </div>
       
       <div className="mt-6 text-center">
-        <Button asChild className="bg-cricket-accent hover:bg-cricket-accent/90">
+        <Button variant="accent" asChild className="text-white">
           <Link to="/fantasy-tips">
             View Complete Fantasy Guide
           </Link>
