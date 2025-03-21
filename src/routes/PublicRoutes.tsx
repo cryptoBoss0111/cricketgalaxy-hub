@@ -1,4 +1,5 @@
 
+import { Fragment } from "react";
 import { Route } from "react-router-dom";
 import Home from "@/pages/Home";
 import CricketNews from "@/pages/cricket-news";
@@ -8,7 +9,7 @@ import NotFound from "@/pages/NotFound";
 
 export const PublicRoutes = () => {
   return (
-    <>
+    <Fragment>
       <Route path="/" element={<Home />} />
       <Route path="/cricket-news" element={<CricketNews />} />
       <Route path="/match-previews" element={<CricketNews />} />
@@ -21,6 +22,6 @@ export const PublicRoutes = () => {
       <Route path="/article/:id" element={<ArticleDetail />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="*" element={<NotFound />} />
-    </>
+    </Fragment>
   );
 };

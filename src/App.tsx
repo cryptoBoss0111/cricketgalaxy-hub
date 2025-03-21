@@ -7,12 +7,9 @@ import { PublicRoutes } from "./routes/PublicRoutes";
 const App = () => (
   <AppProviders>
     <Routes>
-      <Route>
-        <PublicRoutes />
-      </Route>
-      <Route>
-        <AdminRoutes />
-      </Route>
+      {/* Use the components as fragments containing routes */}
+      <PublicRoutes />
+      <AdminRoutes />
     </Routes>
   </AppProviders>
 );
