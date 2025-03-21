@@ -32,17 +32,21 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   timeToRead,
   className,
 }) => {
-  // Define fallback image
-  const placeholderImage = 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop';
+  // Define fallback image - using a reliable source
+  const placeholderImage = 'https://placehold.co/600x400/cricket/white?text=Cricket+Express';
   
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null);
   
-  // Use effect to determine the best image to display
+  // Use effect to determine the best image to display with cross-origin support
   useEffect(() => {
-    // Try all possible image sources in order of preference
-    const imageSources = [imageUrl, cover_image, featured_image].filter(Boolean);
+    // Use all possible image sources
+    const imageSources = [
+      imageUrl, 
+      featured_image, 
+      cover_image
+    ].filter(Boolean) as string[];
     
     if (imageSources.length === 0) {
       console.log(`No image sources available for article: ${title}`);
@@ -51,37 +55,63 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
       return;
     }
     
-    // Check if the first image is loadable
-    const checkImage = (url: string, index: number) => {
+    // Make the image URLs more reliable by using the placehold service as fallback
+    const tryLoadImage = (currentIndex = 0) => {
+      if (currentIndex >= imageSources.length) {
+        // If all sources fail, use placeholder
+        console.log(`Using placeholder image for article: ${title}`);
+        setFinalImageUrl(placeholderImage);
+        setIsImageLoading(false);
+        return;
+      }
+
       const img = new Image();
+      const currentUrl = imageSources[currentIndex];
+      
+      img.crossOrigin = "anonymous"; // Add cross-origin support
       
       img.onload = () => {
-        console.log(`Successfully loaded image for article: ${title}`);
-        setFinalImageUrl(url);
+        console.log(`Successfully loaded image for article: ${title} from ${currentUrl}`);
+        setFinalImageUrl(currentUrl);
         setIsImageLoading(false);
         setImageError(false);
       };
       
       img.onerror = () => {
-        console.error(`Failed to load image at ${url} for article: ${title}`);
-        
-        // Try the next image if available
-        if (index < imageSources.length - 1) {
-          checkImage(imageSources[index + 1] as string, index + 1);
-        } else {
-          // If all images fail, use placeholder
-          console.log(`Using placeholder image for article: ${title}`);
-          setFinalImageUrl(placeholderImage);
-          setIsImageLoading(false);
-          setImageError(true);
-        }
+        console.error(`Failed to load image at ${currentUrl} for article: ${title}`);
+        // Try next image source
+        tryLoadImage(currentIndex + 1);
       };
       
-      img.src = url;
+      // Set a timeout to handle very slow image loads
+      const timeout = setTimeout(() => {
+        if (img.complete === false) {
+          console.log(`Image loading timeout for ${currentUrl}`);
+          img.src = ''; // Cancel the current load
+          tryLoadImage(currentIndex + 1);
+        }
+      }, 5000); // 5 second timeout
+      
+      img.src = currentUrl;
+      
+      // Clear timeout if image loads or errors out before timeout
+      img.onload = () => {
+        clearTimeout(timeout);
+        console.log(`Successfully loaded image for article: ${title} from ${currentUrl}`);
+        setFinalImageUrl(currentUrl);
+        setIsImageLoading(false);
+        setImageError(false);
+      };
+      
+      img.onerror = () => {
+        clearTimeout(timeout);
+        console.error(`Failed to load image at ${currentUrl} for article: ${title}`);
+        tryLoadImage(currentIndex + 1);
+      };
     };
     
-    // Start checking with the first available image
-    checkImage(imageSources[0] as string, 0);
+    // Start trying the images
+    tryLoadImage();
     
     // Log available image URLs for debugging
     console.log(`Article ${id} - Image URLs:`, { 
@@ -100,6 +130,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   
   const handleImageError = () => {
     console.error(`Failed to load image for article: ${title}`);
+    setFinalImageUrl(placeholderImage); // Set to placeholder immediately on error
     setIsImageLoading(false);
     setImageError(true);
   };
@@ -114,19 +145,17 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           <Skeleton className="w-full h-48 object-cover" />
         )}
         
-        {finalImageUrl && (
-          <img 
-            src={finalImageUrl}
-            alt={title}
-            className={cn(
-              "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
-              isImageLoading ? "opacity-0" : "opacity-100"
-            )}
-            onLoad={handleImageLoad}
-            onError={handleImageError}
-            loading="lazy"
-          />
-        )}
+        <img 
+          src={finalImageUrl || placeholderImage}
+          alt={title}
+          className={cn(
+            "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",
+            isImageLoading ? "opacity-0" : "opacity-100"
+          )}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+          loading="lazy"
+        />
         
         <div className="absolute top-3 left-3">
           <span className="inline-block px-2 py-1 text-xs font-medium bg-cricket-accent text-white rounded">

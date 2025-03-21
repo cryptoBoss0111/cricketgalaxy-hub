@@ -8,6 +8,7 @@ export interface Article {
   featured_image?: string;
   category: string;
   author: string;
+  author_id?: string;
   date: string;
   timeToRead?: string;
   content?: string;

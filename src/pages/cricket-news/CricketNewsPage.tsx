@@ -86,7 +86,8 @@ const CricketNewsPage = () => {
               cover_image: article.cover_image || null,
               featured_image: article.featured_image || null,
               category: article.category,
-              author: article.author || 'CricketExpress Staff',
+              author: article.author_id ? `Author ${article.author_id.slice(0, 8)}` : 'CricketExpress Staff',
+              author_id: article.author_id || undefined,
               date: new Date(article.published_at || article.created_at).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
