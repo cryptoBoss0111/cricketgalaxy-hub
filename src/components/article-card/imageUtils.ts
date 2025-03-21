@@ -16,7 +16,13 @@ export const getFullImageUrl = (url?: string): string | undefined => {
   // If it's already a full URL, return as is
   if (url.startsWith('http')) return url;
   
-  // Handle relative URLs if needed
+  // If it's a Supabase storage URL that might be relative
+  if (url.includes('index-')) {
+    // Construct the full Supabase storage URL
+    return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/${url}`;
+  }
+  
+  // Return as is for other cases
   return url;
 };
 
@@ -25,10 +31,13 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [imageSource, setImageSource] = useState<string>(DEFAULT_PLACEHOLDER);
+  const [fallbacksAttempted, setFallbacksAttempted] = useState<string[]>([]);
   
   useEffect(() => {
+    // Reset state when props change
     setIsLoading(true);
     setImageError(false);
+    setFallbacksAttempted([]);
     
     const fullFeaturedImage = getFullImageUrl(featured_image);
     const fullCoverImage = getFullImageUrl(cover_image);
@@ -77,25 +86,30 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
   const handleImageError = () => {
     console.error(`❌ Image load failed for "${title}": ${imageSource}`);
     
-    // Track which sources we've already tried
+    // Add the current source to attempted fallbacks
+    setFallbacksAttempted(prev => [...prev, imageSource]);
+    
+    // Get all available image sources
     const fullFeaturedImage = getFullImageUrl(featured_image);
     const fullCoverImage = getFullImageUrl(cover_image);
     const fullImageUrl = getFullImageUrl(imageUrl);
     
-    const isFeaturedImage = imageSource === fullFeaturedImage;
-    const isCoverImage = imageSource === fullCoverImage;
-    const isImageUrl = imageSource === fullImageUrl;
+    // Create an array of available sources that we haven't tried yet
+    const availableSources = [
+      fullFeaturedImage,
+      fullCoverImage,
+      fullImageUrl
+    ].filter(source => 
+      source && 
+      source !== imageSource && 
+      !fallbacksAttempted.includes(source)
+    );
     
-    // Try fallback images in sequence
-    if (isFeaturedImage && isValidImageUrl(fullCoverImage)) {
-      console.log(`Trying fallback to cover_image for "${title}": ${fullCoverImage}`);
-      setImageSource(fullCoverImage!);
-      return;
-    } 
-    
-    if ((isFeaturedImage || isCoverImage) && isValidImageUrl(fullImageUrl)) {
-      console.log(`Trying fallback to imageUrl for "${title}": ${fullImageUrl}`);
-      setImageSource(fullImageUrl!);
+    if (availableSources.length > 0) {
+      // Try the next available source
+      const nextSource = availableSources[0];
+      console.log(`Trying fallback to ${nextSource} for "${title}"`);
+      setImageSource(nextSource);
       return;
     }
     
