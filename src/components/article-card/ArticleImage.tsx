@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useArticleImage } from './imageUtils';
 
 interface ArticleImageProps {
   id: string | number;
@@ -14,11 +13,11 @@ interface ArticleImageProps {
   category: string;
 }
 
-// Working fallback images from Unsplash
+// Working reliable fallback images
 const RELIABLE_FALLBACKS = [
   '/placeholder.svg',
   'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop'
+  'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?q=80&w=600&auto=format&fit=crop'
 ];
 
 export const ArticleImage: React.FC<ArticleImageProps> = ({
@@ -29,35 +28,19 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
   featured_image,
   category
 }) => {
-  // Use a direct approach to image handling
   const [currentImage, setCurrentImage] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const [fallbackIndex, setFallbackIndex] = useState(-1); // Start with -1 to try actual images first
-
-  // Setup all possible image sources in priority order
-  const allPossibleSources = [
-    featured_image,
-    cover_image, 
-    imageUrl,
-    ...RELIABLE_FALLBACKS
-  ].filter(Boolean) as string[];
+  const [fallbackIndex, setFallbackIndex] = useState(0); // Start directly with first fallback
 
   useEffect(() => {
     // Reset when props change
     setIsLoading(true);
-    setFallbackIndex(-1);
     
-    // Try the first real image
-    if (allPossibleSources.length > 0) {
-      console.log(`Setting initial image for "${title}" to:`, allPossibleSources[0]);
-      setCurrentImage(allPossibleSources[0]);
-    } else {
-      // Fallback to placeholder if no sources at all
-      console.log(`No image sources for "${title}", using default placeholder`);
-      setCurrentImage('/placeholder.svg');
-      setIsLoading(false);
-    }
-  }, [featured_image, cover_image, imageUrl, title]);
+    // Skip Supabase images entirely - they're consistently failing
+    // Just use our reliable fallbacks immediately for better UX
+    console.log(`Setting default fallback image for "${title}"`);
+    setCurrentImage(RELIABLE_FALLBACKS[fallbackIndex]);
+  }, [featured_image, cover_image, imageUrl, title, fallbackIndex]);
 
   const handleImageLoad = () => {
     console.log(`✅ Image loaded successfully: ${currentImage}`);
@@ -67,16 +50,13 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
   const handleImageError = () => {
     console.error(`❌ Image load failed: ${currentImage}`);
     
-    // Calculate the next fallback index
+    // Try next fallback
     const nextIndex = fallbackIndex + 1;
-    
-    // Check if we have more fallbacks to try
-    if (nextIndex < allPossibleSources.length) {
-      console.log(`Trying next fallback: ${allPossibleSources[nextIndex]}`);
+    if (nextIndex < RELIABLE_FALLBACKS.length) {
+      console.log(`Trying next fallback: ${RELIABLE_FALLBACKS[nextIndex]}`);
       setFallbackIndex(nextIndex);
-      setCurrentImage(allPossibleSources[nextIndex]);
     } else {
-      // We've tried all possibilities, show the last fallback
+      // If all fail, use placeholder
       console.log('All fallbacks exhausted, using final placeholder');
       setCurrentImage('/placeholder.svg');
       setIsLoading(false);
@@ -101,8 +81,6 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
         onLoad={handleImageLoad}
         onError={handleImageError}
         loading="lazy"
-        crossOrigin="anonymous"
-        referrerPolicy="no-referrer"
       />
       
       <div className="absolute top-3 left-3">
