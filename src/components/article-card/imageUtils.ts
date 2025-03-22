@@ -20,69 +20,74 @@ export const getFullImageUrl = (url: string): string => {
   
   // If URL already starts with http(s), it's already a full URL
   if (url.startsWith('http://') || url.startsWith('https://')) {
-    console.log('URL already in correct format:', url);
     return url;
   }
   
   // If URL starts with /, it's a local URL
   if (url.startsWith('/')) {
-    console.log('Local URL detected:', url);
     return url;
   }
   
   // Otherwise, assume it's a Supabase storage URL
-  const fullUrl = `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
-  console.log('Constructed storage URL:', fullUrl);
-  return fullUrl;
+  return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
 };
 
 // Custom hook for article image handling with multiple fallbacks
 export const useArticleImage = (title: string, featured_image?: string, cover_image?: string, imageUrl?: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [imageSource, setImageSource] = useState<string>(RELIABLE_FALLBACKS[0]);
+  const [imageSource, setImageSource] = useState<string>('');
+  const [currentSourceIndex, setCurrentSourceIndex] = useState(-1);
   
+  // Create a prioritized list of all possible image sources
+  const allImageSources = [
+    featured_image,
+    cover_image,
+    imageUrl,
+    ...RELIABLE_FALLBACKS,
+    DEFAULT_PLACEHOLDER
+  ].filter(Boolean) as string[];
+  
+  // Try the next image source
+  const tryNextImageSource = () => {
+    const nextIndex = currentSourceIndex + 1;
+    if (nextIndex < allImageSources.length) {
+      const nextSource = allImageSources[nextIndex];
+      console.log(`Trying image source ${nextIndex} for "${title}": ${nextSource}`);
+      setImageSource(nextSource);
+      setCurrentSourceIndex(nextIndex);
+    }
+  };
+  
+  // Initialize with first source
   useEffect(() => {
-    // Reset state when props change
     setIsLoading(true);
     setImageError(false);
-    
-    // Skip trying to load Supabase images, they consistently fail
-    // Use our first reliable fallback directly for better UX
-    console.log(`Setting reliable fallback for "${title}"`);
-    setImageSource(RELIABLE_FALLBACKS[0]);
+    setCurrentSourceIndex(-1);
+    tryNextImageSource();
   }, [title, featured_image, cover_image, imageUrl]);
   
+  // Handle successful image load
   const handleImageLoad = () => {
     console.log(`✅ Image loaded successfully for "${title}": ${imageSource}`);
     setIsLoading(false);
     setImageError(false);
   };
   
+  // Handle image load error and try next source
   const handleImageError = () => {
     console.error(`❌ Image load failed for "${title}": ${imageSource}`);
     
-    // If current source is not the placeholder and not the last fallback
-    if (imageSource !== DEFAULT_PLACEHOLDER && 
-        imageSource !== RELIABLE_FALLBACKS[RELIABLE_FALLBACKS.length - 1]) {
-      
-      // Find index of current source in fallbacks
-      const currentIndex = RELIABLE_FALLBACKS.indexOf(imageSource);
-      
-      // Try next fallback if there is one
-      if (currentIndex >= 0 && currentIndex < RELIABLE_FALLBACKS.length - 1) {
-        const nextSource = RELIABLE_FALLBACKS[currentIndex + 1];
-        console.log(`Trying another fallback for "${title}": ${nextSource}`);
-        setImageSource(nextSource);
-        return;
-      }
+    // If we haven't reached the end of our sources, try the next one
+    if (currentSourceIndex < allImageSources.length - 1) {
+      tryNextImageSource();
+    } else {
+      // If all sources failed, set placeholder and finish loading
+      console.log(`All image attempts failed for "${title}", using placeholder`);
+      setImageSource(DEFAULT_PLACEHOLDER);
+      setIsLoading(false);
+      setImageError(true);
     }
-    
-    // If all fallbacks failed or not in fallbacks list, use placeholder
-    console.log(`All image attempts failed for "${title}", using placeholder`);
-    setImageSource(DEFAULT_PLACEHOLDER);
-    setIsLoading(false);
-    setImageError(true);
   };
   
   return {
@@ -90,7 +95,6 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
     isLoading,
     imageError,
     handleImageLoad,
-    handleImageError,
-    DEFAULT_PLACEHOLDER
+    handleImageError
   };
 };

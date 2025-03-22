@@ -57,7 +57,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       return;
     }
     
-    // Create preview
+    // Create preview immediately for better UX
     const fileReader = new FileReader();
     fileReader.onload = () => {
       if (typeof fileReader.result === 'string') {
@@ -72,8 +72,30 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     try {
       console.log("Starting image upload process...");
       
-      // Upload the file to Supabase storage
-      const imageUrl = await uploadImageToStorage(file, 'article_images');
+      // Upload the file to Supabase storage with retry mechanism
+      const maxRetries = 3;
+      let imageUrl = '';
+      let retryCount = 0;
+      
+      while (retryCount < maxRetries) {
+        try {
+          imageUrl = await uploadImageToStorage(file, 'article_images');
+          if (imageUrl) {
+            break; // Success, exit retry loop
+          }
+        } catch (retryError) {
+          console.error(`Upload attempt ${retryCount + 1} failed:`, retryError);
+          retryCount++;
+          if (retryCount >= maxRetries) throw retryError;
+          
+          // Wait a bit before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1)));
+        }
+      }
+      
+      if (!imageUrl) {
+        throw new Error("Failed to upload image after multiple attempts");
+      }
       
       console.log("Upload successful, image URL:", imageUrl);
       onImageUploaded(imageUrl);

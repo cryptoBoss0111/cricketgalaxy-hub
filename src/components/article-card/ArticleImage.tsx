@@ -29,39 +29,49 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
   featured_image,
   category
 }) => {
-  const [currentImage, setCurrentImage] = useState<string>(RELIABLE_FALLBACKS[0]);
   const [isLoading, setIsLoading] = useState(true);
-  const [fallbackIndex, setFallbackIndex] = useState(0); // Start directly with first fallback
+  const [imageSrc, setImageSrc] = useState<string>('');
+  const [fallbackIndex, setFallbackIndex] = useState<number>(-1);
+  
+  // Prioritized list of all possible image sources
+  const imageSources = [
+    featured_image,
+    cover_image,
+    imageUrl,
+    ...RELIABLE_FALLBACKS,
+    '/placeholder.svg'
+  ].filter(Boolean) as string[];
 
+  // Try next image source in our prioritized list
+  const tryNextSource = () => {
+    const nextIndex = fallbackIndex + 1;
+    if (nextIndex < imageSources.length) {
+      console.log(`Trying image source ${nextIndex}: ${imageSources[nextIndex]}`);
+      setFallbackIndex(nextIndex);
+      setImageSrc(imageSources[nextIndex]);
+    } else {
+      // If all fail, use placeholder and stop loading state
+      console.log('All image sources exhausted, using final placeholder');
+      setImageSrc('/placeholder.svg');
+      setIsLoading(false);
+    }
+  };
+
+  // Initialize with first image source
   useEffect(() => {
-    // Reset when props change
     setIsLoading(true);
-    
-    // Skip Supabase images entirely - they're consistently failing
-    // Just use our reliable fallbacks immediately for better UX
-    console.log(`Setting default fallback image for "${title}"`);
-    setCurrentImage(RELIABLE_FALLBACKS[fallbackIndex]);
-  }, [featured_image, cover_image, imageUrl, title, fallbackIndex]);
+    setFallbackIndex(-1);
+    tryNextSource();
+  }, [featured_image, cover_image, imageUrl]); // Reset when props change
 
   const handleImageLoad = () => {
-    console.log(`✅ Image loaded successfully: ${currentImage}`);
+    console.log(`✅ Image loaded successfully: ${imageSrc}`);
     setIsLoading(false);
   };
 
   const handleImageError = () => {
-    console.error(`❌ Image load failed: ${currentImage}`);
-    
-    // Try next fallback
-    const nextIndex = fallbackIndex + 1;
-    if (nextIndex < RELIABLE_FALLBACKS.length) {
-      console.log(`Trying next fallback: ${RELIABLE_FALLBACKS[nextIndex]}`);
-      setFallbackIndex(nextIndex);
-    } else {
-      // If all fail, use placeholder
-      console.log('All fallbacks exhausted, using final placeholder');
-      setCurrentImage('/placeholder.svg');
-      setIsLoading(false);
-    }
+    console.error(`❌ Image load failed: ${imageSrc}`);
+    tryNextSource();
   };
 
   return (
@@ -73,7 +83,7 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
       
       {/* Display the image with error handling */}
       <img 
-        src={currentImage}
+        src={imageSrc}
         alt={title}
         className={cn(
           "w-full h-48 object-cover transition-transform duration-500 hover:scale-110",

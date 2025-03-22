@@ -11,6 +11,15 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Chatbot from '@/components/Chatbot';
 import ArticleCard from '@/components/ArticleCard';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Reliable fallback images for when Supabase images fail
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?q=80&w=600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=600&auto=format&fit=crop'
+];
 
 const ArticleDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +27,9 @@ const ArticleDetail = () => {
   const [article, setArticle] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [relatedArticles, setRelatedArticles] = useState<any[]>([]);
+  const [mainImage, setMainImage] = useState<string>(FALLBACK_IMAGES[0]);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageFailed, setImageFailed] = useState(false);
   
   useEffect(() => {
     const fetchArticle = async () => {
@@ -30,6 +42,13 @@ const ArticleDetail = () => {
         if (articleData) {
           setArticle(articleData);
           console.log("Article data:", articleData);
+          
+          // Try to set the main image from article data
+          if (articleData.featured_image || articleData.cover_image) {
+            setMainImage(articleData.featured_image || articleData.cover_image);
+            setImageLoading(true);
+            setImageFailed(false);
+          }
           
           // Fetch related articles with the same category
           const { getArticlesByCategory } = await import('@/integrations/supabase/client');
@@ -65,6 +84,28 @@ const ArticleDetail = () => {
     // Scroll to top when article changes
     window.scrollTo(0, 0);
   }, [id, toast]);
+  
+  // Handle main image error
+  const handleImageError = () => {
+    console.error(`Image load failed: ${mainImage}`);
+    setImageFailed(true);
+    
+    // Use a fallback image
+    const randomFallback = FALLBACK_IMAGES[Math.floor(Math.random() * FALLBACK_IMAGES.length)];
+    if (mainImage !== randomFallback) {
+      setMainImage(randomFallback);
+      setImageLoading(true);
+    } else {
+      // If we're already using a fallback, just show it
+      setImageLoading(false);
+    }
+  };
+  
+  // Handle successful image load
+  const handleImageLoad = () => {
+    console.log(`Image loaded successfully: ${mainImage}`);
+    setImageLoading(false);
+  };
   
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -177,22 +218,27 @@ const ArticleDetail = () => {
           </div>
         </section>
         
-        {/* Featured image */}
-        {(article.featured_image || article.cover_image) && (
-          <section className="py-8">
-            <div className="container mx-auto px-4">
-              <div className="max-w-4xl mx-auto">
-                <div className="rounded-xl overflow-hidden shadow-lg">
-                  <img 
-                    src={article.featured_image || article.cover_image} 
-                    alt={article.title}
-                    className="w-full h-auto max-h-[600px] object-cover"
-                  />
-                </div>
+        {/* Featured image - improved with fallback handling */}
+        <section className="py-8">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="rounded-xl overflow-hidden shadow-lg relative">
+                {imageLoading && (
+                  <Skeleton className="w-full h-[400px] object-cover absolute inset-0" />
+                )}
+                <img 
+                  src={mainImage}
+                  alt={article.title}
+                  className="w-full h-auto max-h-[600px] object-cover"
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                  style={{ opacity: imageLoading ? 0 : 1 }}
+                  crossOrigin="anonymous"
+                />
               </div>
             </div>
-          </section>
-        )}
+          </div>
+        </section>
         
         {/* Article content */}
         <section className="py-8 md:py-12">
@@ -238,7 +284,7 @@ const ArticleDetail = () => {
                     id={relatedArticle.id}
                     title={relatedArticle.title}
                     excerpt={relatedArticle.excerpt || relatedArticle.meta_description || ''}
-                    imageUrl={relatedArticle.featured_image || relatedArticle.cover_image || 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=600&auto=format&fit=crop'}
+                    imageUrl={relatedArticle.featured_image || relatedArticle.cover_image || FALLBACK_IMAGES[0]}
                     category={relatedArticle.category}
                     author="CricketExpress Staff"
                     date={formatDate(relatedArticle.published_at || relatedArticle.created_at)}
