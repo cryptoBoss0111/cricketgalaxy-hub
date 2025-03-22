@@ -1,23 +1,46 @@
-
 import { useState, useEffect } from 'react';
 
 const DEFAULT_PLACEHOLDER = '/placeholder.svg';
 const RELIABLE_FALLBACKS = [
   'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?q=80&w=600&auto=format&fit=crop'
+  'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?q=80&w=600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=600&auto=format&fit=crop'
 ];
 
-// Simple helper to check if a URL is provided
+// Check if a URL is provided and looks valid
 export const isValidImageUrl = (url?: string): boolean => {
   if (!url || url.trim() === '') return false;
   return true;
 };
 
-// Custom hook that now primarily uses reliable fallbacks
+// Process image URLs for better compatibility
+export const getFullImageUrl = (url: string): string => {
+  if (!url) return DEFAULT_PLACEHOLDER;
+  
+  // If URL already starts with http(s), it's already a full URL
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    console.log('URL already in correct format:', url);
+    return url;
+  }
+  
+  // If URL starts with /, it's a local URL
+  if (url.startsWith('/')) {
+    console.log('Local URL detected:', url);
+    return url;
+  }
+  
+  // Otherwise, assume it's a Supabase storage URL
+  const fullUrl = `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
+  console.log('Constructed storage URL:', fullUrl);
+  return fullUrl;
+};
+
+// Custom hook for article image handling with multiple fallbacks
 export const useArticleImage = (title: string, featured_image?: string, cover_image?: string, imageUrl?: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [imageSource, setImageSource] = useState<string>(DEFAULT_PLACEHOLDER);
+  const [imageSource, setImageSource] = useState<string>(RELIABLE_FALLBACKS[0]);
   
   useEffect(() => {
     // Reset state when props change

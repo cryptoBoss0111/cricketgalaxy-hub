@@ -15,9 +15,10 @@ interface ArticleImageProps {
 
 // Working reliable fallback images
 const RELIABLE_FALLBACKS = [
-  '/placeholder.svg',
   'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=600&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?q=80&w=600&auto=format&fit=crop'
+  'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?q=80&w=600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=600&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=600&auto=format&fit=crop'
 ];
 
 export const ArticleImage: React.FC<ArticleImageProps> = ({
@@ -28,7 +29,7 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
   featured_image,
   category
 }) => {
-  const [currentImage, setCurrentImage] = useState<string>('');
+  const [currentImage, setCurrentImage] = useState<string>(RELIABLE_FALLBACKS[0]);
   const [isLoading, setIsLoading] = useState(true);
   const [fallbackIndex, setFallbackIndex] = useState(0); // Start directly with first fallback
 
@@ -81,6 +82,7 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
         onLoad={handleImageLoad}
         onError={handleImageError}
         loading="lazy"
+        crossOrigin="anonymous"
       />
       
       <div className="absolute top-3 left-3">

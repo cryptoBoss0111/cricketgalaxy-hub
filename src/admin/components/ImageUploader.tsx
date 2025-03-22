@@ -21,6 +21,13 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   const { toast } = useToast();
   const { isAdmin } = useAdminAuth();
   
+  useEffect(() => {
+    // Update previewUrl when existingImageUrl changes
+    if (existingImageUrl) {
+      setPreviewUrl(existingImageUrl);
+    }
+  }, [existingImageUrl]);
+  
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -65,7 +72,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     try {
       console.log("Starting image upload process...");
       
-      // Direct upload without checking auth (new policies don't require auth)
+      // Upload the file to Supabase storage
       const imageUrl = await uploadImageToStorage(file, 'article_images');
       
       console.log("Upload successful, image URL:", imageUrl);
@@ -97,13 +104,6 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
         variant: "destructive",
         duration: 6000,
       });
-      
-      // Clear the preview on error if no existing image
-      if (!existingImageUrl) {
-        setPreviewUrl(null);
-      } else {
-        setPreviewUrl(existingImageUrl);
-      }
     } finally {
       setIsUploading(false);
     }
@@ -133,6 +133,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
             src={previewUrl} 
             alt="Preview" 
             className="w-full h-48 object-cover"
+            crossOrigin="anonymous"
           />
           <Button 
             variant="destructive" 

@@ -155,13 +155,18 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
     attempt++;
     
     try {
-      // Directly attempt upload without checking authentication
+      // Set up CORS headers for fetch request
+      const uploadOptions = {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: file.type,
+      };
+      
+      console.log(`Attempt ${attempt}/${maxAttempts} - Uploading to Supabase Storage...`);
+      
       const { data, error } = await supabase.storage
         .from(bucketName)
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
+        .upload(fileName, file, uploadOptions);
       
       if (error) {
         console.error(`Storage upload error (attempt ${attempt}/${maxAttempts}):`, error);
@@ -195,6 +200,7 @@ export const uploadImageToStorage = async (file: File, bucketName = 'article_ima
       console.log("Image uploaded successfully, public URL:", publicUrl);
       return publicUrl;
     } catch (err) {
+      console.error(`Upload attempt ${attempt} failed with error:`, err);
       if (attempt >= maxAttempts) {
         throw err;
       }
