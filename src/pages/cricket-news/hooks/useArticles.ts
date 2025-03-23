@@ -23,7 +23,7 @@ export const useArticles = (selectedCategory: string, searchQuery: string, sortB
       return url;
     }
     
-    return url;
+    return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
   };
 
   useEffect(() => {

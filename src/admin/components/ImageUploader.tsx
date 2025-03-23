@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -23,10 +24,12 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   const processSupabaseUrl = (url?: string): string | null => {
     if (!url) return null;
     
+    // If URL already starts with http(s), it's already a full URL
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
     
+    // Construct the full Supabase storage URL
     return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
   };
   
@@ -100,9 +103,11 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       
       console.log("Upload successful, image URL:", imageUrl);
       
+      // Extract just the relative path from the full URL if needed
       const relativePathMatch = imageUrl.match(/\/public\/(.+)$/);
       const relativePath = relativePathMatch ? relativePathMatch[1] : imageUrl;
       
+      // Save the relative path only, which will be properly processed when displayed
       onImageUploaded(relativePath);
       
       toast({
@@ -159,7 +164,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
             src={previewUrl} 
             alt="Preview" 
             className="w-full h-48 object-cover"
-            referrerPolicy="no-referrer"
+            crossOrigin="anonymous"
             onError={(e) => {
               console.error("Error loading preview image:", previewUrl);
               (e.target as HTMLImageElement).src = '/placeholder.svg';

@@ -29,7 +29,7 @@ export const getFullImageUrl = (url: string): string => {
     return url;
   }
   
-  // Otherwise, assume it's a Supabase storage URL
+  // Construct the full Supabase storage URL
   return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
 };
 
