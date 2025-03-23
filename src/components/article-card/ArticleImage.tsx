@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/components/ui/use-toast';
 
 interface ArticleImageProps {
   id: string | number;
@@ -29,15 +29,29 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
   featured_image,
   category
 }) => {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [imageSrc, setImageSrc] = useState<string>('');
   const [fallbackIndex, setFallbackIndex] = useState<number>(-1);
   
+  // Process Supabase URLs if needed
+  const processUrl = (url?: string): string | undefined => {
+    if (!url) return undefined;
+    
+    // If URL is already a full URL, return it
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // Otherwise, construct the full Supabase URL
+    return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
+  };
+  
   // Prioritized list of all possible image sources
   const imageSources = [
-    featured_image,
-    cover_image,
-    imageUrl,
+    processUrl(featured_image),
+    processUrl(cover_image),
+    processUrl(imageUrl),
     ...RELIABLE_FALLBACKS,
     '/placeholder.svg'
   ].filter(Boolean) as string[];
@@ -92,7 +106,7 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
         onLoad={handleImageLoad}
         onError={handleImageError}
         loading="lazy"
-        crossOrigin="anonymous"
+        referrerPolicy="no-referrer"
       />
       
       <div className="absolute top-3 left-3">

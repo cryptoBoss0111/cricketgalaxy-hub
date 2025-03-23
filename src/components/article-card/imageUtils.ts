@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 const DEFAULT_PLACEHOLDER = '/placeholder.svg';
@@ -39,11 +40,16 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
   const [imageSource, setImageSource] = useState<string>('');
   const [currentSourceIndex, setCurrentSourceIndex] = useState(-1);
   
+  // Process URLs to ensure they are complete
+  const processedFeaturedImage = featured_image ? getFullImageUrl(featured_image) : undefined;
+  const processedCoverImage = cover_image ? getFullImageUrl(cover_image) : undefined;
+  const processedImageUrl = imageUrl ? getFullImageUrl(imageUrl) : undefined;
+  
   // Create a prioritized list of all possible image sources
   const allImageSources = [
-    featured_image,
-    cover_image,
-    imageUrl,
+    processedFeaturedImage,
+    processedCoverImage,
+    processedImageUrl,
     ...RELIABLE_FALLBACKS,
     DEFAULT_PLACEHOLDER
   ].filter(Boolean) as string[];
@@ -65,7 +71,7 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
     setImageError(false);
     setCurrentSourceIndex(-1);
     tryNextImageSource();
-  }, [title, featured_image, cover_image, imageUrl]);
+  }, [title, processedFeaturedImage, processedCoverImage, processedImageUrl]);
   
   // Handle successful image load
   const handleImageLoad = () => {

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +12,20 @@ export const useArticles = (selectedCategory: string, searchQuery: string, sortB
   const [categories, setCategories] = useState<string[]>(['All Categories']);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch articles from Supabase
+  const processSupabaseUrl = (url?: string | null): string | null => {
+    if (!url) return null;
+    
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    if (url.startsWith('/')) {
+      return url;
+    }
+    
+    return url;
+  };
+
   useEffect(() => {
     const fetchArticles = async () => {
       setIsLoading(true);
@@ -44,18 +56,23 @@ export const useArticles = (selectedCategory: string, searchQuery: string, sortB
           setCategories(['All Categories', ...uniqueCategories]);
           
           const transformedArticles: Article[] = articlesData.map((article: Tables<'articles'>) => {
+            const featured_image = processSupabaseUrl(article.featured_image);
+            const cover_image = processSupabaseUrl(article.cover_image);
+            
             console.log('Article image data:', {
-              featured_image: article.featured_image,
-              cover_image: article.cover_image
+              featured_image,
+              cover_image,
+              original_featured: article.featured_image,
+              original_cover: article.cover_image
             });
             
             return {
               id: article.id,
               title: article.title,
               excerpt: article.excerpt || article.meta_description || 'Read this exciting story...',
-              imageUrl: article.featured_image || article.cover_image || null,
-              cover_image: article.cover_image || null,
-              featured_image: article.featured_image || null,
+              imageUrl: featured_image || cover_image || null,
+              cover_image: cover_image,
+              featured_image: featured_image,
               category: article.category,
               author: article.author_id ? `Author ${article.author_id.slice(0, 8)}` : 'CricketExpress Staff',
               author_id: article.author_id || undefined,
@@ -89,7 +106,6 @@ export const useArticles = (selectedCategory: string, searchQuery: string, sortB
     fetchArticles();
   }, [toast]);
   
-  // Filter and sort articles based on criteria
   useEffect(() => {
     let results = [...articles];
     

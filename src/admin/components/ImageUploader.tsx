@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,15 +15,24 @@ interface ImageUploaderProps {
 
 const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Image" }: ImageUploaderProps) => {
   const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { isAdmin } = useAdminAuth();
   
+  const processSupabaseUrl = (url?: string): string | null => {
+    if (!url) return null;
+    
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
+  };
+  
   useEffect(() => {
-    // Update previewUrl when existingImageUrl changes
     if (existingImageUrl) {
-      setPreviewUrl(existingImageUrl);
+      setPreviewUrl(processSupabaseUrl(existingImageUrl));
     }
   }, [existingImageUrl]);
   
@@ -32,10 +40,8 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     const file = event.target.files?.[0];
     if (!file) return;
     
-    // Clear previous errors
     setError(null);
     
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       setError("Please upload an image file");
       toast({
@@ -46,7 +52,6 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       return;
     }
     
-    // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       setError("Please upload an image smaller than 5MB");
       toast({
@@ -57,7 +62,6 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       return;
     }
     
-    // Create preview immediately for better UX
     const fileReader = new FileReader();
     fileReader.onload = () => {
       if (typeof fileReader.result === 'string') {
@@ -66,13 +70,11 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     };
     fileReader.readAsDataURL(file);
     
-    // Upload to Supabase
     setIsUploading(true);
     
     try {
       console.log("Starting image upload process...");
       
-      // Upload the file to Supabase storage with retry mechanism
       const maxRetries = 3;
       let imageUrl = '';
       let retryCount = 0;
@@ -81,14 +83,13 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
         try {
           imageUrl = await uploadImageToStorage(file, 'article_images');
           if (imageUrl) {
-            break; // Success, exit retry loop
+            break;
           }
         } catch (retryError) {
           console.error(`Upload attempt ${retryCount + 1} failed:`, retryError);
           retryCount++;
           if (retryCount >= maxRetries) throw retryError;
           
-          // Wait a bit before retrying (exponential backoff)
           await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1)));
         }
       }
@@ -98,7 +99,11 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       }
       
       console.log("Upload successful, image URL:", imageUrl);
-      onImageUploaded(imageUrl);
+      
+      const relativePathMatch = imageUrl.match(/\/public\/(.+)$/);
+      const relativePath = relativePathMatch ? relativePathMatch[1] : imageUrl;
+      
+      onImageUploaded(relativePath);
       
       toast({
         title: "Image uploaded",
@@ -107,7 +112,6 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     } catch (error: any) {
       console.error('Error uploading image:', error);
       
-      // Format error message
       let errorMessage = "Failed to upload image";
       if (typeof error === 'object') {
         if (error.message) {
@@ -155,7 +159,11 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
             src={previewUrl} 
             alt="Preview" 
             className="w-full h-48 object-cover"
-            crossOrigin="anonymous"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              console.error("Error loading preview image:", previewUrl);
+              (e.target as HTMLImageElement).src = '/placeholder.svg';
+            }}
           />
           <Button 
             variant="destructive" 
