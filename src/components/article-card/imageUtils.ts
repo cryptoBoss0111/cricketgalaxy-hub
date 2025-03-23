@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 
-// Default placeholder image
 const DEFAULT_PLACEHOLDER = '/placeholder.svg';
-
-// Fallback images that are known to work reliably
 const RELIABLE_FALLBACKS = [
   'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=600&auto=format&fit=crop',
   'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?q=80&w=600&auto=format&fit=crop',
@@ -15,11 +12,6 @@ const RELIABLE_FALLBACKS = [
 export const isValidImageUrl = (url?: string): boolean => {
   if (!url || url.trim() === '') return false;
   return true;
-};
-
-// Get a random fallback image
-export const getRandomFallbackImage = (): string => {
-  return RELIABLE_FALLBACKS[Math.floor(Math.random() * RELIABLE_FALLBACKS.length)];
 };
 
 // Process image URLs for better compatibility
@@ -36,8 +28,8 @@ export const getFullImageUrl = (url: string): string => {
     return url;
   }
   
-  // Otherwise, return a fallback image
-  return getRandomFallbackImage();
+  // Otherwise, assume it's a Supabase storage URL
+  return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
 };
 
 // Custom hook for article image handling with multiple fallbacks

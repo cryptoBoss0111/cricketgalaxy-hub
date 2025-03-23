@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,8 +13,8 @@ interface ArticleImageProps {
   category: string;
 }
 
-// Reliable fallback images (local or CDN)
-const FALLBACK_IMAGES = [
+// Working reliable fallback images
+const RELIABLE_FALLBACKS = [
   'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=600&auto=format&fit=crop',
   'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?q=80&w=600&auto=format&fit=crop',
   'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=600&auto=format&fit=crop',
@@ -31,29 +31,48 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [imageSrc, setImageSrc] = useState<string>('');
-  const [hasError, setHasError] = useState(false);
+  const [fallbackIndex, setFallbackIndex] = useState<number>(-1);
   
-  // Use a random fallback image for consistency
-  const fallbackImage = FALLBACK_IMAGES[Math.floor(Math.random() * FALLBACK_IMAGES.length)];
-  
-  // Handle successful image load
+  // Prioritized list of all possible image sources
+  const imageSources = [
+    featured_image,
+    cover_image,
+    imageUrl,
+    ...RELIABLE_FALLBACKS,
+    '/placeholder.svg'
+  ].filter(Boolean) as string[];
+
+  // Try next image source in our prioritized list
+  const tryNextSource = () => {
+    const nextIndex = fallbackIndex + 1;
+    if (nextIndex < imageSources.length) {
+      console.log(`Trying image source ${nextIndex}: ${imageSources[nextIndex]}`);
+      setFallbackIndex(nextIndex);
+      setImageSrc(imageSources[nextIndex]);
+    } else {
+      // If all fail, use placeholder and stop loading state
+      console.log('All image sources exhausted, using final placeholder');
+      setImageSrc('/placeholder.svg');
+      setIsLoading(false);
+    }
+  };
+
+  // Initialize with first image source
+  useEffect(() => {
+    setIsLoading(true);
+    setFallbackIndex(-1);
+    tryNextSource();
+  }, [featured_image, cover_image, imageUrl]); // Reset when props change
+
   const handleImageLoad = () => {
+    console.log(`✅ Image loaded successfully: ${imageSrc}`);
     setIsLoading(false);
-    setHasError(false);
   };
 
-  // Handle image load error - use fallback
   const handleImageError = () => {
-    setImageSrc(fallbackImage);
-    setIsLoading(false);
-    setHasError(true);
+    console.error(`❌ Image load failed: ${imageSrc}`);
+    tryNextSource();
   };
-
-  // Set initial image source when component mounts
-  React.useEffect(() => {
-    const source = featured_image || cover_image || imageUrl || fallbackImage;
-    setImageSrc(source);
-  }, [featured_image, cover_image, imageUrl, fallbackImage]);
 
   return (
     <Link to={`/article/${id}`} className="block relative overflow-hidden aspect-video">
@@ -73,6 +92,7 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
         onLoad={handleImageLoad}
         onError={handleImageError}
         loading="lazy"
+        crossOrigin="anonymous"
       />
       
       <div className="absolute top-3 left-3">

@@ -1,8 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Article } from '../types';
 import { mockNewsArticles } from '../data/mockNewsArticles';
+import { Tables } from '@/integrations/supabase/types';
 
 export const useArticles = (selectedCategory: string, searchQuery: string, sortBy: string) => {
   const { toast } = useToast();
@@ -11,32 +13,76 @@ export const useArticles = (selectedCategory: string, searchQuery: string, sortB
   const [categories, setCategories] = useState<string[]>(['All Categories']);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load mock articles
+  // Fetch articles from Supabase
   useEffect(() => {
     const fetchArticles = async () => {
       setIsLoading(true);
       
       try {
-        // Simulate API delay
-        setTimeout(() => {
-          console.log('Using mock news articles');
+        console.log('Fetching articles from Supabase');
+        const { data: articlesData, error } = await supabase
+          .from('articles')
+          .select('*')
+          .eq('published', true)
+          .order('published_at', { ascending: false });
+          
+        if (error) {
+          console.error('Error fetching articles:', error);
+          toast({
+            title: 'Error fetching articles',
+            description: error.message,
+            variant: 'destructive'
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log('Fetched articles:', articlesData);
+        
+        if (articlesData && articlesData.length > 0) {
+          const uniqueCategories = [...new Set(articlesData.map(article => article.category))];
+          setCategories(['All Categories', ...uniqueCategories]);
+          
+          const transformedArticles: Article[] = articlesData.map((article: Tables<'articles'>) => {
+            console.log('Article image data:', {
+              featured_image: article.featured_image,
+              cover_image: article.cover_image
+            });
+            
+            return {
+              id: article.id,
+              title: article.title,
+              excerpt: article.excerpt || article.meta_description || 'Read this exciting story...',
+              imageUrl: article.featured_image || article.cover_image || null,
+              cover_image: article.cover_image || null,
+              featured_image: article.featured_image || null,
+              category: article.category,
+              author: article.author_id ? `Author ${article.author_id.slice(0, 8)}` : 'CricketExpress Staff',
+              author_id: article.author_id || undefined,
+              date: new Date(article.published_at || article.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+              }),
+              timeToRead: `${Math.ceil((article.content?.length || 0) / 1000)} min read`,
+              content: article.content
+            };
+          });
+          
+          console.log('Transformed articles:', transformedArticles);
+          setArticles(transformedArticles);
+        } else {
+          console.log('No articles found, using mock data');
           setArticles(mockNewsArticles);
           
           const uniqueCategories = [...new Set(mockNewsArticles.map(article => article.category))];
           setCategories(['All Categories', ...uniqueCategories]);
-          
-          setIsLoading(false);
-        }, 500);
+        }
       } catch (err) {
         console.error('Error in fetching articles:', err);
         setArticles(mockNewsArticles);
+      } finally {
         setIsLoading(false);
-        
-        toast({
-          title: 'Note',
-          description: 'Using mock data - no database connection',
-          variant: 'default'
-        });
       }
     };
     
