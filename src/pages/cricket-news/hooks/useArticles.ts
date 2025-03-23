@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Article } from '../types';
 import { mockNewsArticles } from '../data/mockNewsArticles';
 import { Tables } from '@/integrations/supabase/types';
-import { getFullImageUrl } from '@/components/article-card/imageUtils';
 
 export const useArticles = (selectedCategory: string, searchQuery: string, sortBy: string) => {
   const { toast } = useToast();
@@ -43,23 +42,13 @@ export const useArticles = (selectedCategory: string, searchQuery: string, sortB
           setCategories(['All Categories', ...uniqueCategories]);
           
           const transformedArticles: Article[] = articlesData.map((article: Tables<'articles'>) => {
-            const featured_image = article.featured_image || null;
-            const cover_image = article.cover_image || null;
-            
-            console.log('Article image data:', {
-              id: article.id,
-              title: article.title,
-              featured_image,
-              cover_image,
-            });
-            
             return {
               id: article.id,
               title: article.title,
               excerpt: article.excerpt || article.meta_description || 'Read this exciting story...',
-              imageUrl: featured_image || cover_image || null,
-              cover_image: cover_image,
-              featured_image: featured_image,
+              imageUrl: article.featured_image || article.cover_image || null,
+              cover_image: article.cover_image || null,
+              featured_image: article.featured_image || null,
               category: article.category,
               author: article.author_id ? `Author ${article.author_id.slice(0, 8)}` : 'CricketExpress Staff',
               author_id: article.author_id || undefined,

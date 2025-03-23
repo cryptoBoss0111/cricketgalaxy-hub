@@ -21,15 +21,14 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   const { toast } = useToast();
   const { isAdmin } = useAdminAuth();
   
+  // Simplified URL processing for preview
   const processSupabaseUrl = (url?: string): string | null => {
     if (!url) return null;
     
-    // If URL already starts with http(s), it's already a full URL
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
     
-    // Construct the full Supabase storage URL
     return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
   };
   
@@ -65,6 +64,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       return;
     }
     
+    // Create preview from the selected file
     const fileReader = new FileReader();
     fileReader.onload = () => {
       if (typeof fileReader.result === 'string') {
@@ -78,37 +78,20 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     try {
       console.log("Starting image upload process...");
       
-      const maxRetries = 3;
-      let imageUrl = '';
-      let retryCount = 0;
-      
-      while (retryCount < maxRetries) {
-        try {
-          imageUrl = await uploadImageToStorage(file, 'article_images');
-          if (imageUrl) {
-            break;
-          }
-        } catch (retryError) {
-          console.error(`Upload attempt ${retryCount + 1} failed:`, retryError);
-          retryCount++;
-          if (retryCount >= maxRetries) throw retryError;
-          
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1)));
-        }
-      }
-      
-      if (!imageUrl) {
-        throw new Error("Failed to upload image after multiple attempts");
-      }
+      // Upload the image to Supabase
+      const imageUrl = await uploadImageToStorage(file, 'article_images');
       
       console.log("Upload successful, image URL:", imageUrl);
       
-      // Extract just the relative path from the full URL if needed
-      const relativePathMatch = imageUrl.match(/\/public\/(.+)$/);
-      const relativePath = relativePathMatch ? relativePathMatch[1] : imageUrl;
+      // Extract just the path part from the full URL for storage
+      const pathOnly = imageUrl.includes('/public/') 
+        ? imageUrl.split('/public/')[1] 
+        : imageUrl;
       
-      // Save the relative path only, which will be properly processed when displayed
-      onImageUploaded(relativePath);
+      console.log("Storing path:", pathOnly);
+      
+      // Save the path only - it will be properly processed when displayed
+      onImageUploaded(pathOnly);
       
       toast({
         title: "Image uploaded",
@@ -118,14 +101,8 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       console.error('Error uploading image:', error);
       
       let errorMessage = "Failed to upload image";
-      if (typeof error === 'object') {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.error_description) {
-          errorMessage = error.error_description;
-        } else if (error.statusText) {
-          errorMessage = `${error.statusText} (${error.status})`;
-        }
+      if (typeof error === 'object' && error !== null) {
+        errorMessage = error.message || "Unknown error occurred";
       }
       
       setError(errorMessage);
@@ -164,7 +141,6 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
             src={previewUrl} 
             alt="Preview" 
             className="w-full h-48 object-cover"
-            crossOrigin="anonymous"
             onError={(e) => {
               console.error("Error loading preview image:", previewUrl);
               (e.target as HTMLImageElement).src = '/placeholder.svg';
