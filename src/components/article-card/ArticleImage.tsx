@@ -22,6 +22,12 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
   featured_image,
   category
 }) => {
+  console.log(`ArticleImage rendering for "${title}" with:`, {
+    featured_image,
+    cover_image,
+    imageUrl
+  });
+
   // Use our custom hook for image handling
   const {
     imageSource,

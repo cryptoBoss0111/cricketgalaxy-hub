@@ -29,6 +29,17 @@ export const getFullImageUrl = (url: string): string => {
     return url;
   }
   
+  // Handle Supabase storage URLs - extract the actual path
+  if (url.includes('swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/')) {
+    // The URL is already a full Supabase URL, return it as is
+    return url;
+  }
+  
+  // Check if it's an article_images path without the full URL
+  if (url.startsWith('article_images/')) {
+    return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
+  }
+  
   // Construct the full Supabase storage URL
   return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
 };
@@ -39,30 +50,54 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
   const [imageError, setImageError] = useState(false);
   const [imageSource, setImageSource] = useState<string>('');
   const [currentSourceIndex, setCurrentSourceIndex] = useState(-1);
+  const [fallbackAttempt, setFallbackAttempt] = useState(0);
   
   // Process URLs to ensure they are complete
   const processedFeaturedImage = featured_image ? getFullImageUrl(featured_image) : undefined;
   const processedCoverImage = cover_image ? getFullImageUrl(cover_image) : undefined;
   const processedImageUrl = imageUrl ? getFullImageUrl(imageUrl) : undefined;
   
+  console.log(`Processing image sources for article "${title}":`, {
+    featured: featured_image, 
+    cover: cover_image,
+    processed_featured: processedFeaturedImage,
+    processed_cover: processedCoverImage
+  });
+  
   // Create a prioritized list of all possible image sources
   const allImageSources = [
     processedFeaturedImage,
     processedCoverImage,
     processedImageUrl,
-    ...RELIABLE_FALLBACKS,
-    DEFAULT_PLACEHOLDER
   ].filter(Boolean) as string[];
   
   // Try the next image source
   const tryNextImageSource = () => {
     const nextIndex = currentSourceIndex + 1;
+    
+    // First try all the article's own images
     if (nextIndex < allImageSources.length) {
       const nextSource = allImageSources[nextIndex];
       console.log(`Trying image source ${nextIndex} for "${title}": ${nextSource}`);
       setImageSource(nextSource);
       setCurrentSourceIndex(nextIndex);
+      return;
     }
+    
+    // If all article images fail, use a fallback from our reliable list
+    if (fallbackAttempt < RELIABLE_FALLBACKS.length) {
+      const fallbackImage = RELIABLE_FALLBACKS[fallbackAttempt];
+      console.log(`Trying fallback image ${fallbackAttempt} for "${title}": ${fallbackImage}`);
+      setImageSource(fallbackImage);
+      setFallbackAttempt(fallbackAttempt + 1);
+      return;
+    }
+    
+    // If all else fails, use the default placeholder
+    console.log(`All image attempts failed for "${title}", using default placeholder`);
+    setImageSource(DEFAULT_PLACEHOLDER);
+    setIsLoading(false);
+    setImageError(true);
   };
   
   // Initialize with first source
@@ -70,7 +105,15 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
     setIsLoading(true);
     setImageError(false);
     setCurrentSourceIndex(-1);
-    tryNextImageSource();
+    setFallbackAttempt(0);
+    
+    // If we have no image sources at all, immediately use a fallback
+    if (allImageSources.length === 0) {
+      setImageSource(RELIABLE_FALLBACKS[0]);
+      setFallbackAttempt(1);
+    } else {
+      tryNextImageSource();
+    }
   }, [title, processedFeaturedImage, processedCoverImage, processedImageUrl]);
   
   // Handle successful image load
@@ -83,17 +126,7 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
   // Handle image load error and try next source
   const handleImageError = () => {
     console.error(`❌ Image load failed for "${title}": ${imageSource}`);
-    
-    // If we haven't reached the end of our sources, try the next one
-    if (currentSourceIndex < allImageSources.length - 1) {
-      tryNextImageSource();
-    } else {
-      // If all sources failed, set placeholder and finish loading
-      console.log(`All image attempts failed for "${title}", using placeholder`);
-      setImageSource(DEFAULT_PLACEHOLDER);
-      setIsLoading(false);
-      setImageError(true);
-    }
+    tryNextImageSource();
   };
   
   return {

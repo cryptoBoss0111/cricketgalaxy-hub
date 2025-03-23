@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Article } from '../types';
 import { mockNewsArticles } from '../data/mockNewsArticles';
 import { Tables } from '@/integrations/supabase/types';
+import { getFullImageUrl } from '@/components/article-card/imageUtils';
 
 export const useArticles = (selectedCategory: string, searchQuery: string, sortBy: string) => {
   const { toast } = useToast();
@@ -11,20 +12,6 @@ export const useArticles = (selectedCategory: string, searchQuery: string, sortB
   const [filteredArticles, setFilteredArticles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<string[]>(['All Categories']);
   const [isLoading, setIsLoading] = useState(true);
-
-  const processSupabaseUrl = (url?: string | null): string | null => {
-    if (!url) return null;
-    
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    
-    if (url.startsWith('/')) {
-      return url;
-    }
-    
-    return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
-  };
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -56,14 +43,14 @@ export const useArticles = (selectedCategory: string, searchQuery: string, sortB
           setCategories(['All Categories', ...uniqueCategories]);
           
           const transformedArticles: Article[] = articlesData.map((article: Tables<'articles'>) => {
-            const featured_image = processSupabaseUrl(article.featured_image);
-            const cover_image = processSupabaseUrl(article.cover_image);
+            const featured_image = article.featured_image || null;
+            const cover_image = article.cover_image || null;
             
             console.log('Article image data:', {
+              id: article.id,
+              title: article.title,
               featured_image,
               cover_image,
-              original_featured: article.featured_image,
-              original_cover: article.cover_image
             });
             
             return {
