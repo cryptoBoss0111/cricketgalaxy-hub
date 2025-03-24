@@ -2,7 +2,7 @@
 import { supabase } from './client-core';
 
 // Upload file to storage with improved error handling and CORS support
-export const uploadImageToStorage = async (file: File, bucket = 'media') => {
+export const uploadImageToStorage = async (file: File, bucket = 'article_images') => {
   try {
     // Check if file exists
     if (!file) {
@@ -137,7 +137,7 @@ export const deleteMediaFile = async (id: string) => {
     // Delete from storage
     const { error: storageError } = await supabase
       .storage
-      .from('media')
+      .from('article_images')
       .remove([fileData.stored_file_name]);
     
     if (storageError) {
