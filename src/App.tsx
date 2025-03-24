@@ -1,8 +1,6 @@
 
 import { Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
-import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 import { AdminProtectedRoute } from "@/routes/AdminRoutes";
 import { PublicRoutes } from "@/routes/PublicRoutes";
 import NotFound from "@/pages/NotFound";
@@ -23,147 +21,145 @@ import Analytics from "@/admin/Analytics";
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="cricket-theme">
-      <AdminAuthProvider>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/*" element={<PublicRoutes />} />
-          
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          
-          <Route 
-            path="/admin/dashboard" 
-            element={
-              <AdminProtectedRoute>
-                <AdminDashboard />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/articles" 
-            element={
-              <AdminProtectedRoute>
-                <ArticlesList />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/articles/new" 
-            element={
-              <AdminProtectedRoute>
-                <ArticleForm />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/articles/edit/:id" 
-            element={
-              <AdminProtectedRoute>
-                <ArticleForm />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/top-stories" 
-            element={
-              <AdminProtectedRoute>
-                <TopStoriesManager />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/hero-slider" 
-            element={
-              <AdminProtectedRoute>
-                <HeroSliderManager />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/fan-polls" 
-            element={
-              <AdminProtectedRoute>
-                <FanPollManager />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/fantasy-picks" 
-            element={
-              <AdminProtectedRoute>
-                <FantasyPicksManager />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/navigation" 
-            element={
-              <AdminProtectedRoute>
-                <NavigationManager />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/media" 
-            element={
-              <AdminProtectedRoute>
-                <MediaLibraryManager />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/matches" 
-            element={
-              <AdminProtectedRoute>
-                <MatchesManager />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/players" 
-            element={
-              <AdminProtectedRoute>
-                <PlayerProfilesManager />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/settings" 
-            element={
-              <AdminProtectedRoute>
-                <SettingsManager />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/admin/analytics" 
-            element={
-              <AdminProtectedRoute>
-                <Analytics />
-              </AdminProtectedRoute>
-            } 
-          />
-          
-          {/* 404 Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-      </AdminAuthProvider>
-    </ThemeProvider>
+    <>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/*" element={<PublicRoutes />} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        
+        <Route 
+          path="/admin/dashboard" 
+          element={
+            <AdminProtectedRoute>
+              <AdminDashboard />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/articles" 
+          element={
+            <AdminProtectedRoute>
+              <ArticlesList />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/articles/new" 
+          element={
+            <AdminProtectedRoute>
+              <ArticleForm />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/articles/edit/:id" 
+          element={
+            <AdminProtectedRoute>
+              <ArticleForm />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/top-stories" 
+          element={
+            <AdminProtectedRoute>
+              <TopStoriesManager />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/hero-slider" 
+          element={
+            <AdminProtectedRoute>
+              <HeroSliderManager />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/fan-polls" 
+          element={
+            <AdminProtectedRoute>
+              <FanPollManager />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/fantasy-picks" 
+          element={
+            <AdminProtectedRoute>
+              <FantasyPicksManager />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/navigation" 
+          element={
+            <AdminProtectedRoute>
+              <NavigationManager />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/media" 
+          element={
+            <AdminProtectedRoute>
+              <MediaLibraryManager />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/matches" 
+          element={
+            <AdminProtectedRoute>
+              <MatchesManager />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/players" 
+          element={
+            <AdminProtectedRoute>
+              <PlayerProfilesManager />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/settings" 
+          element={
+            <AdminProtectedRoute>
+              <SettingsManager />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/analytics" 
+          element={
+            <AdminProtectedRoute>
+              <Analytics />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        {/* 404 Route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+    </>
   );
 }
 
