@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Copy, Trash2 } from 'lucide-react';
+import { Copy, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   Dialog, 
@@ -33,9 +33,19 @@ const MediaPreviewDialog = ({
 }: MediaPreviewDialogProps) => {
   // State to track if image has loaded
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  
+  // Reset states when dialog opens/closes
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setImageLoaded(false);
+      setHasError(false);
+    }
+    onOpenChange(open);
+  };
   
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="truncate">
@@ -46,24 +56,34 @@ const MediaPreviewDialog = ({
         {selectedFile && (
           <>
             <div className="flex-1 min-h-0 relative bg-gray-100 rounded-md overflow-hidden">
-              {!imageLoaded && (
+              {!imageLoaded && !hasError && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cricket-accent"></div>
                 </div>
               )}
-              <img 
-                src={selectedFile.publicUrl} 
-                alt={selectedFile.name} 
-                className={`absolute inset-0 w-full h-full object-contain p-4 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                crossOrigin="anonymous"
-                onLoad={() => setImageLoaded(true)}
-                onError={(e) => {
-                  console.error("Error loading preview image:", selectedFile.publicUrl);
-                  const imgElement = e.target as HTMLImageElement;
-                  imgElement.src = '/placeholder.svg';
-                  setImageLoaded(true);
-                }}
-              />
+              
+              {hasError ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+                  <ImageIcon className="h-16 w-16 text-gray-300 mb-4" />
+                  <p className="text-sm text-gray-500">Image could not be loaded</p>
+                </div>
+              ) : (
+                <img 
+                  src={selectedFile.publicUrl + '?t=' + new Date().getTime()} // Add cache-busting parameter
+                  alt={selectedFile.name} 
+                  className={`absolute inset-0 w-full h-full object-contain p-4 transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  crossOrigin="anonymous"
+                  onLoad={() => {
+                    setImageLoaded(true);
+                    setHasError(false);
+                  }}
+                  onError={(e) => {
+                    console.error("Error loading preview image:", selectedFile.publicUrl);
+                    setHasError(true);
+                    setImageLoaded(false);
+                  }}
+                />
+              )}
             </div>
             
             <div className="grid grid-cols-2 gap-4 mt-4">

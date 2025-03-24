@@ -129,17 +129,23 @@ export const getMediaFiles = async (bucketName = 'article_images') => {
     }
     
     // Add public URLs to each file
-    const filesWithUrls = data.map(file => {
-      const { data: { publicUrl } } = supabase
-        .storage
-        .from(bucketName)
-        .getPublicUrl(file.name);
-      
-      return {
-        ...file,
-        publicUrl
-      };
-    });
+    const filesWithUrls = data.filter(file => !file.id.startsWith('.'))
+      .map(file => {
+        const { data: { publicUrl } } = supabase
+          .storage
+          .from(bucketName)
+          .getPublicUrl(file.name, {
+            download: false,
+            transform: {
+              quality: 80 // Slightly reduce quality to improve loading speed
+            }
+          });
+        
+        return {
+          ...file,
+          publicUrl
+        };
+      });
     
     console.log(`Successfully fetched ${filesWithUrls.length} files from bucket:`, bucketName);
     return filesWithUrls || [];
