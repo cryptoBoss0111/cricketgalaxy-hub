@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 import { AdminProtectedRoute } from "@/routes/AdminRoutes";
-import PublicRoutes from "@/routes/PublicRoutes";
+import { PublicRoutes } from "@/routes/PublicRoutes";
 import NotFound from "@/pages/NotFound";
 import AdminLogin from "@/admin/AdminLogin";
 import AdminDashboard from "@/admin/Dashboard";

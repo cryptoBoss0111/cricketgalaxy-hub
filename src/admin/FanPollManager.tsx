@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import AdminLayout from './AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 interface PollOption {
   id: string;
@@ -79,8 +80,9 @@ const FanPollManager = () => {
           
           return {
             ...poll,
+            options: poll.options as unknown as PollOption[],
             votes_count: countError ? 0 : count || 0
-          };
+          } as Poll;
         })
       );
       
@@ -223,7 +225,7 @@ const FanPollManager = () => {
           .from('fan_polls')
           .update({
             question,
-            options: validOptions,
+            options: validOptions as unknown as Json,
             is_active: isActive,
             updated_at: new Date().toISOString()
           })
@@ -241,7 +243,7 @@ const FanPollManager = () => {
           .from('fan_polls')
           .insert({
             question,
-            options: validOptions,
+            options: validOptions as unknown as Json,
             is_active: isActive
           });
         

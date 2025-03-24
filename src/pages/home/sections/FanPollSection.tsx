@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PollOption {
@@ -84,7 +84,8 @@ export const FanPollSection = () => {
       const totalVotes = Object.values(voteCounts).reduce((sum, count) => sum + count, 0) || 0;
 
       // Process the options
-      const processedOptions = pollData.options.map((option: any) => {
+      const options = pollData.options;
+      const processedOptions = Array.isArray(options) ? options.map((option: any) => {
         const votes = voteCounts[option.id] || 0;
         return {
           id: option.id,
@@ -92,7 +93,7 @@ export const FanPollSection = () => {
           votes,
           percentage: totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0
         };
-      });
+      }) : [];
 
       setPoll({
         id: pollData.id,
@@ -180,11 +181,11 @@ export const FanPollSection = () => {
     <div className="bg-white dark:bg-cricket-dark/80 rounded-xl shadow-soft p-6 border border-gray-100 dark:border-gray-800 animate-fade-in animate-delay-300">
       <h2 className="text-xl font-heading font-bold mb-4 dark:text-white">Fan Poll</h2>
       <div className="mb-4">
-        <p className="font-medium dark:text-gray-200">{poll.question}</p>
+        <p className="font-medium dark:text-gray-200">{poll?.question}</p>
       </div>
       
       <div className="space-y-3">
-        {poll.options.map((option) => (
+        {poll?.options.map((option) => (
           <div 
             key={option.id} 
             className={cn(
@@ -224,7 +225,7 @@ export const FanPollSection = () => {
           </p>
         )}
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-          {poll.totalVotes} {poll.totalVotes === 1 ? 'vote' : 'votes'} so far
+          {poll?.totalVotes} {poll?.totalVotes === 1 ? 'vote' : 'votes'} so far
         </p>
       </div>
     </div>
