@@ -1,22 +1,6 @@
 
 import { supabase } from './client-core';
 
-// Generate a unique filename for uploads that preserves the original filename
-export const generateUniqueFileName = (fileName: string) => {
-  const timestamp = new Date().getTime();
-  const randomString = Math.random().toString(36).substring(2, 6);
-  
-  // Extract extension and base name
-  const extension = fileName.split('.').pop()?.toLowerCase();
-  const baseName = fileName.split('.').slice(0, -1).join('.');
-  
-  // Clean the base name to remove any special characters
-  const cleanBaseName = baseName.replace(/[^a-zA-Z0-9_-]/g, '_');
-  
-  // Return a filename that preserves the original name
-  return `${cleanBaseName}_${randomString}_${timestamp}.${extension}`;
-};
-
 // Upload file to storage with improved error handling
 export const uploadImageToStorage = async (file: File, bucket = 'article_images') => {
   try {
@@ -30,12 +14,11 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       throw new Error("Please upload a valid image file");
     }
 
-    // Create a unique file name that preserves the original name
-    const fileName = generateUniqueFileName(file.name);
-    const filePath = `${fileName}`; // Keep the path simple
+    // Use the original filename directly without modification
+    const fileName = file.name;
+    const filePath = `${fileName}`;
     
-    console.log("Uploading image:", file.name, "Size:", file.size, "Type:", file.type);
-    console.log("Generated storage path:", filePath);
+    console.log("Uploading image with original filename:", fileName);
     
     // Get the current session to check authentication status
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
