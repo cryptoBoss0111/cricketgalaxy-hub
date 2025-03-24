@@ -503,12 +503,23 @@ export const deleteMatch = async (id: string) => {
   return true;
 };
 
-// Get fantasy picks
-export const getFantasyPicks = async () => {
-  const { data, error } = await supabase
+// Get fantasy picks with additional filtering options
+export const getFantasyPicks = async (matchId?: string, limit?: number) => {
+  let query = supabase
     .from('fantasy_picks')
-    .select('*')
-    .order('points_prediction', { ascending: false });
+    .select('*');
+  
+  if (matchId) {
+    query = query.eq('match_id', matchId);
+  }
+  
+  if (limit) {
+    query = query.limit(limit);
+  }
+    
+  query = query.order('points_prediction', { ascending: false });
+  
+  const { data, error } = await query;
   
   if (error) {
     console.error('Error fetching fantasy picks:', error);
@@ -520,9 +531,21 @@ export const getFantasyPicks = async () => {
 
 // Create or update fantasy pick
 export const upsertFantasyPick = async (pick: any) => {
+  // Ensure created_at and updated_at are set properly
+  const now = new Date().toISOString();
+  const payload = {
+    ...pick,
+    updated_at: now
+  };
+  
+  // For new picks, add created_at
+  if (!pick.id) {
+    payload.created_at = now;
+  }
+  
   const { data, error } = await supabase
     .from('fantasy_picks')
-    .upsert(pick)
+    .upsert(payload)
     .select();
   
   if (error) {

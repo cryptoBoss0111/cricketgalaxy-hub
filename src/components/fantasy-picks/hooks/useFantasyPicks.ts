@@ -12,6 +12,9 @@ type FantasyPickFromDB = {
   points_prediction: number;
   reason: string;
   match: string;
+  match_id?: string;
+  image_url?: string;
+  stats?: string;
   created_at: string;
   updated_at: string;
 };
@@ -41,8 +44,7 @@ export const useFantasyPicks = () => {
         const { data, error } = await supabase
           .from('fantasy_picks')
           .select('*')
-          .order('created_at', { ascending: false })
-          .limit(3);
+          .order('points_prediction', { ascending: false });
           
         if (error) {
           console.error('Error fetching fantasy picks:', error);
@@ -57,8 +59,8 @@ export const useFantasyPicks = () => {
             team: dbPick.team,
             role: dbPick.role,
             form: (dbPick.form as 'Excellent' | 'Good' | 'Average' | 'Poor'),
-            image_url: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop',
-            stats: 'Recent stats not available',
+            image_url: dbPick.image_url || 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop',
+            stats: dbPick.stats || 'Recent stats not available',
             points_prediction: dbPick.points_prediction,
             match_details: dbPick.match,
             selection_reason: dbPick.reason,
@@ -71,41 +73,54 @@ export const useFantasyPicks = () => {
           setFantasyPicks([
             {
               id: '1',
-              player_name: 'Rishabh Pant',
-              team: 'Delhi Capitals',
-              role: 'WK-Batsman',
+              player_name: 'Virat Kohli',
+              team: 'Royal Challengers Bangalore',
+              role: 'Batsman',
               form: 'Excellent',
               image_url: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop',
-              stats: 'Recent: 68(42), 45(32), 72(39)',
+              stats: '92(48), 77(49), 104(63)',
               points_prediction: 95,
-              match_details: 'DC vs RCB, Apr 5, 2025',
-              selection_reason: 'In exceptional form since his return from injury',
+              match_details: 'RCB vs KKR',
+              selection_reason: 'Kohli has a phenomenal record at Eden Gardens and against KKR, with nearly 1,000 runs in IPL history against them.',
               created_at: new Date().toISOString()
             },
             {
               id: '2',
-              player_name: 'Jasprit Bumrah',
-              team: 'Mumbai Indians',
-              role: 'Bowler',
+              player_name: 'Sunil Narine',
+              team: 'Kolkata Knight Riders',
+              role: 'All-Rounder',
               form: 'Good',
               image_url: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop',
-              stats: 'Recent: 3/24, 2/18, 4/29',
+              stats: '3/24, 2/18, 4/29',
               points_prediction: 88,
-              match_details: 'MI vs KKR, Apr 6, 2025',
-              selection_reason: 'The pitch favors fast bowlers and he has been in great form throughout the tournament',
+              match_details: 'RCB vs KKR',
+              selection_reason: 'Narine thrives on Eden Gardens\' pitch, taking 21 wickets in IPL 2024, and his batting adds extra points.',
               created_at: new Date().toISOString()
             },
             {
               id: '3',
-              player_name: 'Shubman Gill',
-              team: 'Gujarat Titans',
-              role: 'Batsman',
+              player_name: 'Phil Salt',
+              team: 'Royal Challengers Bangalore',
+              role: 'WK-Batsman',
               form: 'Excellent',
               image_url: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop',
-              stats: 'Recent: 92(58), 57(42), 104(63)',
+              stats: '68(42), 45(32), 72(39)',
               points_prediction: 90,
-              match_details: 'GT vs LSG, Apr 7, 2025',
-              selection_reason: 'In great touch and scoring consistently',
+              match_details: 'RCB vs KKR',
+              selection_reason: 'Salt\'s aggressive opening style makes him a top pick, especially with potential dew aiding batsmen in the second innings.',
+              created_at: new Date().toISOString()
+            },
+            {
+              id: '4',
+              player_name: 'Varun Chakaravarthy',
+              team: 'Kolkata Knight Riders',
+              role: 'Bowler',
+              form: 'Good',
+              image_url: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop',
+              stats: '2/26, 1/30, 3/22',
+              points_prediction: 82,
+              match_details: 'RCB vs KKR',
+              selection_reason: 'Chakaravarthy\'s mystery spin could trouble RCB\'s middle order, especially on a pitch that might assist spinners.',
               created_at: new Date().toISOString()
             }
           ]);

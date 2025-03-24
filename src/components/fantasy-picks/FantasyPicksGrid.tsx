@@ -17,17 +17,26 @@ const FantasyPicksGrid: React.FC<FantasyPicksGridProps> = ({ picks, isLoading })
   
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {[1, 2, 3].map((i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {[1, 2, 3, 4].map((i) => (
           <div key={i} className="shadow-md animate-pulse h-64 rounded-lg bg-gray-100 dark:bg-gray-800/50"></div>
         ))}
       </div>
     );
   }
 
+  if (!picks || picks.length === 0) {
+    return (
+      <div className="text-center p-8 bg-gray-50 dark:bg-gray-800/30 rounded-lg">
+        <h3 className="text-lg font-medium mb-2">No Fantasy Picks Available</h3>
+        <p className="text-gray-500 dark:text-gray-400">Check back later for expert fantasy picks</p>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {picks.map((pick, index) => (
           <FantasyPickCard 
             key={pick.id} 

@@ -1,18 +1,25 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Trophy, ChevronRight } from 'lucide-react';
+import { Trophy } from 'lucide-react';
+import { useFeaturedMatch } from './hooks/useFeaturedMatch';
 
-const FantasySectionHeader: React.FC = () => {
+interface FantasySectionHeaderProps {
+  activeMatch?: string | null;
+}
+
+const FantasySectionHeader: React.FC<FantasySectionHeaderProps> = ({ activeMatch }) => {
   return (
-    <div className="flex justify-between items-center mb-10">
-      <div className="flex items-center space-x-3">
-        <Trophy className="text-cricket-accent h-7 w-7" />
-        <h2 className="text-2xl md:text-3xl font-heading font-bold">Fantasy Hot Picks</h2>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+      <div className="flex items-center space-x-3 mb-4 sm:mb-0">
+        <Trophy className="text-cricket-accent h-6 w-6" />
+        <h2 className="text-2xl font-heading font-bold dark:text-white">Fantasy Picks</h2>
       </div>
-      <Link to="/fantasy-tips" className="flex items-center text-sm font-medium text-cricket-accent hover:underline">
-        View All Picks <ChevronRight size={16} className="ml-1" />
-      </Link>
+      
+      {activeMatch && (
+        <div className="bg-cricket-accent/20 px-4 py-2 rounded-full text-cricket-accent font-medium text-sm">
+          {activeMatch}
+        </div>
+      )}
     </div>
   );
 };

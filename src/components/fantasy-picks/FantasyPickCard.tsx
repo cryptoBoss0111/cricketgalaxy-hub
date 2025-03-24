@@ -39,6 +39,20 @@ const getFormColor = (form: string) => {
   }
 };
 
+// Helper to process image URL
+const processImageUrl = (url: string) => {
+  if (!url) {
+    return 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop';
+  }
+  
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // Process Supabase storage URL
+  return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
+};
+
 const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
   return (
     <Card 
@@ -46,7 +60,8 @@ const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
         "overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border-t-4 relative animate-fade-in dark:bg-cricket-dark/80 dark:border-gray-800 dark:border-t-4",
         index === 0 ? "border-t-yellow-500 animate-delay-100" : 
         index === 1 ? "border-t-blue-500 animate-delay-200" : 
-        "border-t-green-500 animate-delay-300"
+        index === 2 ? "border-t-green-500 animate-delay-300" :
+        "border-t-purple-500 animate-delay-400"
       )}
     >
       <Badge 
@@ -54,18 +69,22 @@ const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
           "absolute top-2 right-2 font-medium",
           index === 0 ? "bg-yellow-500" : 
           index === 1 ? "bg-blue-500" : 
-          "bg-green-500"
+          index === 2 ? "bg-green-500" :
+          "bg-purple-500"
         )}
       >
-        {index === 0 ? "Top Pick" : index === 1 ? "Value Pick" : "Differential Pick"}
+        {index === 0 ? "Top Pick" : index === 1 ? "Value Pick" : index === 2 ? "Differential Pick" : "Budget Pick"}
       </Badge>
       
       <CardContent className="p-6">
         <div className="flex items-center mb-4">
           <img 
-            src={pick.image_url} 
+            src={processImageUrl(pick.image_url)} 
             alt={pick.player_name}
             className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-gray-200 dark:border-gray-700"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop';
+            }}
           />
           <div>
             <h3 className="font-semibold text-lg dark:text-white">{pick.player_name}</h3>
@@ -90,8 +109,8 @@ const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
           </div>
           
           <div className="flex justify-between mb-2">
-            <span className="text-gray-500 text-sm dark:text-gray-400">Match:</span>
-            <span className="text-sm dark:text-gray-300">{pick.match_details}</span>
+            <span className="text-gray-500 text-sm dark:text-gray-400">Recent Stats:</span>
+            <span className="text-sm dark:text-gray-300">{pick.stats}</span>
           </div>
         </div>
         
