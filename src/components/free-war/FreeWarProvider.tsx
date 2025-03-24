@@ -22,7 +22,6 @@ export const FreeWarProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
   const [hasClosedPopup, setHasClosedPopup] = useState(false);
-  const [showStickyButton, setShowStickyButton] = useState(false);
   const [hasScrolledPastThreshold, setHasScrolledPastThreshold] = useState(false);
 
   // Show popup automatically when the component mounts (user lands on the page)
@@ -70,7 +69,6 @@ export const FreeWarProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const handlePopupClose = () => {
     setIsPopupOpen(false);
     setHasClosedPopup(true);
-    setShowStickyButton(true);
   };
 
   // Handle join now button click
@@ -102,12 +100,11 @@ export const FreeWarProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isOpen={isSelectionModalOpen}
         onClose={() => {
           setIsSelectionModalOpen(false);
-          setShowStickyButton(true);
         }}
       />
       
-      {/* Sticky Button */}
-      {showStickyButton && !isPopupOpen && !isSelectionModalOpen && (
+      {/* Sticky Button - always visible when popup/modal is not open */}
+      {!isPopupOpen && !isSelectionModalOpen && (
         <StickyButton onClick={() => setIsSelectionModalOpen(true)} />
       )}
     </FreeWarContext.Provider>

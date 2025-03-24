@@ -14,6 +14,7 @@ import MatchesManager from "@/admin/MatchesManager";
 import PlayerProfilesManager from "@/admin/PlayerProfilesManager";
 import MediaLibraryManager from "@/admin/MediaLibraryManager";
 import SettingsManager from "@/admin/SettingsManager";
+import FreeWarContestManager from "@/admin/FreeWarContestManager";
 
 // Protected route component for admin routes
 export const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {

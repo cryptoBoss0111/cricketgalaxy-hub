@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { BadgeDollarSign } from 'lucide-react';
 
 interface StickyButtonProps {
   onClick: () => void;
@@ -29,6 +30,7 @@ const StickyButton = ({ onClick }: StickyButtonProps) => {
         onClick={handleClick}
         className="relative shadow-lg px-6 py-6 h-auto rounded-full font-semibold bg-gradient-to-r from-orange-500 to-orange-400 border-2 border-white hover:scale-105 transition-all duration-200 hover:brightness-110"
       >
+        <BadgeDollarSign className="mr-2 h-5 w-5" />
         Earn Now
       </Button>
     </div>

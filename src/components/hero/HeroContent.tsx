@@ -2,7 +2,6 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useFreeWar } from '../free-war/FreeWarProvider';
 import { HeroArticle } from './types';
 
 interface HeroContentProps {
@@ -16,8 +15,6 @@ export const HeroContent: React.FC<HeroContentProps> = ({
   isAnimating,
   getCategoryUrl,
 }) => {
-  const { showSelectionModal } = useFreeWar();
-  
   return (
     <div className={`flex flex-col justify-center p-8 md:p-12 lg:p-16 max-w-3xl transition-opacity duration-700 ${
       isAnimating ? 'opacity-0' : 'opacity-100'
@@ -47,14 +44,6 @@ export const HeroContent: React.FC<HeroContentProps> = ({
             Read Full Story
             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </a>
-        </Button>
-        <Button 
-          variant="outline" 
-          size="lg" 
-          className="bg-white hover:bg-gray-100 text-cricket-accent border-cricket-accent"
-          onClick={showSelectionModal}
-        >
-          Join Free War Contest
         </Button>
       </div>
     </div>
