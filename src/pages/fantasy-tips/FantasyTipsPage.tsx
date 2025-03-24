@@ -39,7 +39,8 @@ type Match = {
   image?: string;
 };
 
-type FantasyPickResponse = {
+// Fixed response type to avoid deep instantiation
+interface FantasyPickResponse {
   id: string;
   player_name: string;
   team: string;
@@ -52,7 +53,7 @@ type FantasyPickResponse = {
   match_id?: string;
   reason: string;
   created_at: string;
-};
+}
 
 const FantasyTipsPage = () => {
   const [searchParams] = useSearchParams();
@@ -75,10 +76,10 @@ const FantasyTipsPage = () => {
     }
   });
 
-  // Fetch fantasy picks with explicit typing
+  // Fetch fantasy picks with explicit typing - fixed to avoid deep type instantiation
   const { data: picks = [], isLoading: picksLoading } = useQuery({
     queryKey: ['fantasyPicks', selectedMatch],
-    queryFn: async (): Promise<FantasyPick[]> => {
+    queryFn: async () => {
       let query = supabase
         .from('fantasy_picks')
         .select('*')
@@ -104,7 +105,8 @@ const FantasyTipsPage = () => {
         points_prediction: pick.points_prediction,
         match_details: pick.match,
         selection_reason: pick.reason,
-        created_at: pick.created_at
+        created_at: pick.created_at,
+        match_id: pick.match_id
       }));
     }
   });

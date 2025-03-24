@@ -32,7 +32,7 @@ const mapDbToClientModel = (dbPick: FantasyPickDB): FantasyPick => ({
   match_details: dbPick.match,
   selection_reason: dbPick.reason,
   created_at: dbPick.created_at,
-  match_id: dbPick.match_id
+  match_id: dbPick.match_id // Now properly mapped
 });
 
 // Default fallback picks if API fails or returns no data

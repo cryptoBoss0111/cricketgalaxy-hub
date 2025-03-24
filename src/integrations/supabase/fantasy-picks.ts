@@ -11,6 +11,7 @@ export interface FantasyPickDB {
   form: string;
   reason: string;
   match: string;
+  match_id?: string; // Added match_id property
   created_at: string;
   updated_at: string;
   image_url?: string;
@@ -65,9 +66,10 @@ export const saveFantasyPick = async (pick: Partial<FantasyPickDB>): Promise<Fan
     // Determine if this is an insert or update
     const isUpdate = Boolean(pick.id);
     
+    // Ensure we're passing a proper object for upsert, not an array
     const { data, error } = await supabase
       .from('fantasy_picks')
-      .upsert([pick], { onConflict: 'id' })
+      .upsert(pick) // Fix: Remove the array brackets
       .select()
       .single();
     

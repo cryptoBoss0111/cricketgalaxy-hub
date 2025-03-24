@@ -1,9 +1,37 @@
+
 import React from 'react';
 import ArticleCard from '@/components/ArticleCard';
 import { Article } from '../types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
-const NewsContent = ({ articles, isLoading }: { articles: Article[], isLoading: boolean }) => {
+interface NewsContentProps {
+  articles?: Article[];
+  isLoading: boolean;
+  selectedCategory?: string;
+  setSelectedCategory?: React.Dispatch<React.SetStateAction<string>>;
+  categories?: string[];
+  sortBy?: string;
+  setSortBy?: React.Dispatch<React.SetStateAction<string>>;
+  filteredArticles?: Article[];
+  searchQuery?: string;
+}
+
+const NewsContent = ({ 
+  articles = [], 
+  isLoading,
+  selectedCategory,
+  setSelectedCategory,
+  categories = [],
+  sortBy,
+  setSortBy,
+  filteredArticles = [],
+  searchQuery
+}: NewsContentProps) => {
+  // Use filteredArticles if provided, otherwise use articles
+  const displayArticles = filteredArticles?.length > 0 ? filteredArticles : articles;
+
   return (
     <div className="py-8">
       <div className="container mx-auto px-4">
@@ -20,7 +48,7 @@ const NewsContent = ({ articles, isLoading }: { articles: Article[], isLoading: 
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles.map((article) => (
+            {displayArticles.map((article) => (
               <ArticleCard
                 key={article.id}
                 id={article.id}

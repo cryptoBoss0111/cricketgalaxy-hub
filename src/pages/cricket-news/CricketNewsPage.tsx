@@ -47,13 +47,13 @@ const CricketNewsPage = () => {
           handleSearch={handleSearch}
         />
         <NewsContent 
+          filteredArticles={filteredArticles}
+          isLoading={isLoading}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           categories={categories}
           sortBy={sortBy}
           setSortBy={setSortBy}
-          isLoading={isLoading}
-          filteredArticles={filteredArticles}
           searchQuery={searchQuery}
         />
         <NewsletterSection />
