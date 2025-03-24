@@ -31,18 +31,19 @@ const MediaCard = ({
   // Function to handle image retry
   const handleRetry = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log(`Manually retrying image: ${file.original_file_name}`);
     setIsLoading(true);
     setHasError(false);
     setRetryCount(prev => prev + 1);
   };
 
-  // Generate direct URL to image with cache busting
+  // Generate direct URL to Supabase storage
   const getImageUrl = () => {
-    // Ensure we have a clean URL (no query parameters)
-    const baseUrl = file.url.split('?')[0];
+    // Directly construct the Supabase storage URL
+    const directUrl = `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/article_images/${file.stored_file_name}`;
     // Add cache busting parameter
-    return `${baseUrl}?t=${Date.now()}&r=${retryCount}`;
+    const urlWithCacheBusting = `${directUrl}?t=${Date.now()}&r=${retryCount}`;
+    console.log("Constructed image URL:", directUrl);
+    return urlWithCacheBusting;
   };
 
   return (
@@ -112,7 +113,9 @@ const MediaCard = ({
             className="h-8 w-8"
             onClick={(e) => {
               e.stopPropagation();
-              onCopyUrl(file.url.split('?')[0]); // Use clean URL
+              // Copy direct Supabase storage URL
+              const directUrl = `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/article_images/${file.stored_file_name}`;
+              onCopyUrl(directUrl);
             }}
             title="Copy URL"
           >

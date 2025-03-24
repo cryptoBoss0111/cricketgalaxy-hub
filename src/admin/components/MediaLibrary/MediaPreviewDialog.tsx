@@ -1,9 +1,22 @@
 
-import { useState, useEffect } from 'react';
-import { Copy, Download, Trash2, RefreshCw } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useState } from 'react';
+import { 
+  Dialog, 
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { 
+  Clipboard, 
+  Calendar, 
+  FileType, 
+  HardDrive,
+  Trash2,
+  AlertCircle,
+  RefreshCw
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { MediaFile } from './types';
 
 interface MediaPreviewDialogProps {
@@ -28,54 +41,39 @@ const MediaPreviewDialog = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [cleanUrl, setCleanUrl] = useState('');
-  
-  // Reset loading state when dialog opens with a new file
-  useEffect(() => {
-    if (isOpen && selectedFile) {
-      setIsLoading(true);
-      setHasError(false);
-      
-      // Ensure we have a clean base URL (strip all query parameters)
-      const baseUrl = selectedFile.url.split('?')[0];
-      setCleanUrl(baseUrl);
-    }
-  }, [isOpen, selectedFile]);
-  
-  if (!selectedFile) return null;
 
-  // Generate image URL with cache busting
-  const getImageUrl = () => {
-    return `${cleanUrl}?t=${Date.now()}&r=${retryCount}`;
-  };
-
+  // Function to handle image retry
   const handleRetry = () => {
-    console.log(`Retrying image load: ${selectedFile.original_file_name}`);
     setIsLoading(true);
     setHasError(false);
     setRetryCount(prev => prev + 1);
   };
 
-  const handleDownload = () => {
-    // Create a link element with download attribute
-    const link = document.createElement('a');
-    // Use the clean URL for download
-    link.href = cleanUrl;
-    link.download = selectedFile.original_file_name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // Generate direct URL to Supabase storage
+  const getImageUrl = (file: MediaFile) => {
+    // Directly construct the Supabase storage URL
+    const directUrl = `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/article_images/${file.stored_file_name}`;
+    // Add cache busting parameter
+    const urlWithCacheBusting = `${directUrl}?t=${Date.now()}&r=${retryCount}`;
+    console.log("Preview dialog image URL:", directUrl);
+    return urlWithCacheBusting;
   };
+
+  if (!selectedFile) return null;
+
+  const fileExtension = selectedFile.original_file_name.split('.').pop()?.toLowerCase();
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
-        <div className="flex flex-col">
-          <div className="text-xl font-medium mb-2 truncate">
+      <DialogContent className="max-w-4xl h-auto max-h-[80vh] overflow-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-heading">
             {selectedFile.original_file_name}
-          </div>
-          
-          <div className="bg-gray-100 rounded-md overflow-hidden relative min-h-[300px]">
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-6">
+          <div className="md:col-span-3 bg-gray-50 rounded-lg flex items-center justify-center h-[300px] overflow-hidden relative">
             {isLoading && !hasError && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-cricket-accent border-t-transparent"></div>
@@ -83,23 +81,25 @@ const MediaPreviewDialog = ({
             )}
             
             {hasError ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                <div className="text-gray-400 mb-4">Failed to load image</div>
-                <Button onClick={handleRetry} className="flex items-center">
-                  <RefreshCw className="h-4 w-4 mr-2" /> Retry
+              <div className="flex flex-col items-center justify-center text-center p-6">
+                <AlertCircle className="h-16 w-16 text-amber-500 mb-4" />
+                <h3 className="text-lg font-medium text-gray-700 mb-2">Image failed to load</h3>
+                <p className="text-gray-500 mb-4">There was an error loading this image</p>
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetry}
+                  className="flex items-center"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" /> Retry Loading
                 </Button>
               </div>
             ) : (
               <img 
-                src={getImageUrl()}
+                src={getImageUrl(selectedFile)}
                 alt={selectedFile.original_file_name}
-                className={`w-full h-auto max-h-[calc(80vh-200px)] object-contain transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-                onLoad={() => {
-                  console.log("Preview image loaded successfully");
-                  setIsLoading(false);
-                }}
-                onError={(e) => {
-                  console.error("Error loading preview image:", e);
+                className={`max-w-full max-h-full object-contain transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                onLoad={() => setIsLoading(false)}
+                onError={() => {
                   setHasError(true);
                   setIsLoading(false);
                 }}
@@ -108,49 +108,70 @@ const MediaPreviewDialog = ({
             )}
           </div>
           
-          <Separator className="my-4" />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-sm font-medium mb-2">File Details</h3>
-              <ul className="text-sm text-gray-500 space-y-1">
-                <li><span className="font-medium">Name:</span> {selectedFile.original_file_name}</li>
-                {selectedFile.size && <li><span className="font-medium">Size:</span> {formatFileSize(selectedFile.size)}</li>}
-                <li><span className="font-medium">Uploaded:</span> {formatDate(selectedFile.created_at)}</li>
-                <li className="truncate"><span className="font-medium">URL:</span> {cleanUrl}</li>
-              </ul>
-            </div>
+          <div className="md:col-span-2">
+            <h3 className="font-medium text-lg mb-4">File Details</h3>
             
-            <div className="flex justify-between items-end">
-              <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => onCopyUrl(cleanUrl)}
-                  className="flex items-center"
-                >
-                  <Copy className="h-4 w-4 mr-2" /> Copy URL
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={handleDownload}
-                  className="flex items-center"
-                >
-                  <Download className="h-4 w-4 mr-2" /> Download
-                </Button>
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center text-gray-500">
+                  <FileType className="h-4 w-4 mr-2" />
+                  <span className="text-sm">File name</span>
+                </div>
+                <p className="text-base mt-1 break-all">{selectedFile.original_file_name}</p>
               </div>
-              <Button 
-                variant="destructive" 
-                onClick={() => {
-                  onDelete(selectedFile);
-                  onOpenChange(false);
-                }}
-                className="flex items-center"
-              >
-                <Trash2 className="h-4 w-4 mr-2" /> Delete
-              </Button>
+              
+              <div>
+                <div className="flex items-center text-gray-500">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span className="text-sm">Uploaded on</span>
+                </div>
+                <p className="text-base mt-1">{formatDate(selectedFile.created_at)}</p>
+              </div>
+              
+              {selectedFile.size && (
+                <div>
+                  <div className="flex items-center text-gray-500">
+                    <HardDrive className="h-4 w-4 mr-2" />
+                    <span className="text-sm">File size</span>
+                  </div>
+                  <p className="text-base mt-1">{formatFileSize(selectedFile.size)}</p>
+                </div>
+              )}
+              
+              <div>
+                <div className="flex items-center text-gray-500">
+                  <FileType className="h-4 w-4 mr-2" />
+                  <span className="text-sm">File type</span>
+                </div>
+                <p className="text-base mt-1">{fileExtension ? `.${fileExtension}` : 'Unknown'}</p>
+              </div>
             </div>
           </div>
         </div>
+        
+        <DialogFooter className="flex gap-2 mt-6">
+          <Button 
+            variant="outline" 
+            className="flex-1 sm:flex-initial flex items-center"
+            onClick={() => {
+              // Copy direct Supabase storage URL
+              const directUrl = `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/article_images/${selectedFile.stored_file_name}`;
+              onCopyUrl(directUrl);
+            }}
+          >
+            <Clipboard className="h-4 w-4 mr-2" /> Copy URL
+          </Button>
+          <Button 
+            variant="destructive" 
+            className="flex-1 sm:flex-initial flex items-center"
+            onClick={() => {
+              onDelete(selectedFile);
+              onOpenChange(false);
+            }}
+          >
+            <Trash2 className="h-4 w-4 mr-2" /> Delete File
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
