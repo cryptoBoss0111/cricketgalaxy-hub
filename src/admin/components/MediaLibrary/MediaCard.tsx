@@ -28,6 +28,9 @@ const MediaCard = ({
   const displayName = file.original_file_name.split('.')[0] || file.original_file_name;
   const fileExtension = file.original_file_name.split('.').pop()?.toLowerCase();
 
+  // Add cache busting parameter to URL
+  const imageUrl = `${file.url}?t=${Date.now()}&r=${retryCount}`;
+
   // Function to handle image retry
   const handleRetry = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -64,7 +67,7 @@ const MediaCard = ({
           </div>
         ) : (
           <img 
-            src={`${file.url}?r=${retryCount}`}
+            src={imageUrl}
             alt={file.original_file_name} 
             className={`absolute inset-0 w-full h-full object-cover p-2 transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             loading="lazy"
