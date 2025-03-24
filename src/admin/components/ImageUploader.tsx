@@ -93,35 +93,27 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     setError(null);
     
     try {
-      // CRITICAL FIX: We must preserve the original MIME type
-      const originalName = selectedFile.name;
-      const originalMimeType = selectedFile.type;
-      console.log("Original file MIME type:", originalMimeType);
-      
-      // Ensure we're using jpg/jpeg extension
-      const extension = originalName.split('.').pop()?.toLowerCase();
-      const useExtension = (extension === 'jpg' || extension === 'jpeg') ? extension : 'jpg';
-      
-      const safeBaseName = originalName
+      // Simplify by always using jpg extension and image/jpeg MIME type
+      const safeBaseName = selectedFile.name
         .split('.')[0]
         .replace(/\s+/g, "_")
         .replace(/[^\w.-]/g, "");
       
-      const safeName = `${safeBaseName}.${useExtension}`;
+      const safeName = `${safeBaseName}.jpg`;
       
-      // Create a file with the EXACT same MIME type
-      const croppedFile = new File(
+      // Create a file with forced image/jpeg MIME type
+      const jpegFile = new File(
         [croppedBlob], 
         safeName, 
-        { type: originalMimeType } // Keep the exact same MIME type
+        { type: 'image/jpeg' }
       );
       
       console.log("Starting image upload process...");
       console.log("Sanitized filename:", safeName);
-      console.log("Original file type:", originalMimeType);
-      console.log("File for upload:", croppedFile.name, "with type:", croppedFile.type);
+      console.log("Forced MIME type: image/jpeg");
+      console.log("File for upload:", jpegFile.name, "with type:", jpegFile.type);
       
-      const mediaRecord = await uploadImageToStorage(croppedFile);
+      const mediaRecord = await uploadImageToStorage(jpegFile);
       
       console.log("Upload successful, media record:", mediaRecord);
       

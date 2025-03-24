@@ -1,3 +1,4 @@
+
 import { useRef, useState } from 'react';
 import { Upload, Info } from 'lucide-react';
 import { 
@@ -112,22 +113,21 @@ const MediaUploadDialog = ({
     }
     
     try {
-      const originalType = processingFile.type;
-      console.log("Original file type:", originalType);
+      // Create a new file with forced image/jpeg MIME type
+      const extension = 'jpg';
+      const fileName = `${processingFile.name.split('.')[0]}.${extension}`;
       
-      const extension = processingFile.name.split('.').pop()?.toLowerCase();
-      const useExtension = (extension === 'jpg' || extension === 'jpeg') ? extension : 'jpg';
-      
-      const croppedFile = new File(
+      // Always use image/jpeg MIME type
+      const jpegFile = new File(
         [croppedBlob], 
-        `${processingFile.name.split('.')[0]}.${useExtension}`, 
-        { type: originalType }
+        fileName, 
+        { type: 'image/jpeg' }
       );
       
-      console.log("Created cropped file:", croppedFile.name, "with type:", croppedFile.type);
+      console.log("Created cropped file:", jpegFile.name, "with forced type: image/jpeg");
       
       const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(croppedFile);
+      dataTransfer.items.add(jpegFile);
       const fileList = dataTransfer.files;
       
       await onFileUpload(fileList);
