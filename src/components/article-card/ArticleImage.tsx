@@ -18,8 +18,6 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
   imageUrl,
   category
 }) => {
-  console.log(`ArticleImage rendering for "${title}" with:`, { imageUrl });
-
   // Use our custom hook for image handling
   const {
     imageSource,
@@ -47,6 +45,7 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
         onLoad={handleImageLoad}
         onError={handleImageError}
         loading="lazy"
+        crossOrigin="anonymous"
       />
       
       <div className="absolute top-3 left-3">

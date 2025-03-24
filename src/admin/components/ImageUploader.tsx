@@ -125,6 +125,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
               console.error("Error loading preview image:", previewUrl);
               (e.target as HTMLImageElement).src = '/placeholder.svg';
             }}
+            crossOrigin="anonymous"
           />
           <Button 
             variant="destructive" 

@@ -29,6 +29,11 @@ export const getFullImageUrl = (url: string): string => {
     return url;
   }
   
+  // If the URL starts with article_images/, prepend the Supabase storage URL
+  if (url.startsWith('article_images/')) {
+    return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
+  }
+  
   // If it's not a full URL or local path, assume it's a relative path
   // and convert to an absolute URL
   return `${window.location.origin}/${url}`;
