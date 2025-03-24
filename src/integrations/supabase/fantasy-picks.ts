@@ -1,7 +1,9 @@
 
 import { supabase } from './client-core';
 
-// Define a specific type for fantasy picks returned from the database
+/**
+ * Fantasy Pick DB Model - represents how data is stored in the database
+ */
 export interface FantasyPickDB {
   id: string;
   player_name: string;
@@ -18,8 +20,10 @@ export interface FantasyPickDB {
   updated_at: string;
 }
 
-// Define a separate input type for upsert operations
-export interface FantasyPickUpsertInput {
+/**
+ * Fantasy Pick Input - used for creating or updating picks
+ */
+export interface FantasyPickInput {
   id?: string;
   player_name: string;
   team: string;
@@ -33,8 +37,10 @@ export interface FantasyPickUpsertInput {
   stats?: string;
 }
 
-// Get fantasy picks with additional filtering options
-export const getFantasyPicks = async (): Promise<FantasyPickDB[]> => {
+/**
+ * Get all fantasy picks
+ */
+export async function getAllFantasyPicks(): Promise<FantasyPickDB[]> {
   try {
     const { data, error } = await supabase
       .from('fantasy_picks')
@@ -42,14 +48,17 @@ export const getFantasyPicks = async (): Promise<FantasyPickDB[]> => {
       .order('created_at', { ascending: false });
       
     if (error) throw error;
-    return data as FantasyPickDB[] || [];
+    return (data || []) as FantasyPickDB[];
   } catch (error) {
     console.error('Error fetching fantasy picks:', error);
     return [];
   }
-};
+}
 
-export const getFantasyPicksByMatch = async (matchId: string): Promise<FantasyPickDB[]> => {
+/**
+ * Get fantasy picks for a specific match
+ */
+export async function getFantasyPicksByMatch(matchId: string): Promise<FantasyPickDB[]> {
   try {
     const { data, error } = await supabase
       .from('fantasy_picks')
@@ -58,14 +67,17 @@ export const getFantasyPicksByMatch = async (matchId: string): Promise<FantasyPi
       .order('points_prediction', { ascending: false });
       
     if (error) throw error;
-    return data as FantasyPickDB[] || [];
+    return (data || []) as FantasyPickDB[];
   } catch (error) {
     console.error('Error fetching fantasy picks for match:', error);
     return [];
   }
-};
+}
 
-export const getFantasyPickById = async (id: string): Promise<FantasyPickDB | null> => {
+/**
+ * Get a single fantasy pick by ID
+ */
+export async function getFantasyPickById(id: string): Promise<FantasyPickDB | null> {
   try {
     const { data, error } = await supabase
       .from('fantasy_picks')
@@ -79,11 +91,13 @@ export const getFantasyPickById = async (id: string): Promise<FantasyPickDB | nu
     console.error('Error fetching fantasy pick:', error);
     return null;
   }
-};
+}
 
-export const upsertFantasyPick = async (pick: FantasyPickUpsertInput): Promise<FantasyPickDB | null> => {
+/**
+ * Create or update a fantasy pick
+ */
+export async function saveFantasyPick(pick: FantasyPickInput): Promise<FantasyPickDB | null> {
   try {
-    // If id exists, update; otherwise insert
     const { data, error } = await supabase
       .from('fantasy_picks')
       .upsert(pick)
@@ -93,12 +107,15 @@ export const upsertFantasyPick = async (pick: FantasyPickUpsertInput): Promise<F
     if (error) throw error;
     return data as FantasyPickDB;
   } catch (error) {
-    console.error('Error upserting fantasy pick:', error);
+    console.error('Error saving fantasy pick:', error);
     return null;
   }
-};
+}
 
-export const deleteFantasyPick = async (id: string): Promise<boolean> => {
+/**
+ * Delete a fantasy pick
+ */
+export async function deleteFantasyPick(id: string): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('fantasy_picks')
@@ -111,4 +128,42 @@ export const deleteFantasyPick = async (id: string): Promise<boolean> => {
     console.error('Error deleting fantasy pick:', error);
     return false;
   }
-};
+}
+
+/**
+ * Get top fantasy picks - limited to a specific number
+ */
+export async function getTopFantasyPicks(limit: number = 4): Promise<FantasyPickDB[]> {
+  try {
+    const { data, error } = await supabase
+      .from('fantasy_picks')
+      .select('*')
+      .order('points_prediction', { ascending: false })
+      .limit(limit);
+      
+    if (error) throw error;
+    return (data || []) as FantasyPickDB[];
+  } catch (error) {
+    console.error('Error fetching top fantasy picks:', error);
+    return [];
+  }
+}
+
+/**
+ * Get recent fantasy picks - ordered by creation date
+ */
+export async function getRecentFantasyPicks(limit: number = 10): Promise<FantasyPickDB[]> {
+  try {
+    const { data, error } = await supabase
+      .from('fantasy_picks')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+      
+    if (error) throw error;
+    return (data || []) as FantasyPickDB[];
+  } catch (error) {
+    console.error('Error fetching recent fantasy picks:', error);
+    return [];
+  }
+}

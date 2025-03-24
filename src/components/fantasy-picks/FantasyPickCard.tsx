@@ -3,20 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-
-export type FantasyPick = {
-  id: string;
-  player_name: string;
-  team: string;
-  role: string;
-  form: 'Excellent' | 'Good' | 'Average' | 'Poor';
-  image_url: string;
-  stats: string;
-  points_prediction: number;
-  match_details: string;
-  selection_reason: string;
-  created_at: string;
-};
+import { FantasyPick } from './hooks/useFantasyPicks';
 
 interface FantasyPickCardProps {
   pick: FantasyPick;
@@ -24,7 +11,7 @@ interface FantasyPickCardProps {
 }
 
 // Helper to get form color
-const getFormColor = (form: string) => {
+const getFormColor = (form: string): string => {
   switch (form) {
     case 'Excellent':
       return 'text-green-600 dark:text-green-400';
@@ -39,8 +26,8 @@ const getFormColor = (form: string) => {
   }
 };
 
-// Helper to process image URL
-const processImageUrl = (url: string) => {
+// Process image URL helper
+const processImageUrl = (url: string): string => {
   if (!url) {
     return 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop';
   }
@@ -53,37 +40,68 @@ const processImageUrl = (url: string) => {
   return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
 };
 
+// Get badge styles and text based on index
+const getBadgeInfo = (index: number) => {
+  switch (index) {
+    case 0:
+      return {
+        color: "bg-yellow-500",
+        text: "Top Pick",
+        borderColor: "border-t-yellow-500"
+      };
+    case 1:
+      return {
+        color: "bg-blue-500",
+        text: "Value Pick",
+        borderColor: "border-t-blue-500"
+      };
+    case 2:
+      return {
+        color: "bg-green-500",
+        text: "Differential Pick",
+        borderColor: "border-t-green-500"
+      };
+    default:
+      return {
+        color: "bg-purple-500",
+        text: "Budget Pick",
+        borderColor: "border-t-purple-500"
+      };
+  }
+};
+
 const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
+  const { color, text, borderColor } = getBadgeInfo(index);
+  const imageUrl = processImageUrl(pick.image_url);
+  const formColorClass = getFormColor(pick.form);
+  
+  // Animation delay based on index
+  const animationDelay = `animate-delay-${(index + 1) * 100}`;
+  
   return (
     <Card 
       className={cn(
         "overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border-t-4 relative animate-fade-in dark:bg-cricket-dark/80 dark:border-gray-800 dark:border-t-4",
-        index === 0 ? "border-t-yellow-500 animate-delay-100" : 
-        index === 1 ? "border-t-blue-500 animate-delay-200" : 
-        index === 2 ? "border-t-green-500 animate-delay-300" :
-        "border-t-purple-500 animate-delay-400"
+        borderColor,
+        animationDelay
       )}
     >
       <Badge 
         className={cn(
           "absolute top-2 right-2 font-medium",
-          index === 0 ? "bg-yellow-500" : 
-          index === 1 ? "bg-blue-500" : 
-          index === 2 ? "bg-green-500" :
-          "bg-purple-500"
+          color
         )}
       >
-        {index === 0 ? "Top Pick" : index === 1 ? "Value Pick" : index === 2 ? "Differential Pick" : "Budget Pick"}
+        {text}
       </Badge>
       
       <CardContent className="p-6">
         <div className="flex items-center mb-4">
           <img 
-            src={processImageUrl(pick.image_url)} 
+            src={imageUrl} 
             alt={pick.player_name}
             className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-gray-200 dark:border-gray-700"
             onError={(e) => {
-              console.log("Image load error, using fallback");
               (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop';
             }}
           />
@@ -98,7 +116,7 @@ const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
             <span className="text-gray-500 text-sm dark:text-gray-400">Form:</span>
             <span className={cn(
               "text-sm font-medium",
-              getFormColor(pick.form)
+              formColorClass
             )}>
               {pick.form}
             </span>
