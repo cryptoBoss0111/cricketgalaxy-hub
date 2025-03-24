@@ -54,13 +54,18 @@ export const uploadImageToStorage = async (file: File, bucket = 'media') => {
       .from(bucket)
       .getPublicUrl(data.path);
     
+    // Make sure the URL doesn't have any query parameters that might cause CORS issues
+    const cleanUrl = publicUrl.split('?')[0];
+    
+    console.log("Clean public URL:", cleanUrl);
+    
     // Save record to the media table with clean URL
     const { data: mediaRecord, error: mediaError } = await supabase
       .from('media')
       .insert({
         original_file_name: originalFileName,
         stored_file_name: storedFileName,
-        url: publicUrl,
+        url: cleanUrl,
         size: file.size
       })
       .select()
