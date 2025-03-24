@@ -16,6 +16,7 @@ interface ImageUploaderProps {
 const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Image" }: ImageUploaderProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [cleanUrl, setCleanUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [imageLoadError, setImageLoadError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -23,7 +24,10 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   
   useEffect(() => {
     if (existingImageUrl) {
-      setPreviewUrl(existingImageUrl);
+      // Clean the URL by removing any query parameters
+      const cleanedUrl = existingImageUrl.split('?')[0];
+      setPreviewUrl(cleanedUrl);
+      setCleanUrl(cleanedUrl);
     }
   }, [existingImageUrl]);
   
@@ -73,8 +77,12 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       
       console.log("Upload successful, media record:", mediaRecord);
       
+      // Ensure the URL is clean (no query parameters)
+      const cleanedUrl = mediaRecord.url.split('?')[0];
+      setCleanUrl(cleanedUrl);
+      
       // Pass the URL to the parent component
-      onImageUploaded(mediaRecord.url);
+      onImageUploaded(cleanedUrl);
       
       toast({
         title: "Image uploaded",
@@ -102,6 +110,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   
   const handleRemoveImage = () => {
     setPreviewUrl(null);
+    setCleanUrl(null);
     onImageUploaded('');
     setError(null);
     setImageLoadError(false);
@@ -114,16 +123,18 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   
   // Create a URL with cache busting for external images
   const getImageUrl = () => {
-    if (!previewUrl || previewUrl.startsWith('data:')) return previewUrl;
+    if (!previewUrl) return null;
     
+    // If it's a data URL, return as is
+    if (previewUrl.startsWith('data:')) return previewUrl;
+    
+    // If it's a network URL, add cache busting
     try {
-      const timestamp = Date.now();
-      const url = new URL(previewUrl);
-      url.searchParams.set('t', timestamp.toString());
-      url.searchParams.set('r', retryCount.toString());
-      return url.toString();
+      // Use cleanUrl if available, otherwise use previewUrl but clean it first
+      const baseUrl = cleanUrl || previewUrl.split('?')[0];
+      return `${baseUrl}?t=${Date.now()}&r=${retryCount}`;
     } catch {
-      return `${previewUrl}?t=${Date.now()}&r=${retryCount}`;
+      return previewUrl;
     }
   };
   
@@ -156,7 +167,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
             </div>
           ) : (
             <img 
-              src={getImageUrl()} 
+              src={getImageUrl() || ''} 
               alt="Preview" 
               className="w-full h-48 object-cover"
               onError={() => {

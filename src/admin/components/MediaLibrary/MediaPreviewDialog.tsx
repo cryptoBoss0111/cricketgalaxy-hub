@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Copy, Download, Trash2, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -28,12 +28,26 @@ const MediaPreviewDialog = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [cleanUrl, setCleanUrl] = useState('');
+  
+  // Reset loading state when dialog opens with a new file
+  useEffect(() => {
+    if (isOpen && selectedFile) {
+      setIsLoading(true);
+      setHasError(false);
+      
+      // Ensure we have a clean base URL (strip all query parameters)
+      const baseUrl = selectedFile.url.split('?')[0];
+      setCleanUrl(baseUrl);
+    }
+  }, [isOpen, selectedFile]);
   
   if (!selectedFile) return null;
 
-  // Ensure we have a clean base URL and add cache busting parameter
-  const baseUrl = selectedFile.url.split('?')[0]; // Ensure we have a clean base URL
-  const imageUrl = `${baseUrl}?t=${Date.now()}&r=${retryCount}`;
+  // Generate image URL with cache busting
+  const getImageUrl = () => {
+    return `${cleanUrl}?t=${Date.now()}&r=${retryCount}`;
+  };
 
   const handleRetry = () => {
     console.log(`Retrying image load: ${selectedFile.original_file_name}`);
@@ -46,7 +60,7 @@ const MediaPreviewDialog = ({
     // Create a link element with download attribute
     const link = document.createElement('a');
     // Use the clean URL for download
-    link.href = baseUrl;
+    link.href = cleanUrl;
     link.download = selectedFile.original_file_name;
     document.body.appendChild(link);
     link.click();
@@ -77,7 +91,7 @@ const MediaPreviewDialog = ({
               </div>
             ) : (
               <img 
-                src={imageUrl}
+                src={getImageUrl()}
                 alt={selectedFile.original_file_name}
                 className={`w-full h-auto max-h-[calc(80vh-200px)] object-contain transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                 onLoad={() => {
@@ -103,7 +117,7 @@ const MediaPreviewDialog = ({
                 <li><span className="font-medium">Name:</span> {selectedFile.original_file_name}</li>
                 {selectedFile.size && <li><span className="font-medium">Size:</span> {formatFileSize(selectedFile.size)}</li>}
                 <li><span className="font-medium">Uploaded:</span> {formatDate(selectedFile.created_at)}</li>
-                <li className="truncate"><span className="font-medium">URL:</span> {baseUrl}</li>
+                <li className="truncate"><span className="font-medium">URL:</span> {cleanUrl}</li>
               </ul>
             </div>
             
@@ -111,7 +125,7 @@ const MediaPreviewDialog = ({
               <div className="flex space-x-2">
                 <Button 
                   variant="outline" 
-                  onClick={() => onCopyUrl(baseUrl)}
+                  onClick={() => onCopyUrl(cleanUrl)}
                   className="flex items-center"
                 >
                   <Copy className="h-4 w-4 mr-2" /> Copy URL

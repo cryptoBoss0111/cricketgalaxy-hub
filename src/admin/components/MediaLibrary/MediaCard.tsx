@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Copy, Trash2, Image as ImageIcon, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,14 +23,23 @@ const MediaCard = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [cleanUrl, setCleanUrl] = useState('');
   
   // Extract a more readable name from the filename
   const displayName = file.original_file_name.split('.')[0] || file.original_file_name;
   const fileExtension = file.original_file_name.split('.').pop()?.toLowerCase();
 
-  // Add cache busting parameter to URL and ensure clean base URL
-  const baseUrl = file.url.split('?')[0]; // Ensure we have a clean base URL
-  const imageUrl = `${baseUrl}?t=${Date.now()}&r=${retryCount}`;
+  // Process URL on component mount or URL change
+  useEffect(() => {
+    // Ensure we have a clean base URL (no query parameters)
+    const baseUrl = file.url.split('?')[0];
+    setCleanUrl(baseUrl);
+  }, [file.url]);
+
+  // Generate image URL with cache busting
+  const getImageUrl = () => {
+    return `${cleanUrl}?t=${Date.now()}&r=${retryCount}`;
+  };
 
   // Function to handle image retry
   const handleRetry = (e: React.MouseEvent) => {
@@ -68,7 +77,7 @@ const MediaCard = ({
           </div>
         ) : (
           <img 
-            src={imageUrl}
+            src={getImageUrl()}
             alt={file.original_file_name} 
             className={`absolute inset-0 w-full h-full object-cover p-2 transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             loading="lazy"
@@ -108,7 +117,7 @@ const MediaCard = ({
             className="h-8 w-8"
             onClick={(e) => {
               e.stopPropagation();
-              onCopyUrl(file.url);
+              onCopyUrl(cleanUrl);
             }}
             title="Copy URL"
           >

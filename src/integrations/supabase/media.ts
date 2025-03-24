@@ -79,8 +79,13 @@ export const uploadImageToStorage = async (file: File, bucket = 'media') => {
     
     console.log("Media record created:", mediaRecord);
     
-    // Return the media record
-    return mediaRecord;
+    // Return the media record with guaranteed clean URL
+    const cleanMediaRecord = {
+      ...mediaRecord,
+      url: mediaRecord.url.split('?')[0] // Ensure URL is clean
+    };
+    
+    return cleanMediaRecord;
   } catch (error) {
     console.error('Error uploading image:', error);
     throw error;
