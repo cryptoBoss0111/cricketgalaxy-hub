@@ -1,5 +1,5 @@
 
-import { Copy, Trash2, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Copy, Trash2, Image as ImageIcon, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MediaFile } from './types';
@@ -24,31 +24,26 @@ const MediaCard = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [imageSrc, setImageSrc] = useState('');
   
   // Extract a more readable name from the filename
-  const displayName = file.name.includes('-') 
-    ? file.name.split('-').slice(0, -1).join('-') 
-    : file.name;
+  const displayName = file.name.split('.')[0] || file.name;
+  const fileExtension = file.name.split('.').pop()?.toLowerCase();
 
-  // Add a retry mechanism
+  // Generate a new image URL with cache busting parameters
   useEffect(() => {
-    if (hasError && retryCount < 2) {
-      const timer = setTimeout(() => {
-        console.log(`Retrying image load for ${file.name}, attempt ${retryCount + 1}`);
-        setIsLoading(true);
-        setHasError(false);
-        setRetryCount(prevCount => prevCount + 1);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [hasError, retryCount, file.name]);
+    const timestamp = new Date().getTime();
+    const random = Math.floor(Math.random() * 1000000);
+    setImageSrc(`${file.publicUrl}?t=${timestamp}&r=${random}&retry=${retryCount}`);
+  }, [file.publicUrl, retryCount]);
 
   // Function to handle image retry
-  const handleRetry = () => {
+  const handleRetry = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log(`Manually retrying image: ${file.name}`);
     setIsLoading(true);
     setHasError(false);
-    setRetryCount(0);
+    setRetryCount(prev => prev + 1);
   };
 
   return (
@@ -59,7 +54,7 @@ const MediaCard = ({
       >
         {isLoading && !hasError && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <Skeleton className="h-full w-full" />
+            <div className="animate-spin rounded-full h-8 w-8 border-4 border-cricket-accent border-t-transparent"></div>
           </div>
         )}
         
@@ -70,18 +65,15 @@ const MediaCard = ({
             <Button 
               variant="outline" 
               size="sm" 
-              className="text-xs py-1 px-2 h-auto"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRetry();
-              }}
+              className="text-xs py-1 px-2 h-auto flex items-center"
+              onClick={handleRetry}
             >
-              Retry
+              <RefreshCw className="h-3 w-3 mr-1" /> Retry
             </Button>
           </div>
         ) : (
           <img 
-            src={`${file.publicUrl}?t=${new Date().getTime()}&rand=${Math.random()}`} // Add stronger cache-busting
+            src={imageSrc}
             alt={file.name} 
             className={`absolute inset-0 w-full h-full object-cover p-2 transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             crossOrigin="anonymous"
@@ -91,7 +83,7 @@ const MediaCard = ({
               setIsLoading(false);
             }}
             onError={(e) => {
-              console.error("Error loading image:", file.publicUrl);
+              console.error(`Error loading image: ${file.name}`, e);
               setHasError(true);
               setIsLoading(false);
             }}
@@ -105,6 +97,7 @@ const MediaCard = ({
         </div>
         <div className="text-xs text-gray-500 flex justify-between">
           <span>{formatFileSize(file.size)}</span>
+          {fileExtension && <span className="text-gray-400">.{fileExtension}</span>}
           {hasError && (
             <span className="text-amber-500 flex items-center">
               <AlertCircle className="h-3 w-3 mr-1" />

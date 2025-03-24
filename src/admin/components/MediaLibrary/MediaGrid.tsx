@@ -38,7 +38,7 @@ const MediaGrid = ({
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cricket-accent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-cricket-accent border-t-transparent"></div>
       </div>
     );
   }
@@ -58,6 +58,17 @@ const MediaGrid = ({
           <>
             <h3 className="text-xl font-medium text-gray-500">No matching files found</h3>
             <p className="text-gray-400 mt-2">Try changing your search query</p>
+            
+            {onRefresh && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onRefresh}
+                className="mt-4 flex items-center"
+              >
+                <RotateCw className="h-4 w-4 mr-2" /> Refresh Images
+              </Button>
+            )}
           </>
         ) : (
           <>
@@ -91,7 +102,7 @@ const MediaGrid = ({
       )}
       
       <div 
-        className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 transition-colors ${
+        className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 transition-colors ${
           isDragging ? 'ring-2 ring-cricket-accent ring-offset-2 bg-cricket-accent/5 rounded-lg p-4' : ''
         }`}
         onDragOver={onDragOver}
@@ -100,7 +111,7 @@ const MediaGrid = ({
       >
         {files.map((file) => (
           <MediaCard
-            key={file.name}
+            key={file.name + "-" + file.created_at}
             file={file}
             onPreview={onPreview}
             onCopyUrl={onCopyUrl}

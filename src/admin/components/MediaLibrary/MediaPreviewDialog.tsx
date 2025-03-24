@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Copy, Trash2, Image as ImageIcon, RotateCw } from 'lucide-react';
+import { Copy, Trash2, Image as ImageIcon, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   Dialog, 
@@ -36,39 +36,29 @@ const MediaPreviewDialog = ({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [uniqueId, setUniqueId] = useState(Date.now());
+  const [imageSrc, setImageSrc] = useState('');
   
   // Reset states when dialog opens/closes or file changes
   useEffect(() => {
     if (isOpen && selectedFile) {
       setImageLoaded(false);
       setHasError(false);
-      setRetryCount(0);
-      setUniqueId(Date.now());
-    }
-  }, [isOpen, selectedFile]);
-  
-  // Handle retry mechanism
-  useEffect(() => {
-    if (hasError && retryCount < 3 && selectedFile) {
-      const timer = setTimeout(() => {
-        console.log(`Retrying preview image load, attempt ${retryCount + 1}`);
-        setImageLoaded(false);
-        setHasError(false);
-        setUniqueId(Date.now());
-        setRetryCount(prevCount => prevCount + 1);
-      }, 1500);
       
-      return () => clearTimeout(timer);
+      // Generate a unique URL with enhanced cache busting
+      const timestamp = new Date().getTime();
+      const random = Math.floor(Math.random() * 1000000);
+      setImageSrc(`${selectedFile.publicUrl}?t=${timestamp}&r=${random}&retry=${retryCount}`);
+      
+      console.log(`Preview image URL: ${selectedFile.publicUrl} with params t=${timestamp}&r=${random}`);
     }
-  }, [hasError, retryCount, selectedFile]);
+  }, [isOpen, selectedFile, retryCount]);
 
   const handleRetry = () => {
     if (selectedFile) {
+      console.log(`Manually retrying preview for: ${selectedFile.name}`);
       setImageLoaded(false);
       setHasError(false);
-      setUniqueId(Date.now());
-      setRetryCount(0);
+      setRetryCount(prev => prev + 1);
     }
   };
   
@@ -86,7 +76,7 @@ const MediaPreviewDialog = ({
             <div className="flex-1 min-h-0 relative bg-gray-100 rounded-md overflow-hidden">
               {!imageLoaded && !hasError && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cricket-accent"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-cricket-accent border-t-transparent"></div>
                 </div>
               )}
               
@@ -99,13 +89,13 @@ const MediaPreviewDialog = ({
                     onClick={handleRetry}
                     className="flex items-center"
                   >
-                    <RotateCw className="h-4 w-4 mr-2" />
+                    <RefreshCw className="h-4 w-4 mr-2" />
                     Retry
                   </Button>
                 </div>
               ) : (
                 <img 
-                  src={`${selectedFile.publicUrl}?t=${uniqueId}&rand=${Math.random()}`} // Strong cache-busting
+                  src={imageSrc}
                   alt={selectedFile.name} 
                   className={`absolute inset-0 w-full h-full object-contain p-4 transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                   crossOrigin="anonymous"
@@ -115,7 +105,7 @@ const MediaPreviewDialog = ({
                     setHasError(false);
                   }}
                   onError={(e) => {
-                    console.error("Error loading preview image:", selectedFile.publicUrl);
+                    console.error(`Error loading preview image: ${selectedFile.name}`, e);
                     setHasError(true);
                     setImageLoaded(false);
                   }}
@@ -126,7 +116,7 @@ const MediaPreviewDialog = ({
             {hasError && (
               <Alert variant="warning" className="mt-4">
                 <AlertDescription>
-                  There was an issue loading this image. The file might be corrupted or inaccessible.
+                  There was an issue loading this image. The image may be corrupted or inaccessible. Try refreshing the media library.
                 </AlertDescription>
               </Alert>
             )}

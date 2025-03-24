@@ -13,8 +13,8 @@ export const generateUniqueFileName = (fileName: string) => {
   // Clean the base name to remove any special characters
   const cleanBaseName = baseName.replace(/[^a-zA-Z0-9_-]/g, '_');
   
-  // Return a filename that contains the original name for better readability
-  return `${cleanBaseName}-${randomString}.${extension}`;
+  // Return a filename that preserves the original name
+  return `${cleanBaseName}_${randomString}.${extension}`;
 };
 
 // Upload file to storage with improved error handling
@@ -30,7 +30,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       throw new Error("Please upload a valid image file");
     }
 
-    // Create a unique file name while preserving the original file name
+    // Create a unique file name that preserves the original name
     const fileName = generateUniqueFileName(file.name);
     const filePath = `${fileName}`; // Keep the path simple
     
@@ -47,39 +47,34 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       console.log("Session status:", sessionData.session ? "Authenticated" : "Not authenticated");
     }
     
+    // Set proper content type and caching headers
+    const options = {
+      cacheControl: '3600', // 1 hour cache, balance between performance and freshness
+      upsert: true,
+      contentType: file.type
+    };
+    
     // Upload the file to Supabase Storage
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file, {
-        cacheControl: '0', // Disable caching to make sure we always get the newest version
-        upsert: true, // Set to true to overwrite if file exists
-        contentType: file.type // Explicitly set the content type
-      });
+      .upload(filePath, file, options);
     
     if (error) {
       console.error("Storage upload error:", error);
-      // If the error is related to permissions, try a more permissive approach
-      if (error.message.includes("permission") || error.message.includes("row-level security")) {
-        throw new Error(`Permission denied: ${error.message}. Please make sure you're logged in with an account that has upload rights.`);
-      }
       throw error;
     }
     
     console.log("Upload successful, data:", data);
     
-    // Get the public URL with cache-busting parameter
-    const timestamp = new Date().getTime();
+    // Get the public URL
     const { data: { publicUrl } } = supabase
       .storage
       .from(bucket)
       .getPublicUrl(data.path);
     
-    // Add cache-busting parameter to force reloading of the image
-    const urlWithCacheBusting = `${publicUrl}?t=${timestamp}`;
+    console.log("Generated public URL:", publicUrl);
     
-    console.log("Generated public URL:", urlWithCacheBusting);
-    
-    // Return the full public URL
+    // Return the public URL
     return publicUrl;
   } catch (error) {
     console.error('Error uploading image:', error);
@@ -87,43 +82,17 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
   }
 };
 
-// Ensure bucket exists, create if it doesn't
-export const ensureBucketExists = async (bucketName: string) => {
-  try {
-    // First, check if bucket exists
-    const { data: buckets, error: bucketError } = await supabase
-      .storage
-      .listBuckets();
-    
-    if (bucketError) {
-      console.error("Error fetching buckets:", bucketError);
-      throw bucketError;
-    }
-    
-    const bucketExists = buckets.some(bucket => bucket.name === bucketName);
-    
-    if (!bucketExists) {
-      console.log(`Bucket '${bucketName}' does not exist. Will try to use it anyway.`);
-    } else {
-      console.log(`Bucket '${bucketName}' exists.`);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error ensuring bucket exists:", error);
-    // Just log the error but continue, as the bucket might exist even if we can't confirm it
-    return true;
-  }
-};
-
 // Get all media files
 export const getMediaFiles = async (bucketName = 'article_images') => {
   try {
-    // Try to list files in the bucket
+    // Ensure bucket exists
+    await ensureBucketExists(bucketName);
+    
+    // List files in the bucket
     const { data, error } = await supabase
       .storage
       .from(bucketName)
-      .list(undefined, {
+      .list('', {
         limit: 100,
         offset: 0,
         sortBy: { column: 'created_at', order: 'desc' }
@@ -140,8 +109,8 @@ export const getMediaFiles = async (bucketName = 'article_images') => {
     }
     
     // Add public URLs to each file
-    const timestamp = new Date().getTime();
-    const filesWithUrls = data.filter(file => !file.id.startsWith('.'))
+    const filesWithUrls = data
+      .filter(file => !file.id.startsWith('.') && file.id !== '.emptyFolderPlaceholder')
       .map(file => {
         const { data: { publicUrl } } = supabase
           .storage
@@ -191,5 +160,34 @@ export const deleteMediaFile = async (fileName: string, bucketName = 'article_im
   } catch (error) {
     console.error('Error in deleteMediaFile:', error);
     throw error;
+  }
+};
+
+// Ensure bucket exists, create if it doesn't
+export const ensureBucketExists = async (bucketName: string) => {
+  try {
+    // First, check if bucket exists
+    const { data: buckets, error: bucketError } = await supabase
+      .storage
+      .listBuckets();
+    
+    if (bucketError) {
+      console.error("Error fetching buckets:", bucketError);
+      throw bucketError;
+    }
+    
+    const bucketExists = buckets.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      console.log(`Bucket '${bucketName}' does not exist. Will try to use it anyway.`);
+    } else {
+      console.log(`Bucket '${bucketName}' exists.`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error ensuring bucket exists:", error);
+    // Just log the error but continue, as the bucket might exist even if we can't confirm it
+    return true;
   }
 };
