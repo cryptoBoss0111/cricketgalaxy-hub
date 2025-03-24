@@ -25,13 +25,13 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ChatbotProvider>
-          <AdminAuthProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+          <BrowserRouter>
+            <AdminAuthProvider>
+              <Toaster />
+              <Sonner />
               {children}
-            </BrowserRouter>
-          </AdminAuthProvider>
+            </AdminAuthProvider>
+          </BrowserRouter>
         </ChatbotProvider>
       </TooltipProvider>
     </QueryClientProvider>

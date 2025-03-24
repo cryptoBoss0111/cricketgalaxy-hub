@@ -31,8 +31,6 @@ export interface FantasyPickUpsertInput {
   points_prediction: number;
   image_url?: string;
   stats?: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 // Get fantasy picks with additional filtering options
@@ -44,7 +42,7 @@ export const getFantasyPicks = async (): Promise<FantasyPickDB[]> => {
       .order('created_at', { ascending: false });
       
     if (error) throw error;
-    return (data || []) as FantasyPickDB[];
+    return data || [];
   } catch (error) {
     console.error('Error fetching fantasy picks:', error);
     return [];
@@ -60,7 +58,7 @@ export const getFantasyPicksByMatch = async (matchId: string): Promise<FantasyPi
       .order('points_prediction', { ascending: false });
       
     if (error) throw error;
-    return (data || []) as FantasyPickDB[];
+    return data || [];
   } catch (error) {
     console.error('Error fetching fantasy picks for match:', error);
     return [];
