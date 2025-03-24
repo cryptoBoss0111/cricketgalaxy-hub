@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { uploadImageToStorage } from '@/integrations/supabase/media';
-import { Image, Upload, X, AlertTriangle } from 'lucide-react';
+import { Image, Upload, X, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ImageUploaderProps {
@@ -17,6 +17,8 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -56,6 +58,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     fileReader.onload = () => {
       if (typeof fileReader.result === 'string') {
         setPreviewUrl(fileReader.result);
+        setImageLoadError(false);
       }
     };
     fileReader.readAsDataURL(file);
@@ -101,6 +104,27 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     setPreviewUrl(null);
     onImageUploaded('');
     setError(null);
+    setImageLoadError(false);
+  };
+  
+  const handleRetry = () => {
+    setImageLoadError(false);
+    setRetryCount(prev => prev + 1);
+  };
+  
+  // Create a URL with cache busting for external images
+  const getImageUrl = () => {
+    if (!previewUrl || previewUrl.startsWith('data:')) return previewUrl;
+    
+    try {
+      const timestamp = new Date().getTime();
+      const url = new URL(previewUrl);
+      url.searchParams.set('t', timestamp.toString());
+      url.searchParams.set('r', retryCount.toString());
+      return url.toString();
+    } catch {
+      return `${previewUrl}?t=${Date.now()}&r=${retryCount}`;
+    }
   };
   
   return (
@@ -117,16 +141,30 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       
       {previewUrl ? (
         <div className="relative rounded-md overflow-hidden border border-gray-200">
-          <img 
-            src={previewUrl} 
-            alt="Preview" 
-            className="w-full h-48 object-cover"
-            onError={(e) => {
-              console.error("Error loading preview image:", previewUrl);
-              (e.target as HTMLImageElement).src = '/placeholder.svg';
-            }}
-            crossOrigin="anonymous"
-          />
+          {imageLoadError ? (
+            <div className="h-48 flex flex-col items-center justify-center bg-gray-50">
+              <Image className="h-10 w-10 text-gray-300 mb-2" />
+              <p className="text-sm text-gray-400 mb-3">Image failed to load</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center"
+                onClick={handleRetry}
+              >
+                <RefreshCw className="h-4 w-4 mr-1" /> Retry
+              </Button>
+            </div>
+          ) : (
+            <img 
+              src={getImageUrl()} 
+              alt="Preview" 
+              className="w-full h-48 object-cover"
+              onError={() => {
+                console.error("Error loading preview image:", previewUrl);
+                setImageLoadError(true);
+              }}
+            />
+          )}
           <Button 
             variant="destructive" 
             size="icon" 

@@ -23,27 +23,30 @@ const MediaCard = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [imageSrc, setImageSrc] = useState('');
   
   // Extract a more readable name from the filename
   const displayName = file.original_file_name.split('.')[0] || file.original_file_name;
   const fileExtension = file.original_file_name.split('.').pop()?.toLowerCase();
 
-  // Generate a new image URL with enhanced cache busting parameters
-  useEffect(() => {
+  // Create proxy URL to avoid CORS issues
+  const getProxiedImageUrl = () => {
+    // Add cache busting parameters
     const timestamp = new Date().getTime();
     const random = Math.floor(Math.random() * 1000000);
     
-    // Add specific parameters to help with debugging
-    const url = new URL(file.url);
-    url.searchParams.set('t', timestamp.toString());
-    url.searchParams.set('r', random.toString());
-    url.searchParams.set('retry', retryCount.toString());
-    url.searchParams.set('card', 'true');
-    
-    setImageSrc(url.toString());
-    console.log(`Loading card image with URL: ${url.toString()}`);
-  }, [file.url, retryCount]);
+    // Create a URL object to properly handle query parameters
+    try {
+      const url = new URL(file.url);
+      // Add cache busting parameters
+      url.searchParams.set('t', timestamp.toString());
+      url.searchParams.set('r', random.toString());
+      url.searchParams.set('retry', retryCount.toString());
+      return url.toString();
+    } catch (e) {
+      // If URL creation fails, simply append query params
+      return `${file.url}?t=${timestamp}&r=${random}&retry=${retryCount}`;
+    }
+  };
 
   // Function to handle image retry
   const handleRetry = (e: React.MouseEvent) => {
@@ -81,10 +84,9 @@ const MediaCard = ({
           </div>
         ) : (
           <img 
-            src={imageSrc}
+            src={getProxiedImageUrl()}
             alt={file.original_file_name} 
             className={`absolute inset-0 w-full h-full object-cover p-2 transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-            crossOrigin="anonymous"
             loading="lazy"
             onLoad={() => {
               console.log(`Image loaded successfully: ${file.original_file_name}`);

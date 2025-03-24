@@ -1,7 +1,9 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState } from 'react';
+import { Copy, Download, Trash2, RefreshCw } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Copy, Trash2, X, Link } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import { MediaFile } from './types';
 
 interface MediaPreviewDialogProps {
@@ -11,7 +13,7 @@ interface MediaPreviewDialogProps {
   onDelete: (file: MediaFile) => void;
   onCopyUrl: (url: string) => void;
   formatFileSize: (bytes: number) => string;
-  formatDate: (date: string) => string;
+  formatDate: (dateString: string) => string;
 }
 
 const MediaPreviewDialog = ({
@@ -23,86 +25,127 @@ const MediaPreviewDialog = ({
   formatFileSize,
   formatDate
 }: MediaPreviewDialogProps) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  
   if (!selectedFile) return null;
   
+  // Create proxy URL to avoid CORS issues
+  const getProxiedImageUrl = () => {
+    // Add cache busting parameters to avoid browser caching
+    const timestamp = new Date().getTime();
+    const random = Math.floor(Math.random() * 1000000);
+    
+    // Create a URL object to properly handle query parameters
+    try {
+      const url = new URL(selectedFile.url);
+      // Add timestamp to avoid caching
+      url.searchParams.set('t', timestamp.toString());
+      url.searchParams.set('r', random.toString());
+      url.searchParams.set('retry', retryCount.toString());
+      url.searchParams.set('preview', 'true');
+      return url.toString();
+    } catch (e) {
+      // If URL creation fails, simply append query params
+      return `${selectedFile.url}?t=${timestamp}&r=${random}&retry=${retryCount}&preview=true`;
+    }
+  };
+
+  const handleRetry = () => {
+    console.log(`Retrying image load: ${selectedFile.original_file_name}`);
+    setIsLoading(true);
+    setHasError(false);
+    setRetryCount(prev => prev + 1);
+  };
+
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = selectedFile.url;
+    link.download = selectedFile.original_file_name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden">
-        <div className="flex justify-between items-center p-4 border-b">
-          <DialogTitle className="text-xl">{selectedFile.original_file_name}</DialogTitle>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => onOpenChange(false)}
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="grid md:grid-cols-5 gap-4">
-          <div className="md:col-span-3 bg-gray-50 flex items-center justify-center p-4 min-h-[300px]">
-            <img 
-              src={selectedFile.url} 
-              alt={selectedFile.original_file_name} 
-              className="max-w-full max-h-[500px] object-contain"
-              crossOrigin="anonymous"
-            />
+      <DialogContent className="max-w-4xl">
+        <div className="flex flex-col">
+          <div className="text-xl font-medium mb-2 truncate">
+            {selectedFile.original_file_name}
           </div>
           
-          <div className="md:col-span-2 p-4 space-y-4">
+          <div className="bg-gray-100 rounded-md overflow-hidden relative min-h-[300px]">
+            {isLoading && !hasError && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-cricket-accent border-t-transparent"></div>
+              </div>
+            )}
+            
+            {hasError ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
+                <div className="text-gray-400 mb-4">Failed to load image</div>
+                <Button onClick={handleRetry} className="flex items-center">
+                  <RefreshCw className="h-4 w-4 mr-2" /> Retry
+                </Button>
+              </div>
+            ) : (
+              <img 
+                src={getProxiedImageUrl()}
+                alt={selectedFile.original_file_name}
+                className={`w-full h-auto max-h-[calc(80vh-200px)] object-contain transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                onLoad={() => {
+                  console.log("Preview image loaded successfully");
+                  setIsLoading(false);
+                }}
+                onError={(e) => {
+                  console.error("Error loading preview image:", e);
+                  setHasError(true);
+                  setIsLoading(false);
+                }}
+              />
+            )}
+          </div>
+          
+          <Separator className="my-4" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <h3 className="text-sm font-medium text-gray-500">File Details</h3>
-              <div className="mt-2 space-y-2 text-sm">
-                <div className="grid grid-cols-3 gap-1">
-                  <span className="text-gray-500">Name:</span>
-                  <span className="col-span-2 font-medium truncate" title={selectedFile.original_file_name}>
-                    {selectedFile.original_file_name}
-                  </span>
-                </div>
-                
-                {selectedFile.size && (
-                  <div className="grid grid-cols-3 gap-1">
-                    <span className="text-gray-500">Size:</span>
-                    <span className="col-span-2">{formatFileSize(selectedFile.size)}</span>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-3 gap-1">
-                  <span className="text-gray-500">Uploaded:</span>
-                  <span className="col-span-2">{formatDate(selectedFile.created_at)}</span>
-                </div>
-              </div>
+              <h3 className="text-sm font-medium mb-2">File Details</h3>
+              <ul className="text-sm text-gray-500 space-y-1">
+                <li><span className="font-medium">Name:</span> {selectedFile.original_file_name}</li>
+                {selectedFile.size && <li><span className="font-medium">Size:</span> {formatFileSize(selectedFile.size)}</li>}
+                <li><span className="font-medium">Uploaded:</span> {formatDate(selectedFile.created_at)}</li>
+                <li className="truncate"><span className="font-medium">URL:</span> {selectedFile.url}</li>
+              </ul>
             </div>
             
-            <div className="pt-3 border-t">
-              <h3 className="text-sm font-medium text-gray-500">URL</h3>
-              <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-gray-50 p-2 rounded truncate text-sm" title={selectedFile.url}>
-                    {selectedFile.url}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="flex-shrink-0"
-                    onClick={() => onCopyUrl(selectedFile.url)}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
+            <div className="flex justify-between items-end">
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => onCopyUrl(selectedFile.url)}
+                  className="flex items-center"
+                >
+                  <Copy className="h-4 w-4 mr-2" /> Copy URL
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={handleDownload}
+                  className="flex items-center"
+                >
+                  <Download className="h-4 w-4 mr-2" /> Download
+                </Button>
               </div>
-            </div>
-            
-            <div className="pt-4 border-t flex justify-between">
-              <Button variant="default" onClick={() => onCopyUrl(selectedFile.url)}>
-                <Link className="h-4 w-4 mr-2" /> Copy URL
-              </Button>
-              
-              <Button variant="destructive" onClick={() => {
-                onDelete(selectedFile);
-                onOpenChange(false);
-              }}>
+              <Button 
+                variant="destructive" 
+                onClick={() => {
+                  onDelete(selectedFile);
+                  onOpenChange(false);
+                }}
+                className="flex items-center"
+              >
                 <Trash2 className="h-4 w-4 mr-2" /> Delete
               </Button>
             </div>

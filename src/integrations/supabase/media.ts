@@ -1,7 +1,7 @@
 
 import { supabase } from './client-core';
 
-// Upload file to storage with improved error handling
+// Upload file to storage with improved error handling and CORS support
 export const uploadImageToStorage = async (file: File, bucket = 'media') => {
   try {
     // Check if file exists
@@ -21,7 +21,10 @@ export const uploadImageToStorage = async (file: File, bucket = 'media') => {
     const timestamp = new Date().getTime();
     const randomString = Math.random().toString(36).substring(2, 8);
     const extension = originalFileName.split('.').pop()?.toLowerCase() || '';
-    const storedFileName = `${originalFileName.split('.')[0]}_${timestamp}_${randomString}.${extension}`;
+    
+    // Sanitize the filename to avoid URL encoding issues
+    const fileBaseName = originalFileName.split('.')[0].replace(/[^a-zA-Z0-9]/g, '_');
+    const storedFileName = `${fileBaseName}_${timestamp}_${randomString}.${extension}`;
     
     console.log("Uploading image:", originalFileName);
     console.log("Stored as:", storedFileName);
@@ -57,7 +60,8 @@ export const uploadImageToStorage = async (file: File, bucket = 'media') => {
       .insert({
         original_file_name: originalFileName,
         stored_file_name: storedFileName,
-        url: publicUrl
+        url: publicUrl,
+        size: file.size
       })
       .select()
       .single();
