@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
@@ -280,7 +281,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         <div className="p-4 flex items-center justify-between">
           {!isCollapsed && (
             <Link to="/admin/dashboard">
-              <span className="text-xl font-heading font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              <span className="text-xl font-heading font-bold text-white">
                 Admin Panel
               </span>
             </Link>
@@ -309,8 +310,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                       className={cn(
                         "flex items-center py-3 px-3 rounded-md text-sm font-medium transition-colors",
                         item.active 
-                          ? "bg-white/10 text-white" 
-                          : "text-gray-300 hover:text-white hover:bg-white/5",
+                          ? "bg-white/20 text-white" 
+                          : "text-white/80 hover:text-white hover:bg-white/10",
                         isCollapsed ? "justify-center" : ""
                       )}
                     >
@@ -330,12 +331,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         </div>
         
         <div className="mt-auto p-4">
-          <Separator className="mb-4 bg-white/10" />
+          <Separator className="mb-4 bg-white/20" />
           
           <TooltipProvider>
             <div className="flex items-center">
               {!isCollapsed && adminUser && (
-                <Avatar className="h-10 w-10 mr-3 bg-white/10 text-white">
+                <Avatar className="h-10 w-10 mr-3 bg-white/20 text-white">
                   <span className="text-sm font-semibold">{adminUser.username?.substring(0, 2).toUpperCase() || 'AD'}</span>
                 </Avatar>
               )}
@@ -344,7 +345,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 {adminUser && (
                   <div>
                     <p className="text-sm font-medium text-white">{adminUser.username || 'Admin'}</p>
-                    <p className="text-xs text-gray-400">Administrator</p>
+                    <p className="text-xs text-white/70">Administrator</p>
                   </div>
                 )}
               </div>
@@ -355,7 +356,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                     variant="ghost" 
                     size="icon" 
                     onClick={handleLogout}
-                    className="text-gray-300 hover:text-white hover:bg-white/10"
+                    className="text-white hover:text-white hover:bg-white/10"
                   >
                     <LogOut size={20} />
                   </Button>
@@ -370,7 +371,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               <Link
                 to="/"
                 className={cn(
-                  "flex items-center py-2 px-3 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 mt-4 transition-colors",
+                  "flex items-center py-2 px-3 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 mt-4 transition-colors",
                   isCollapsed ? "justify-center" : ""
                 )}
               >

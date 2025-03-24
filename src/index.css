@@ -185,6 +185,18 @@
   .admin-collapsed .admin-content {
     @apply ml-0 md:ml-20;
   }
+
+  .admin-nav-link {
+    @apply flex items-center py-3 px-3 rounded-md text-sm font-medium transition-colors;
+  }
+  
+  .admin-nav-link-active {
+    @apply bg-white/20 text-white;
+  }
+  
+  .admin-nav-link-inactive {
+    @apply text-white/80 hover:text-white hover:bg-white/10;
+  }
 }
 
 /* Animations */
