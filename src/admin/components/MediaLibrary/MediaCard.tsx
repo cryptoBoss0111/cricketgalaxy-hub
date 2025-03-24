@@ -64,7 +64,7 @@ const MediaCard = ({
           </div>
         ) : (
           <img 
-            src={file.url}
+            src={`${file.url}?r=${retryCount}`}
             alt={file.original_file_name} 
             className={`absolute inset-0 w-full h-full object-cover p-2 transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             loading="lazy"

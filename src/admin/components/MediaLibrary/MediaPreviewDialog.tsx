@@ -73,7 +73,7 @@ const MediaPreviewDialog = ({
               </div>
             ) : (
               <img 
-                src={selectedFile.url}
+                src={`${selectedFile.url}?r=${retryCount}`}
                 alt={selectedFile.original_file_name}
                 className={`w-full h-auto max-h-[calc(80vh-200px)] object-contain transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                 onLoad={() => {
