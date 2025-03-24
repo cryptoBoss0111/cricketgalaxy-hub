@@ -1,44 +1,40 @@
+
 import { supabase } from './client-core';
 
-// Upload file to storage with simplified MIME type handling
+// Upload file to storage with strict JPEG MIME type
 export const uploadImageToStorage = async (file: File, bucket = 'article_images') => {
   try {
     // Check if file exists
     if (!file) {
       throw new Error("No file provided for upload");
     }
-
-    // Always use jpeg MIME type as configured in Supabase
+    
+    // Always use image/jpeg MIME type as configured in Supabase
     const forcedMimeType = "image/jpeg";
     
-    // Use the original filename but sanitize it
-    const originalFileName = file.name;
-    
-    // Sanitize filename to remove spaces and special characters
+    // Sanitize filename
     const fileBaseName = file.name
       .split('.')[0]
-      .replace(/\s+/g, "_")         // Replace spaces with underscores
-      .replace(/[^\w.-]/g, "");     // Remove any special characters except word chars, dots and hyphens
+      .replace(/\s+/g, "_")
+      .replace(/[^\w.-]/g, "");
     
     const timestamp = Date.now();
     const storedFileName = `${fileBaseName}_${timestamp}.jpg`;
     
-    console.log("Uploading image:", originalFileName);
-    console.log("Stored as:", storedFileName);
-    console.log("Forcing MIME type to:", forcedMimeType);
+    console.log("Uploading image with forced MIME type:", forcedMimeType);
+    console.log("Original file type:", file.type);
+    console.log("File will be stored as:", storedFileName);
     
-    // Set options with forced image/jpeg MIME type
+    // Create a new Blob with forced image/jpeg MIME type
+    const fileContent = await file.arrayBuffer();
+    const properTypeFile = new Blob([fileContent], { type: forcedMimeType });
+    
+    // Set options for upload
     const options = {
       cacheControl: '3600',
       upsert: false,
-      contentType: forcedMimeType // Always use image/jpeg
+      contentType: forcedMimeType
     };
-    
-    console.log("Upload options:", options);
-    
-    // Create a new Blob with the proper MIME type
-    const fileContent = await file.arrayBuffer();
-    const properTypeFile = new Blob([fileContent], { type: forcedMimeType });
     
     // Upload the file with forced MIME type
     const { data, error } = await supabase.storage
@@ -58,20 +54,18 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       .from(bucket)
       .getPublicUrl(data.path);
     
-    // Ensure we have no query parameters that might cause CORS issues
+    // Ensure we have no query parameters
     const cleanUrl = publicUrl.split('?')[0];
     
-    console.log("Clean public URL:", cleanUrl);
-    
-    // Save record to the media table with clean URL and file size
+    // Save record to the media table
     const { data: mediaRecord, error: mediaError } = await supabase
       .from('media')
       .insert({
-        original_file_name: originalFileName,
+        original_file_name: file.name,
         stored_file_name: storedFileName,
         url: cleanUrl,
         size: file.size,
-        content_type: forcedMimeType // Always use image/jpeg
+        content_type: forcedMimeType
       })
       .select()
       .single();
@@ -81,15 +75,10 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       throw mediaError;
     }
     
-    console.log("Media record created:", mediaRecord);
-    
-    // Return the media record with guaranteed clean URL
-    const cleanMediaRecord = {
+    return {
       ...mediaRecord,
-      url: mediaRecord.url.split('?')[0] // Ensure URL is clean
+      url: mediaRecord.url.split('?')[0]
     };
-    
-    return cleanMediaRecord;
   } catch (error) {
     console.error('Error uploading image:', error);
     throw error;
@@ -109,14 +98,13 @@ export const getMediaFiles = async () => {
       throw error;
     }
     
-    // Make sure all URLs are clean (no query parameters) and have proper content type
+    // Make sure all URLs are clean and content type is image/jpeg
     const cleanData = data?.map(item => ({
       ...item,
-      url: item.url.split('?')[0], // Ensure URL is clean
-      content_type: "image/jpeg" // Always use image/jpeg
+      url: item.url.split('?')[0],
+      content_type: "image/jpeg"
     }));
     
-    console.log(`Successfully fetched ${cleanData?.length} media records`);
     return cleanData || [];
   } catch (error) {
     console.error('Error in getMediaFiles:', error);

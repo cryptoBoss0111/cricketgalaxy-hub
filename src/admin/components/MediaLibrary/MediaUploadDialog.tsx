@@ -43,33 +43,33 @@ const MediaUploadDialog = ({
   const [imageToProcess, setImageToProcess] = useState<string | null>(null);
   const [processingFile, setProcessingFile] = useState<File | null>(null);
 
-  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const validateAndProcessFile = (file: File) => {
     setError(null);
+      
+    // Check file type - we only allow JPEG files
+    if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
+      setError('Only JPEG files (.jpg or .jpeg) are allowed');
+      return false;
+    }
     
+    // Check file size - limit to 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size should be less than 5MB');
+      return false;
+    }
+    
+    // Create preview URL and store the file for processing
+    const imageUrl = URL.createObjectURL(file);
+    setImageToProcess(imageUrl);
+    setProcessingFile(file);
+    
+    console.log("File selected:", file.name, file.type, file.size);
+    return true;
+  };
+
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      
-      if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
-        setError('Please select only JPEG files (.jpg or .jpeg)');
-        return;
-      }
-      
-      const extension = file.name.split('.').pop()?.toLowerCase() || '';
-      if (extension !== 'jpg' && extension !== 'jpeg') {
-        setError('Only .jpg and .jpeg files are allowed');
-        return;
-      }
-      
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Image size should be less than 5MB');
-        return;
-      }
-      
-      const imageUrl = URL.createObjectURL(file);
-      setImageToProcess(imageUrl);
-      setProcessingFile(file);
-      
-      console.log("Selected file:", file.name, file.type, file.size);
+      validateAndProcessFile(e.target.files[0]);
     }
   };
   
@@ -77,32 +77,8 @@ const MediaUploadDialog = ({
     e.preventDefault();
     e.stopPropagation();
     
-    setError(null);
-    
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      
-      if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
-        setError('Please select only JPEG files (.jpg or .jpeg)');
-        return;
-      }
-      
-      const extension = file.name.split('.').pop()?.toLowerCase() || '';
-      if (extension !== 'jpg' && extension !== 'jpeg') {
-        setError('Only .jpg and .jpeg files are allowed');
-        return;
-      }
-      
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Image size should be less than 5MB');
-        return;
-      }
-      
-      const imageUrl = URL.createObjectURL(file);
-      setImageToProcess(imageUrl);
-      setProcessingFile(file);
-      
-      console.log("Dropped file:", file.name, file.type, file.size);
+      validateAndProcessFile(e.dataTransfer.files[0]);
     }
   };
   
@@ -113,18 +89,16 @@ const MediaUploadDialog = ({
     }
     
     try {
-      // Create a new file with forced image/jpeg MIME type
-      const extension = 'jpg';
-      const fileName = `${processingFile.name.split('.')[0]}.${extension}`;
+      // Create a new File with image/jpeg MIME type
+      const fileName = `${processingFile.name.split('.')[0]}.jpg`;
       
-      // Always use image/jpeg MIME type
       const jpegFile = new File(
         [croppedBlob], 
         fileName, 
         { type: 'image/jpeg' }
       );
       
-      console.log("Created cropped file:", jpegFile.name, "with forced type: image/jpeg");
+      console.log("Created cropped file:", jpegFile.name, "with type:", jpegFile.type);
       
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(jpegFile);
@@ -160,9 +134,9 @@ const MediaUploadDialog = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload Media Files</DialogTitle>
+          <DialogTitle>Upload JPEG Images</DialogTitle>
           <DialogDescription>
-            {imageToProcess ? 'Crop your image before uploading' : 'Select JPEG images to upload to your media library'}
+            {imageToProcess ? 'Crop your image before uploading' : 'Select JPEG images (.jpg, .jpeg) to upload to your media library'}
           </DialogDescription>
         </DialogHeader>
         
@@ -197,7 +171,7 @@ const MediaUploadDialog = ({
               <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
                 <Upload className="h-6 w-6 text-gray-500" />
               </div>
-              <h3 className="text-base font-medium">Drag files here or click to browse</h3>
+              <h3 className="text-base font-medium">Drag JPEG files here or click to browse</h3>
               <p className="text-sm text-gray-500 mt-1 mb-4">
                 Upload JPEG files only (.jpg, .jpeg)
               </p>
@@ -215,7 +189,7 @@ const MediaUploadDialog = ({
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
               >
-                Select Files
+                Select JPEG Files
               </Button>
             </div>
             
@@ -237,7 +211,7 @@ const MediaUploadDialog = ({
             <div className="flex p-3 border rounded-lg bg-amber-50 mt-2">
               <Info className="h-5 w-5 text-amber-600 mr-2 flex-shrink-0" />
               <p className="text-xs text-amber-700">
-                Only JPEG files (.jpg, .jpeg) are allowed. Files will be publicly accessible once uploaded.
+                <strong>Only JPEG files (.jpg, .jpeg)</strong> are allowed. Your Supabase bucket is configured to only accept image/jpeg MIME type.
               </p>
             </div>
             

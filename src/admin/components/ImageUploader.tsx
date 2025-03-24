@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -38,29 +39,18 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     
     setError(null);
     
-    // Validate file type - only allow JPEG files
+    // Only allow JPEG files
     if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
       setError("Please upload only JPEG files (.jpg or .jpeg)");
       toast({
         title: "Invalid file type",
-        description: "Please upload only JPEG files (.jpg or .jpeg)",
+        description: "Only JPEG files (.jpg or .jpeg) are allowed",
         variant: "destructive",
       });
       return;
     }
     
-    // Validate file extension
-    const extension = file.name.split('.').pop()?.toLowerCase() || '';
-    if (extension !== 'jpg' && extension !== 'jpeg') {
-      setError("Only .jpg and .jpeg files are allowed");
-      toast({
-        title: "Invalid file format",
-        description: "Only .jpg and .jpeg files are allowed",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+    // Check file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       setError("Please upload an image smaller than 5MB");
       toast({
@@ -93,29 +83,24 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     setError(null);
     
     try {
-      // Simplify by always using jpg extension and image/jpeg MIME type
+      // Always use .jpg extension and image/jpeg MIME type
       const safeBaseName = selectedFile.name
         .split('.')[0]
         .replace(/\s+/g, "_")
         .replace(/[^\w.-]/g, "");
       
-      const safeName = `${safeBaseName}.jpg`;
+      const jpegFileName = `${safeBaseName}.jpg`;
       
       // Create a file with forced image/jpeg MIME type
       const jpegFile = new File(
         [croppedBlob], 
-        safeName, 
+        jpegFileName, 
         { type: 'image/jpeg' }
       );
       
-      console.log("Starting image upload process...");
-      console.log("Sanitized filename:", safeName);
-      console.log("Forced MIME type: image/jpeg");
-      console.log("File for upload:", jpegFile.name, "with type:", jpegFile.type);
+      console.log("Uploading with strict JPEG format:", jpegFile.name, jpegFile.type);
       
       const mediaRecord = await uploadImageToStorage(jpegFile);
-      
-      console.log("Upload successful, media record:", mediaRecord);
       
       const cleanedUrl = mediaRecord.url.split('?')[0];
       setCleanUrl(cleanedUrl);
@@ -270,7 +255,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
                 <span className="font-medium text-primary">Click to upload</span> or drag and drop
               </div>
               <div className="text-xs text-gray-400">
-                JPEG files only (.jpg, .jpeg) - max. 5MB
+                <strong>JPEG files only (.jpg, .jpeg)</strong> - max. 5MB
               </div>
               {isUploading && (
                 <div className="mt-2 animate-pulse text-xs">Uploading...</div>
