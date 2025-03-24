@@ -1,4 +1,3 @@
-
 import { supabase } from './client-core';
 
 // Helper function to infer content type from file extension
@@ -46,19 +45,17 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     const timestamp = Date.now();
     const storedFileName = `${fileBaseName}_${timestamp}.${extension}`;
     
-    // Ensure correct content type for JPEG files - this is critical
-    const contentType = 'image/jpeg';
-    
+    // CRITICAL FIX: Do not attempt to infer or change the file's MIME type
+    // Use the file's actual type directly
     console.log("Uploading image:", originalFileName);
     console.log("Stored as:", storedFileName);
     console.log("Content type from file object:", file.type);
-    console.log("Using content type:", contentType);
     
-    // Set proper content type and caching headers
+    // Set caching headers but do NOT override content type
     const options = {
       cacheControl: '3600',
       upsert: false, // Don't overwrite files with the same name
-      contentType: contentType // Always use image/jpeg for our uploads
+      contentType: file.type // Use the file's actual MIME type
     };
     
     // Upload the file directly to Supabase Storage without any transformation
@@ -92,7 +89,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
         stored_file_name: storedFileName,
         url: cleanUrl,
         size: file.size,
-        content_type: contentType // Always store as image/jpeg
+        content_type: file.type // Use the file's actual MIME type
       })
       .select()
       .single();

@@ -1,4 +1,3 @@
-
 import { useRef, useState } from 'react';
 import { Upload, Info } from 'lucide-react';
 import { 
@@ -49,26 +48,22 @@ const MediaUploadDialog = ({
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       
-      // Validate file type - only allow JPEG files
       if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
         setError('Please select only JPEG files (.jpg or .jpeg)');
         return;
       }
       
-      // Validate file extension
       const extension = file.name.split('.').pop()?.toLowerCase() || '';
       if (extension !== 'jpg' && extension !== 'jpeg') {
         setError('Only .jpg and .jpeg files are allowed');
         return;
       }
       
-      // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         setError('Image size should be less than 5MB');
         return;
       }
       
-      // Create a URL for the image
       const imageUrl = URL.createObjectURL(file);
       setImageToProcess(imageUrl);
       setProcessingFile(file);
@@ -84,26 +79,22 @@ const MediaUploadDialog = ({
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       
-      // Validate file type - only allow JPEG files
       if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
         setError('Please select only JPEG files (.jpg or .jpeg)');
         return;
       }
       
-      // Validate file extension
       const extension = file.name.split('.').pop()?.toLowerCase() || '';
       if (extension !== 'jpg' && extension !== 'jpeg') {
         setError('Only .jpg and .jpeg files are allowed');
         return;
       }
       
-      // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         setError('Image size should be less than 5MB');
         return;
       }
       
-      // Create a URL for the image
       const imageUrl = URL.createObjectURL(file);
       setImageToProcess(imageUrl);
       setProcessingFile(file);
@@ -117,33 +108,29 @@ const MediaUploadDialog = ({
     }
     
     try {
-      // Always use jpg/jpeg extension for consistency
       const extension = processingFile.name.split('.').pop()?.toLowerCase();
       const useExtension = (extension === 'jpg' || extension === 'jpeg') ? extension : 'jpg';
       
-      // Create a proper File object from the Blob with the original file name pattern
-      // CRITICAL: Explicitly set the MIME type to image/jpeg
+      const originalMimeType = processingFile.type;
+      console.log("Original file MIME type:", originalMimeType);
+      
       const croppedFile = new File(
         [croppedBlob], 
         `${processingFile.name.split('.')[0]}.${useExtension}`, 
-        { type: 'image/jpeg' }  // Always use image/jpeg
+        { type: originalMimeType }
       );
       
       console.log("Cropped file:", croppedFile.name, croppedFile.type, croppedFile.size);
       
-      // Create a FileList-like object from the file
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(croppedFile);
       const fileList = dataTransfer.files;
       
-      // Upload the file
       await onFileUpload(fileList);
       
-      // Reset state
       setImageToProcess(null);
       setProcessingFile(null);
       
-      // Reset the file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -153,16 +140,13 @@ const MediaUploadDialog = ({
   };
   
   const handleCropCancel = () => {
-    // Clean up URL object
     if (imageToProcess) {
       URL.revokeObjectURL(imageToProcess);
     }
     
-    // Reset state
     setImageToProcess(null);
     setProcessingFile(null);
     
-    // Reset the file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }

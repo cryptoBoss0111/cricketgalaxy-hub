@@ -94,6 +94,8 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     
     try {
       const originalName = selectedFile.name;
+      const originalMimeType = selectedFile.type;
+      console.log("Original file MIME type:", originalMimeType);
       
       // Ensure we're using jpg/jpeg extension
       const extension = originalName.split('.').pop()?.toLowerCase();
@@ -106,10 +108,11 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       
       const safeName = `${safeBaseName}.${useExtension}`;
       
+      // CRITICAL FIX: Preserve the original MIME type
       const croppedFile = new File(
         [croppedBlob], 
         safeName, 
-        { type: 'image/jpeg' }  // Always use image/jpeg
+        { type: originalMimeType }
       );
       
       console.log("Starting image upload process with cropped image...");
