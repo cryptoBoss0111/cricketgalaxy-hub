@@ -1,12 +1,13 @@
 
 import { supabase } from './client-core';
 
-// Generate a unique filename for uploads
+// Generate a unique filename for uploads that preserves the original filename
 export const generateUniqueFileName = (fileName: string) => {
   const timestamp = new Date().getTime();
-  const randomString = Math.random().toString(36).substring(2, 12);
+  const randomString = Math.random().toString(36).substring(2, 8);
   const extension = fileName.split('.').pop();
-  return `${timestamp}-${randomString}.${extension}`;
+  const baseName = fileName.split('.').slice(0, -1).join('.');
+  return `${baseName}-${randomString}.${extension}`;
 };
 
 // Upload file to storage with improved error handling
@@ -22,12 +23,12 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       throw new Error("Please upload a valid image file");
     }
 
-    // Create a unique file name
-    const fileExtension = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
+    // Create a unique file name while preserving the original file name
+    const fileName = generateUniqueFileName(file.name);
     const filePath = `${fileName}`; // Keep the path simple
     
     console.log("Uploading image:", file.name, "Size:", file.size, "Type:", file.type);
+    console.log("Generated storage path:", filePath);
     
     // Get the current session to check authentication status
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();

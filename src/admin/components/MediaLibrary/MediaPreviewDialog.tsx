@@ -31,6 +31,9 @@ const MediaPreviewDialog = ({
   formatFileSize,
   formatDate
 }: MediaPreviewDialogProps) => {
+  // State to track if image has loaded
+  const [imageLoaded, setImageLoaded] = useState(false);
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -43,15 +46,22 @@ const MediaPreviewDialog = ({
         {selectedFile && (
           <>
             <div className="flex-1 min-h-0 relative bg-gray-100 rounded-md overflow-hidden">
+              {!imageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cricket-accent"></div>
+                </div>
+              )}
               <img 
                 src={selectedFile.publicUrl} 
                 alt={selectedFile.name} 
-                className="absolute inset-0 w-full h-full object-contain p-4"
+                className={`absolute inset-0 w-full h-full object-contain p-4 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                 crossOrigin="anonymous"
+                onLoad={() => setImageLoaded(true)}
                 onError={(e) => {
                   console.error("Error loading preview image:", selectedFile.publicUrl);
                   const imgElement = e.target as HTMLImageElement;
                   imgElement.src = '/placeholder.svg';
+                  setImageLoaded(true);
                 }}
               />
             </div>

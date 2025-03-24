@@ -43,6 +43,8 @@ const MediaUploadDialog = ({
     setError(null);
     if (e.target.files && e.target.files.length > 0) {
       try {
+        // Log the file names that are being uploaded
+        console.log("Selected files:", Array.from(e.target.files).map(f => f.name));
         await onFileUpload(e.target.files);
       } catch (err: any) {
         setError(err.message || 'Error uploading files');

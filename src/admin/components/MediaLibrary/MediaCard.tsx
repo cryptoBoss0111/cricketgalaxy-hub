@@ -19,6 +19,11 @@ const MediaCard = ({
   onDelete,
   formatFileSize
 }: MediaCardProps) => {
+  // Extract a more readable name from the timestamp-based filename
+  const displayName = file.name.includes('-') 
+    ? file.name.split('-').slice(0, -1).join('-') 
+    : file.name;
+
   return (
     <Card key={file.name} className="overflow-hidden hover:shadow-md transition-shadow">
       <div 
@@ -28,8 +33,9 @@ const MediaCard = ({
         <img 
           src={file.publicUrl} 
           alt={file.name} 
-          className="absolute inset-0 w-full h-full object-contain p-2"
+          className="absolute inset-0 w-full h-full object-cover p-2"
           crossOrigin="anonymous"
+          loading="lazy"
           onError={(e) => {
             console.error("Error loading image:", file.publicUrl);
             const imgElement = e.target as HTMLImageElement;
