@@ -88,14 +88,22 @@ const FreeWarPopup = ({ isOpen, onClose, onJoinNow }: FreeWarPopupProps) => {
           </div>
         </div>
         
-        <div className="flex justify-center">
+        <div className="flex justify-center space-x-4">
+          <Button 
+            variant="outline" 
+            size="lg" 
+            onClick={onClose}
+            className="px-6 py-2 font-medium"
+          >
+            Dismiss
+          </Button>
           <Button 
             variant="accent" 
             size="lg" 
             onClick={onJoinNow}
             className="px-8 py-2 font-semibold"
           >
-            Join Now
+            Earn Now
           </Button>
         </div>
       </DialogContent>

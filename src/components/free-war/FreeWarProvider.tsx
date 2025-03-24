@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import FreeWarPopup from './FreeWarPopup';
 import StickyButton from './StickyButton';
@@ -26,7 +25,24 @@ export const FreeWarProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [showStickyButton, setShowStickyButton] = useState(false);
   const [hasScrolledPastThreshold, setHasScrolledPastThreshold] = useState(false);
 
-  // Handle scroll to show popup when scrolling past the second section
+  // Show popup automatically when the component mounts (user lands on the page)
+  useEffect(() => {
+    // Check if this popup has been shown before in this session
+    const hasShownPopup = sessionStorage.getItem('hasShownFreeWarPopup');
+    
+    if (!hasShownPopup && !isPopupOpen && !isSelectionModalOpen) {
+      // Set a slight delay to ensure the page is fully loaded
+      const timer = setTimeout(() => {
+        setIsPopupOpen(true);
+        // Mark that we've shown the popup in this session
+        sessionStorage.setItem('hasShownFreeWarPopup', 'true');
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isPopupOpen, isSelectionModalOpen]);
+
+  // Keep the scroll behavior as well
   useEffect(() => {
     const handleScroll = () => {
       // Get height of viewport
@@ -39,7 +55,7 @@ export const FreeWarProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (hasPassedThreshold && !hasScrolledPastThreshold) {
         setHasScrolledPastThreshold(true);
         
-        // Only show popup if it hasn't been closed before
+        // Only show popup if it hasn't been closed before and isn't already open
         if (!hasClosedPopup && !isPopupOpen && !isSelectionModalOpen) {
           setIsPopupOpen(true);
         }
