@@ -80,8 +80,8 @@ const MediaCard = ({
               console.log(`Image loaded successfully: ${file.original_file_name}`);
               setIsLoading(false);
             }}
-            onError={() => {
-              console.error(`Error loading image: ${file.original_file_name}`);
+            onError={(e) => {
+              console.error(`Error loading image: ${file.original_file_name}`, e);
               setHasError(true);
               setIsLoading(false);
             }}

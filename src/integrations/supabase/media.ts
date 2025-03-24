@@ -28,12 +28,13 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     
     console.log("Uploading image:", originalFileName);
     console.log("Stored as:", storedFileName);
+    console.log("Content type:", file.type);
     
     // Set proper content type and caching headers
     const options = {
       cacheControl: '3600',
       upsert: false, // Don't overwrite files with the same name
-      contentType: file.type
+      contentType: file.type // Ensure proper content type is set
     };
     
     // Upload the file to Supabase Storage
