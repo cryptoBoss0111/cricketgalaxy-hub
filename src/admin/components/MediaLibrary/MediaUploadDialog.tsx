@@ -122,6 +122,7 @@ const MediaUploadDialog = ({
       const useExtension = (extension === 'jpg' || extension === 'jpeg') ? extension : 'jpg';
       
       // Create a proper File object from the Blob with the original file name pattern
+      // CRITICAL: Explicitly set the MIME type to image/jpeg
       const croppedFile = new File(
         [croppedBlob], 
         `${processingFile.name.split('.')[0]}.${useExtension}`, 
