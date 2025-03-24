@@ -42,7 +42,7 @@ export const FreeWarProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [isPopupOpen, isSelectionModalOpen]);
 
-  // Keep the scroll behavior as well
+  // Keep the scroll behavior as well for a second opportunity to show the popup
   useEffect(() => {
     const handleScroll = () => {
       // Get height of viewport
