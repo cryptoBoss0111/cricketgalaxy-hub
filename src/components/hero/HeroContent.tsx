@@ -1,75 +1,48 @@
 
-import { FC, memo } from 'react';
-import { ChevronRight, TrendingUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import React from 'react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { HeroArticle } from './types';
+import { useFreeWar } from '../free-war/FreeWarProvider';
 
 interface HeroContentProps {
-  article: HeroArticle;
-  isAnimating: boolean;
-  getCategoryUrl: (category: string) => string;
+  title: string;
+  subtitle: string;
+  ctaLink: string;
+  ctaText: string;
 }
 
-const HeroContentComponent: FC<HeroContentProps> = ({ 
-  article, 
-  isAnimating,
-  getCategoryUrl
+export const HeroContent: React.FC<HeroContentProps> = ({
+  title,
+  subtitle,
+  ctaLink,
+  ctaText,
 }) => {
+  const { showSelectionModal } = useFreeWar();
+  
   return (
-    <div className={cn(
-      "transition-all duration-700 ease-in-out transform",
-      isAnimating 
-        ? "opacity-0 translate-y-8" 
-        : "opacity-100 translate-y-0"
-    )}>
-      <div className="flex flex-wrap gap-2 mb-4 transition-all duration-500 delay-100">
-        <Link to={`/${getCategoryUrl(article.category)}`}>
-          <Badge className="bg-cricket-accent hover:bg-cricket-accent/90 transition-transform duration-300 hover:scale-105">
-            {article.category}
-          </Badge>
-        </Link>
-        
-        {article.isFeaturedPick && (
-          <Badge className="bg-amber-500 hover:bg-amber-600 flex items-center gap-1 transition-transform duration-300 hover:scale-105">
-            <TrendingUp className="h-3 w-3" /> Fantasy Hot Pick
-          </Badge>
-        )}
-      </div>
-      
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold mb-4 leading-tight transition-all duration-500 delay-150">
-        {article.title}
+    <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 max-w-3xl">
+      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-4 text-white">
+        {title}
       </h1>
-      
-      <p className="text-gray-300 text-lg mb-6 transition-all duration-500 delay-200">
-        {article.excerpt}
+      <p className="text-lg md:text-xl text-white/80 mb-8">
+        {subtitle}
       </p>
-      
-      <div className="flex items-center mb-8 transition-all duration-500 delay-300">
-        <span className="text-sm text-gray-400">{article.date}</span>
-        <span className="mx-3 text-gray-500">•</span>
-        <Link to={`/article/${article.id}`} className="text-cricket-accent hover:underline flex items-center text-sm font-medium group">
-          Read Full Story <ChevronRight size={16} className="ml-1 transition-transform duration-300 group-hover:translate-x-1" />
-        </Link>
-      </div>
-      
-      <div className="flex flex-wrap gap-3 transition-all duration-500 delay-400">
-        <Button asChild className="bg-cricket-accent hover:bg-cricket-accent/90 transition-transform duration-300 hover:scale-105">
-          <Link to={`/article/${article.id}`}>
-            Read More
-          </Link>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Button asChild variant="accent" size="lg" className="group">
+          <a href={ctaLink}>
+            {ctaText}
+            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </a>
         </Button>
-        
-        <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 transition-transform duration-300 hover:scale-105">
-          <Link to={`/${getCategoryUrl(article.category)}`}>
-            More {article.category} News
-          </Link>
+        <Button 
+          variant="outline" 
+          size="lg" 
+          className="bg-white hover:bg-gray-100 text-cricket-accent border-cricket-accent"
+          onClick={showSelectionModal}
+        >
+          Join Free War Contest
         </Button>
       </div>
     </div>
   );
 };
-
-export const HeroContent = memo(HeroContentComponent);

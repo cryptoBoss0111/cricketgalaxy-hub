@@ -4,11 +4,14 @@ import App from './App.tsx'
 import './index.css'
 import { AppProviders } from './routes/AppProviders.tsx'
 import { ThemeProvider } from './components/ThemeProvider.tsx'
+import { FreeWarProvider } from './components/free-war/FreeWarProvider.tsx'
 
 createRoot(document.getElementById("root")!).render(
   <AppProviders>
     <ThemeProvider defaultTheme="light" storageKey="cricket-express-theme">
-      <App />
+      <FreeWarProvider>
+        <App />
+      </FreeWarProvider>
     </ThemeProvider>
   </AppProviders>
 );
