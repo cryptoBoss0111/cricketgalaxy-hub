@@ -29,12 +29,15 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     
     console.log("Uploading image:", file.name, "Size:", file.size, "Type:", file.type);
     
+    // Ensure bucket exists
+    await ensureBucketExists(bucket);
+    
     // Upload the file to Supabase Storage
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: true, // Changed to true to overwrite if file exists
+        upsert: true, // Set to true to overwrite if file exists
         contentType: file.type // Explicitly set the content type
       });
     
@@ -61,10 +64,10 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
   }
 };
 
-// Get all media files
-export const getMediaFiles = async (bucketName = 'article_images') => {
+// Ensure bucket exists, create if it doesn't
+export const ensureBucketExists = async (bucketName: string) => {
   try {
-    // First, check if bucket exists - if not, create it
+    // First, check if bucket exists
     const { data: buckets, error: bucketError } = await supabase
       .storage
       .listBuckets();
@@ -78,23 +81,34 @@ export const getMediaFiles = async (bucketName = 'article_images') => {
     
     if (!bucketExists) {
       console.log(`Bucket '${bucketName}' does not exist. Auto-creating it.`);
-      try {
-        // Using the storage API directly instead of RPC
-        const { error } = await supabase.storage.createBucket(bucketName, {
-          public: true,
-          fileSizeLimit: 5242880, // 5MB limit
-          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-        });
-        
-        if (error) {
-          console.error("Error creating bucket:", error);
-          // Continue anyway, as the bucket might exist but not be visible
-        }
-      } catch (createError) {
-        console.error("Failed to create bucket:", createError);
-        // Continue anyway
+      
+      // Using the storage API directly
+      const { error } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 5242880, // 5MB limit
+        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      });
+      
+      if (error) {
+        console.error("Error creating bucket:", error);
+        throw error;
       }
+      
+      console.log(`Successfully created bucket: ${bucketName}`);
     }
+    
+    return true;
+  } catch (error) {
+    console.error("Error ensuring bucket exists:", error);
+    throw error;
+  }
+};
+
+// Get all media files
+export const getMediaFiles = async (bucketName = 'article_images') => {
+  try {
+    // Ensure bucket exists
+    await ensureBucketExists(bucketName);
     
     // Now list the files in the bucket
     const { data, error } = await supabase

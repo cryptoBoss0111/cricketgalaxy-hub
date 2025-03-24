@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Image, Upload, Trash2, Copy, Search, X, Info } from 'lucide-react';
 import AdminLayout from './AdminLayout';
@@ -53,14 +52,16 @@ const MediaLibraryManager = () => {
     setIsLoading(true);
     try {
       const files = await getMediaFiles();
-      // Transform data to match MediaFile interface
+      console.log("Fetched media files:", files);
+      
       const transformedFiles: MediaFile[] = files.map(file => ({
         name: file.name,
         publicUrl: file.publicUrl,
-        size: file.metadata?.size || 0, // Add default size if missing
+        size: file.metadata?.size || 0,
         created_at: file.created_at,
         metadata: file.metadata
       }));
+      
       setMediaFiles(transformedFiles);
       setFilteredFiles(transformedFiles);
     } catch (error) {
@@ -101,16 +102,13 @@ const MediaLibraryManager = () => {
     setUploadProgress(0);
     
     try {
-      // Convert FileList to Array
       const fileArray = Array.from(files);
       let successCount = 0;
       
-      // Upload each file
       for (let i = 0; i < fileArray.length; i++) {
         const file = fileArray[i];
         
         try {
-          // Check if file is an image
           if (!file.type.startsWith('image/')) {
             toast({
               title: 'Invalid File',
@@ -120,11 +118,9 @@ const MediaLibraryManager = () => {
             continue;
           }
           
-          // Upload file
           await uploadImageToStorage(file);
           successCount++;
           
-          // Update progress
           setUploadProgress(Math.floor(((i + 1) / fileArray.length) * 100));
         } catch (fileError) {
           console.error(`Error uploading ${file.name}:`, fileError);
@@ -136,18 +132,15 @@ const MediaLibraryManager = () => {
         }
       }
       
-      // Show success message
       if (successCount > 0) {
         toast({
           title: 'Upload Complete',
           description: `Successfully uploaded ${successCount} ${successCount === 1 ? 'file' : 'files'}`,
         });
         
-        // Refresh media files list
         fetchMediaFiles();
       }
       
-      // Close dialog
       setIsUploadDialogOpen(false);
     } catch (error) {
       console.error('Error during file upload:', error);
@@ -160,7 +153,6 @@ const MediaLibraryManager = () => {
       setIsUploading(false);
       setUploadProgress(0);
       
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -178,7 +170,6 @@ const MediaLibraryManager = () => {
     try {
       await deleteMediaFile(selectedFile.name);
       
-      // Update state to remove the deleted file
       setMediaFiles(mediaFiles.filter(file => file.name !== selectedFile.name));
       
       toast({
@@ -219,7 +210,6 @@ const MediaLibraryManager = () => {
     });
   };
   
-  // Format file size
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     
@@ -228,7 +218,6 @@ const MediaLibraryManager = () => {
     return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
   };
   
-  // Format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -238,7 +227,6 @@ const MediaLibraryManager = () => {
     });
   };
   
-  // Drag and drop handlers
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
@@ -339,6 +327,12 @@ const MediaLibraryManager = () => {
                     src={file.publicUrl} 
                     alt={file.name} 
                     className="absolute inset-0 w-full h-full object-contain p-2"
+                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      console.error("Error loading image:", file.publicUrl);
+                      const imgElement = e.target as HTMLImageElement;
+                      imgElement.src = '/placeholder.svg';
+                    }}
                   />
                 </div>
                 
@@ -355,7 +349,10 @@ const MediaLibraryManager = () => {
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8"
-                      onClick={() => copyToClipboard(file.publicUrl)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyToClipboard(file.publicUrl);
+                      }}
                       title="Copy URL"
                     >
                       <Copy className="h-4 w-4" />
@@ -364,7 +361,10 @@ const MediaLibraryManager = () => {
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => confirmDelete(file)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        confirmDelete(file);
+                      }}
                       title="Delete file"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -377,7 +377,6 @@ const MediaLibraryManager = () => {
         )}
       </div>
       
-      {/* Upload Dialog */}
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -454,7 +453,6 @@ const MediaLibraryManager = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -497,7 +495,6 @@ const MediaLibraryManager = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Preview Dialog */}
       <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
@@ -512,7 +509,13 @@ const MediaLibraryManager = () => {
                 <img 
                   src={selectedFile.publicUrl} 
                   alt={selectedFile.name} 
-                  className="absolute inset-0 w-full h-full object-contain p-4" 
+                  className="absolute inset-0 w-full h-full object-contain p-4"
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    console.error("Error loading preview image:", selectedFile.publicUrl);
+                    const imgElement = e.target as HTMLImageElement;
+                    imgElement.src = '/placeholder.svg';
+                  }}
                 />
               </div>
               
