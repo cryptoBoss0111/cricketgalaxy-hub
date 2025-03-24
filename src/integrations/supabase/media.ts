@@ -18,13 +18,11 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     const originalFileName = file.name;
     
     // Create a unique stored filename to prevent collisions while preserving original name
-    const timestamp = new Date().getTime();
-    const randomString = Math.random().toString(36).substring(2, 8);
-    const extension = originalFileName.split('.').pop()?.toLowerCase() || '';
-    
+    const timestamp = Date.now();
     // Sanitize the filename to avoid URL encoding issues - remove spaces and special characters
     const fileBaseName = originalFileName.split('.')[0].replace(/[^a-zA-Z0-9]/g, '_');
-    const storedFileName = `${fileBaseName}_${timestamp}_${randomString}.${extension}`;
+    const extension = originalFileName.split('.').pop()?.toLowerCase() || '';
+    const storedFileName = `${fileBaseName}_${timestamp}.${extension}`;
     
     console.log("Uploading image:", originalFileName);
     console.log("Stored as:", storedFileName);
@@ -56,7 +54,6 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       .getPublicUrl(data.path);
     
     // Ensure we have no query parameters that might cause CORS issues
-    // For Supabase storage URLs, everything before the first question mark is the actual file URL
     const cleanUrl = publicUrl.split('?')[0];
     
     console.log("Clean public URL:", cleanUrl);
