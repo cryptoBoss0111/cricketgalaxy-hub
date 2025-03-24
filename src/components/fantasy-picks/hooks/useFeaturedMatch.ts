@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useFantasyPicks, FantasyPick } from './useFantasyPicks';
-import { supabase } from '@/integrations/supabase/client';
 
 export const useFeaturedMatch = () => {
   const { fantasyPicks, isLoading: isLoadingPicks } = useFantasyPicks();

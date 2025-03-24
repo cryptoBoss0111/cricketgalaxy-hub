@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trophy, Filter, Calendar, Cricket } from 'lucide-react';
+import { Trophy, Filter, Calendar, User } from 'lucide-react';
 import { formatDistance } from 'date-fns';
 import FantasyPickCard, { FantasyPick } from '@/components/fantasy-picks/FantasyPickCard';
 
@@ -77,8 +77,7 @@ const FantasyTipsPage = () => {
         selection_reason: pick.reason,
         created_at: pick.created_at
       })) as FantasyPick[];
-    },
-    enabled: !picksLoading
+    }
   });
 
   // Update the URL when match selection changes
@@ -177,7 +176,7 @@ const FantasyTipsPage = () => {
                 <Trophy className="h-4 w-4" /> All Picks
               </TabsTrigger>
               <TabsTrigger value="byRole" className="flex items-center gap-2">
-                <Cricket className="h-4 w-4" /> By Role
+                <User className="h-4 w-4" /> By Role
               </TabsTrigger>
               <TabsTrigger value="byMatch" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" /> By Match
@@ -223,7 +222,7 @@ const FantasyTipsPage = () => {
               ) : Object.keys(picksGroupedByRole).length === 0 ? (
                 <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12">
-                    <Cricket className="h-16 w-16 text-gray-300 mb-4" />
+                    <User className="h-16 w-16 text-gray-300 mb-4" />
                     <h3 className="text-xl font-medium mb-2">No Fantasy Picks Available</h3>
                     <p className="text-gray-500 text-center max-w-md">
                       Check back soon for role-based fantasy tips and recommendations.
