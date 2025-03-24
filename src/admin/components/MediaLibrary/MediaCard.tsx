@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Copy, Trash2, Image as ImageIcon, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,7 +58,7 @@ const MediaCard = ({
   };
 
   return (
-    <Card key={file.id} className="overflow-hidden hover:shadow-md transition-shadow">
+    <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <div 
         className="relative h-36 bg-gray-100 cursor-pointer"
         onClick={() => onPreview(file)}

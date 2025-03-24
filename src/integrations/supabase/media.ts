@@ -49,14 +49,18 @@ export const uploadImageToStorage = async (file: File, bucket = 'media') => {
     console.log("Upload successful, data:", data);
     
     // Get the public URL with cache-busting query parameter
-    const timestamp2 = new Date().getTime();
     const { data: { publicUrl } } = supabase
       .storage
       .from(bucket)
-      .getPublicUrl(data.path);
+      .getPublicUrl(data.path, {
+        download: false,
+        transform: {
+          quality: 95 // High quality but with slight compression
+        }
+      });
     
     // Add cache-busting parameter to URL
-    const urlWithCacheBusting = `${publicUrl}?t=${timestamp2}`;
+    const urlWithCacheBusting = `${publicUrl}?t=${timestamp}`;
     
     // Save record to the media table
     const { data: mediaRecord, error: mediaError } = await supabase
