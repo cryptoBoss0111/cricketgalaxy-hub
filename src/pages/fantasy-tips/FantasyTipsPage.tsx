@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -32,6 +31,10 @@ type Match = {
   team1: string;
   team2: string;
   match_time: string;
+  venue?: string;
+  match_type?: string;
+  competition?: string;
+  image?: string;
 };
 
 type FantasyPickResponse = {
@@ -44,6 +47,7 @@ type FantasyPickResponse = {
   stats?: string;
   points_prediction: number;
   match: string;
+  match_id?: string;
   reason: string;
   created_at: string;
 };
@@ -65,14 +69,14 @@ const FantasyTipsPage = () => {
         .order('match_time', { ascending: true });
       
       if (error) throw error;
-      return data || [];
+      return (data || []) as Match[];
     }
   });
 
-  // Fetch fantasy picks
+  // Fetch fantasy picks with explicit typing
   const { data: picks = [], isLoading: picksLoading } = useQuery({
     queryKey: ['fantasyPicks', selectedMatch],
-    queryFn: async () => {
+    queryFn: async (): Promise<FantasyPick[]> => {
       let query = supabase
         .from('fantasy_picks')
         .select('*')
@@ -86,20 +90,20 @@ const FantasyTipsPage = () => {
       
       if (error) throw error;
       
-      // Transform the data for the component
-      return data.map((pick: FantasyPickResponse) => ({
+      // Transform the data for the component with explicit typing
+      return (data || []).map((pick: FantasyPickResponse): FantasyPick => ({
         id: pick.id,
         player_name: pick.player_name,
         team: pick.team,
         role: pick.role,
-        form: pick.form,
+        form: pick.form as 'Excellent' | 'Good' | 'Average' | 'Poor',
         image_url: pick.image_url || '',
         stats: pick.stats || 'Recent stats not available',
         points_prediction: pick.points_prediction,
         match_details: pick.match,
         selection_reason: pick.reason,
         created_at: pick.created_at
-      })) as FantasyPick[];
+      }));
     }
   });
 

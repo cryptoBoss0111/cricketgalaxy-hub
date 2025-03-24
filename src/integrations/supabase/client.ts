@@ -457,7 +457,7 @@ export const deleteMatch = async (id: string) => {
 };
 
 // Get fantasy picks with additional filtering options
-export const getFantasyPicks = async () => {
+export const getFantasyPicks = async (): Promise<any[]> => {
   try {
     const { data, error } = await supabase
       .from('fantasy_picks')

@@ -14,24 +14,29 @@ export const useFeaturedMatch = () => {
         // Attempt to get the most recent match with at least 2 fantasy picks
         if (fantasyPicks.length > 0) {
           // Group picks by match
-          const matchGroups = fantasyPicks.reduce<Record<string, FantasyPick[]>>((acc, pick) => {
-            if (!pick.match_details) return acc;
+          const matchGroups: Record<string, FantasyPick[]> = {};
+          
+          // Populate matchGroups
+          for (const pick of fantasyPicks) {
+            if (!pick.match_details) continue;
             
-            if (!acc[pick.match_details]) {
-              acc[pick.match_details] = [];
+            if (!matchGroups[pick.match_details]) {
+              matchGroups[pick.match_details] = [];
             }
-            acc[pick.match_details].push(pick);
-            return acc;
-          }, {});
+            matchGroups[pick.match_details].push(pick);
+          }
+          
+          // Convert to array of entries for sorting
+          const matchEntries = Object.entries(matchGroups);
           
           // Find matches with at least 2 picks
-          const validMatches = Object.entries(matchGroups)
+          const validMatches = matchEntries
             .filter(([_, picks]) => picks.length >= 2)
             .sort((a, b) => {
               // Sort by most recent created_at date in each match group
-              const latestA = new Date(Math.max(...a[1].map(p => new Date(p.created_at).getTime())));
-              const latestB = new Date(Math.max(...b[1].map(p => new Date(p.created_at).getTime())));
-              return latestB.getTime() - latestA.getTime();
+              const latestA = Math.max(...a[1].map(p => new Date(p.created_at).getTime()));
+              const latestB = Math.max(...b[1].map(p => new Date(p.created_at).getTime()));
+              return latestB - latestA;
             });
             
           // Use the most recent valid match
