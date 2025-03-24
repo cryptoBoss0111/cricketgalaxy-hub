@@ -204,6 +204,7 @@ export type Database = {
           created_at: string
           id: string
           original_file_name: string
+          size: number | null
           stored_file_name: string
           url: string
         }
@@ -211,6 +212,7 @@ export type Database = {
           created_at?: string
           id?: string
           original_file_name: string
+          size?: number | null
           stored_file_name: string
           url: string
         }
@@ -218,6 +220,7 @@ export type Database = {
           created_at?: string
           id?: string
           original_file_name?: string
+          size?: number | null
           stored_file_name?: string
           url?: string
         }

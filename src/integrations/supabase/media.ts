@@ -60,7 +60,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'media') => {
     
     console.log("Clean public URL:", cleanUrl);
     
-    // Save record to the media table with clean URL
+    // Save record to the media table with clean URL and file size
     const { data: mediaRecord, error: mediaError } = await supabase
       .from('media')
       .insert({
