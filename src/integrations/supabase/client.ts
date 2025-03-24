@@ -456,8 +456,25 @@ export const deleteMatch = async (id: string) => {
   }
 };
 
+// Define a specific type for fantasy picks returned from the database
+export type FantasyPickDB = {
+  id: string;
+  player_name: string;
+  team: string;
+  role: string;
+  form: string;
+  image_url?: string;
+  stats?: string;
+  points_prediction: number;
+  match: string;
+  match_id?: string;
+  reason: string;
+  created_at: string;
+  updated_at: string;
+};
+
 // Get fantasy picks with additional filtering options
-export const getFantasyPicks = async (): Promise<any[]> => {
+export const getFantasyPicks = async (): Promise<FantasyPickDB[]> => {
   try {
     const { data, error } = await supabase
       .from('fantasy_picks')
@@ -465,10 +482,10 @@ export const getFantasyPicks = async (): Promise<any[]> => {
       .order('created_at', { ascending: false });
       
     if (error) throw error;
-    return data || [];
+    return (data || []) as FantasyPickDB[];
   } catch (error) {
     console.error('Error fetching fantasy picks:', error);
-    throw error;
+    return [];
   }
 };
 
