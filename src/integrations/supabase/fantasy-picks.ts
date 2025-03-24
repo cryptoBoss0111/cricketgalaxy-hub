@@ -48,7 +48,7 @@ export async function getAllFantasyPicks(): Promise<FantasyPickDB[]> {
       .order('created_at', { ascending: false });
       
     if (error) throw error;
-    return (data || []) as FantasyPickDB[];
+    return data as FantasyPickDB[] || [];
   } catch (error) {
     console.error('Error fetching fantasy picks:', error);
     return [];
@@ -67,7 +67,7 @@ export async function getFantasyPicksByMatch(matchId: string): Promise<FantasyPi
       .order('points_prediction', { ascending: false });
       
     if (error) throw error;
-    return (data || []) as FantasyPickDB[];
+    return data as FantasyPickDB[] || [];
   } catch (error) {
     console.error('Error fetching fantasy picks for match:', error);
     return [];
@@ -142,7 +142,7 @@ export async function getTopFantasyPicks(limit: number = 4): Promise<FantasyPick
       .limit(limit);
       
     if (error) throw error;
-    return (data || []) as FantasyPickDB[];
+    return data as FantasyPickDB[] || [];
   } catch (error) {
     console.error('Error fetching top fantasy picks:', error);
     return [];
@@ -161,7 +161,7 @@ export async function getRecentFantasyPicks(limit: number = 10): Promise<Fantasy
       .limit(limit);
       
     if (error) throw error;
-    return (data || []) as FantasyPickDB[];
+    return data as FantasyPickDB[] || [];
   } catch (error) {
     console.error('Error fetching recent fantasy picks:', error);
     return [];

@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { 
-  getFantasyPicks, 
-  upsertFantasyPick, 
+  getAllFantasyPicks, 
+  saveFantasyPick, 
   deleteFantasyPick,
   getUpcomingMatches,
   getFantasyPicksByMatch
@@ -76,7 +76,7 @@ const FantasyPicksManager = () => {
         setMatches(matchesData);
         
         // Then fetch fantasy picks
-        const picksData = await getFantasyPicks();
+        const picksData = await getAllFantasyPicks();
         setPicks(picksData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -145,7 +145,7 @@ const FantasyPicksManager = () => {
       }
       
       // Save the pick
-      const savedPick = await upsertFantasyPick(pick);
+      const savedPick = await saveFantasyPick(pick);
       
       if (pick.id) {
         // Update existing pick

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -24,7 +25,8 @@ import {
 } from '@/components/ui/select';
 import { Trophy, Filter, Calendar, User } from 'lucide-react';
 import { formatDistance } from 'date-fns';
-import FantasyPickCard, { FantasyPick } from '@/components/fantasy-picks/FantasyPickCard';
+import FantasyPickCard from '@/components/fantasy-picks/FantasyPickCard';
+import { FantasyPick } from '@/components/fantasy-picks/hooks/useFantasyPicks';
 
 type Match = {
   id: string;
