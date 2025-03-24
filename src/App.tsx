@@ -18,6 +18,7 @@ import MatchesManager from "@/admin/MatchesManager";
 import PlayerProfilesManager from "@/admin/PlayerProfilesManager";
 import SettingsManager from "@/admin/SettingsManager";
 import Analytics from "@/admin/Analytics";
+import FreeWarContestManager from "@/admin/FreeWarContestManager";
 
 function App() {
   return (
@@ -97,6 +98,15 @@ function App() {
           element={
             <AdminProtectedRoute>
               <FantasyPicksManager />
+            </AdminProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/admin/free-war-contest" 
+          element={
+            <AdminProtectedRoute>
+              <FreeWarContestManager />
             </AdminProtectedRoute>
           } 
         />

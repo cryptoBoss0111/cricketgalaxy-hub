@@ -164,6 +164,30 @@ export type Database = {
           },
         ]
       }
+      free_war_teams: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          players: string[]
+          team_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          players: string[]
+          team_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          players?: string[]
+          team_name?: string | null
+        }
+        Relationships: []
+      }
       hero_slider: {
         Row: {
           article_id: string | null

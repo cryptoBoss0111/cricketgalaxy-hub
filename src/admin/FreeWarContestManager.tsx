@@ -5,15 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AdminLayout from './AdminLayout';
-import { supabase } from '@/integrations/supabase/client';
-
-interface TeamSelection {
-  id: string;
-  email: string;
-  created_at: string;
-  players: string[];
-  team_name?: string;
-}
+import { getFreeWarTeamSelections, TeamSelection } from '@/integrations/supabase/free-war';
 
 const FreeWarContestManager = () => {
   const [teamSelections, setTeamSelections] = useState<TeamSelection[]>([]);
@@ -27,14 +19,8 @@ const FreeWarContestManager = () => {
   const fetchTeamSelections = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('free_war_teams')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setTeamSelections(data || []);
+      const data = await getFreeWarTeamSelections();
+      setTeamSelections(data);
     } catch (error) {
       console.error('Error fetching team selections:', error);
       toast({
