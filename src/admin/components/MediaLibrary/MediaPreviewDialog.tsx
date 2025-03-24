@@ -31,16 +31,16 @@ const MediaPreviewDialog = ({
   
   if (!selectedFile) return null;
   
-  // Create proxy URL to avoid CORS issues
-  const getProxiedImageUrl = () => {
-    // Add cache busting parameters to avoid browser caching
-    const timestamp = new Date().getTime();
-    const random = Math.floor(Math.random() * 1000000);
-    
-    // Create a URL object to properly handle query parameters
+  // Create a URL with cache busting for preview
+  const getImageUrl = () => {
     try {
+      // Add current timestamp and random value to prevent caching
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 1000000);
+      
+      // Create a URL object to properly handle query parameters
       const url = new URL(selectedFile.url);
-      // Add timestamp to avoid caching
+      // Add cache busting parameters
       url.searchParams.set('t', timestamp.toString());
       url.searchParams.set('r', random.toString());
       url.searchParams.set('retry', retryCount.toString());
@@ -48,7 +48,7 @@ const MediaPreviewDialog = ({
       return url.toString();
     } catch (e) {
       // If URL creation fails, simply append query params
-      return `${selectedFile.url}?t=${timestamp}&r=${random}&retry=${retryCount}&preview=true`;
+      return `${selectedFile.url}?t=${Date.now()}&r=${Math.random()}&retry=${retryCount}&preview=true`;
     }
   };
 
@@ -60,7 +60,9 @@ const MediaPreviewDialog = ({
   };
 
   const handleDownload = () => {
+    // Create a link element with download attribute
     const link = document.createElement('a');
+    // Use the original URL without cache-busting parameters for download
     link.href = selectedFile.url;
     link.download = selectedFile.original_file_name;
     document.body.appendChild(link);
@@ -92,7 +94,7 @@ const MediaPreviewDialog = ({
               </div>
             ) : (
               <img 
-                src={getProxiedImageUrl()}
+                src={getImageUrl()}
                 alt={selectedFile.original_file_name}
                 className={`w-full h-auto max-h-[calc(80vh-200px)] object-contain transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                 onLoad={() => {
@@ -104,6 +106,7 @@ const MediaPreviewDialog = ({
                   setHasError(true);
                   setIsLoading(false);
                 }}
+                crossOrigin="anonymous"
               />
             )}
           </div>

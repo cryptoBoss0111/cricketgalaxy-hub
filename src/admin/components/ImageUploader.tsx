@@ -117,7 +117,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     if (!previewUrl || previewUrl.startsWith('data:')) return previewUrl;
     
     try {
-      const timestamp = new Date().getTime();
+      const timestamp = Date.now();
       const url = new URL(previewUrl);
       url.searchParams.set('t', timestamp.toString());
       url.searchParams.set('r', retryCount.toString());
@@ -163,6 +163,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
                 console.error("Error loading preview image:", previewUrl);
                 setImageLoadError(true);
               }}
+              crossOrigin="anonymous"
             />
           )}
           <Button 

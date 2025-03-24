@@ -22,7 +22,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'media') => {
     const randomString = Math.random().toString(36).substring(2, 8);
     const extension = originalFileName.split('.').pop()?.toLowerCase() || '';
     
-    // Sanitize the filename to avoid URL encoding issues
+    // Sanitize the filename to avoid URL encoding issues - remove spaces and special characters
     const fileBaseName = originalFileName.split('.')[0].replace(/[^a-zA-Z0-9]/g, '_');
     const storedFileName = `${fileBaseName}_${timestamp}_${randomString}.${extension}`;
     
@@ -48,11 +48,15 @@ export const uploadImageToStorage = async (file: File, bucket = 'media') => {
     
     console.log("Upload successful, data:", data);
     
-    // Get the public URL
+    // Get the public URL with cache-busting query parameter
+    const timestamp2 = new Date().getTime();
     const { data: { publicUrl } } = supabase
       .storage
       .from(bucket)
       .getPublicUrl(data.path);
+    
+    // Add cache-busting parameter to URL
+    const urlWithCacheBusting = `${publicUrl}?t=${timestamp2}`;
     
     // Save record to the media table
     const { data: mediaRecord, error: mediaError } = await supabase
@@ -60,7 +64,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'media') => {
       .insert({
         original_file_name: originalFileName,
         stored_file_name: storedFileName,
-        url: publicUrl,
+        url: publicUrl, // Store the clean URL without cache-busting parameters
         size: file.size
       })
       .select()

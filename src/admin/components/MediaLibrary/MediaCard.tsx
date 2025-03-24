@@ -28,14 +28,14 @@ const MediaCard = ({
   const displayName = file.original_file_name.split('.')[0] || file.original_file_name;
   const fileExtension = file.original_file_name.split('.').pop()?.toLowerCase();
 
-  // Create proxy URL to avoid CORS issues
-  const getProxiedImageUrl = () => {
-    // Add cache busting parameters
-    const timestamp = new Date().getTime();
-    const random = Math.floor(Math.random() * 1000000);
-    
-    // Create a URL object to properly handle query parameters
+  // Create a URL with cache busting parameters to avoid browser caching
+  const getImageUrl = () => {
     try {
+      // Add current timestamp and random value to prevent caching
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 1000000);
+      
+      // Create a URL object to properly handle query parameters
       const url = new URL(file.url);
       // Add cache busting parameters
       url.searchParams.set('t', timestamp.toString());
@@ -44,7 +44,7 @@ const MediaCard = ({
       return url.toString();
     } catch (e) {
       // If URL creation fails, simply append query params
-      return `${file.url}?t=${timestamp}&r=${random}&retry=${retryCount}`;
+      return `${file.url}?t=${Date.now()}&r=${Math.random()}&retry=${retryCount}`;
     }
   };
 
@@ -84,7 +84,7 @@ const MediaCard = ({
           </div>
         ) : (
           <img 
-            src={getProxiedImageUrl()}
+            src={getImageUrl()}
             alt={file.original_file_name} 
             className={`absolute inset-0 w-full h-full object-cover p-2 transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             loading="lazy"
@@ -97,6 +97,7 @@ const MediaCard = ({
               setHasError(true);
               setIsLoading(false);
             }}
+            crossOrigin="anonymous"
           />
         )}
       </div>
