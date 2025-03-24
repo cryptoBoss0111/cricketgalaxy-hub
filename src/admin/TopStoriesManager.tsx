@@ -344,17 +344,17 @@ const TopStoriesManager = () => {
         featured: story.featured
       }));
       
-      // Use a transaction for this to ensure either all operations succeed or all fail
-      // First try updating with upsert rather than deleting and recreating
-      const { error } = await supabase.rpc('update_top_stories', {
-        stories_data: storiesToSave
-      });
+      // Call the RPC function we created
+      const { error } = await supabase.rpc(
+        'update_top_stories',
+        { stories_data: storiesToSave }
+      );
       
       if (error) {
         console.error("Error using RPC:", error);
         
         // Fallback approach: manual delete and insert
-        // Delete existing top stories one by one rather than with neq
+        // Delete existing top stories one by one
         for (const story of topStories) {
           if (story.id) {
             const { error: deleteError } = await supabase

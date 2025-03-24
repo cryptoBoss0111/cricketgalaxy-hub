@@ -375,6 +375,12 @@ export type Database = {
         }
         Returns: string
       }
+      update_top_stories: {
+        Args: {
+          stories_data: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
