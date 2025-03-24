@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Upload, RotateCw } from 'lucide-react';
 import AdminLayout from './AdminLayout';
@@ -95,6 +96,9 @@ const MediaLibraryManager = () => {
           }
           
           console.log(`Starting upload for file ${i+1}/${fileArray.length}: ${file.name}`);
+          console.log(`File type: ${file.type}, size: ${file.size} bytes`);
+          
+          // Pass the raw File object directly to uploadImageToStorage
           await uploadImageToStorage(file);
           successCount++;
           

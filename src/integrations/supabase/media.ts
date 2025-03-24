@@ -38,7 +38,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       contentType: file.type // Ensure proper content type is set
     };
     
-    // Upload the file to Supabase Storage
+    // Upload the file to Supabase Storage as raw File object, NOT as string
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(storedFileName, file, options);
@@ -68,7 +68,8 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
         original_file_name: originalFileName,
         stored_file_name: storedFileName,
         url: cleanUrl,
-        size: file.size
+        size: file.size,
+        content_type: file.type // Store the content type in the database
       })
       .select()
       .single();

@@ -90,11 +90,18 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       const extension = originalName.split('.').pop()?.toLowerCase() || 'jpg';
       const safeName = `${safeBaseName}.${extension}`;
       
-      const croppedFile = new File([croppedBlob], safeName, { type: 'image/jpeg' });
+      // Create a proper File object from the Blob with correct content type
+      const croppedFile = new File(
+        [croppedBlob], 
+        safeName, 
+        { type: 'image/jpeg' }  // Explicit content type for cropped images
+      );
       
       console.log("Starting image upload process with cropped image...");
       console.log("Sanitized filename:", safeName);
+      console.log("File content type:", croppedFile.type);
       
+      // Pass the File object directly to uploadImageToStorage
       const mediaRecord = await uploadImageToStorage(croppedFile);
       
       console.log("Upload successful, media record:", mediaRecord);

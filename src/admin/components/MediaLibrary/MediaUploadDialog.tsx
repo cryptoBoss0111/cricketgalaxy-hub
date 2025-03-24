@@ -103,12 +103,14 @@ const MediaUploadDialog = ({
     }
     
     try {
-      // Create a file from the blob
+      // Create a proper File object from the Blob with correct content type
       const croppedFile = new File(
         [croppedBlob], 
         processingFile.name, 
-        { type: 'image/jpeg' }
+        { type: 'image/jpeg' }  // Explicit content type for cropped images
       );
+      
+      console.log("Cropped file:", croppedFile.name, croppedFile.type, croppedFile.size);
       
       // Create a FileList-like object from the file
       const dataTransfer = new DataTransfer();
