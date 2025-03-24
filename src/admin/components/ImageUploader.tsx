@@ -6,6 +6,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { uploadImageToStorage } from '@/integrations/supabase/media';
 import { Image, Upload, X, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import ImageCropper from './MediaLibrary/ImageCropper';
 
 interface ImageUploaderProps {
   onImageUploaded: (imageUrl: string) => void;
@@ -20,6 +21,8 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   const [error, setError] = useState<string | null>(null);
   const [imageLoadError, setImageLoadError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [imageToProcess, setImageToProcess] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -31,7 +34,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     }
   }, [existingImageUrl]);
   
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
@@ -57,32 +60,50 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       return;
     }
     
+    // Set the file for cropping
+    setSelectedFile(file);
+    
     // Create preview from the selected file
     const fileReader = new FileReader();
     fileReader.onload = () => {
       if (typeof fileReader.result === 'string') {
-        setPreviewUrl(fileReader.result);
-        setImageLoadError(false);
+        setImageToProcess(fileReader.result);
       }
     };
     fileReader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!selectedFile) {
+      setError("No file selected");
+      return;
+    }
     
     setIsUploading(true);
+    setError(null);
     
     try {
-      console.log("Starting image upload process...");
+      // Create a file from the blob
+      const croppedFile = new File([croppedBlob], selectedFile.name, { type: 'image/jpeg' });
+      
+      console.log("Starting image upload process with cropped image...");
       
       // Upload the image to Supabase and get media record
-      const mediaRecord = await uploadImageToStorage(file);
+      const mediaRecord = await uploadImageToStorage(croppedFile);
       
       console.log("Upload successful, media record:", mediaRecord);
       
       // Ensure the URL is clean (no query parameters)
       const cleanedUrl = mediaRecord.url.split('?')[0];
       setCleanUrl(cleanedUrl);
+      setPreviewUrl(cleanedUrl);
       
       // Pass the URL to the parent component
       onImageUploaded(cleanedUrl);
+      
+      // Reset cropping state
+      setImageToProcess(null);
+      setSelectedFile(null);
       
       toast({
         title: "Image uploaded",
@@ -108,12 +129,25 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     }
   };
   
+  const handleCropCancel = () => {
+    // Clean up URL object if it's not a data URL
+    if (imageToProcess && !imageToProcess.startsWith('data:')) {
+      URL.revokeObjectURL(imageToProcess);
+    }
+    
+    // Reset cropping state
+    setImageToProcess(null);
+    setSelectedFile(null);
+  };
+  
   const handleRemoveImage = () => {
     setPreviewUrl(null);
     setCleanUrl(null);
     onImageUploaded('');
     setError(null);
     setImageLoadError(false);
+    setImageToProcess(null);
+    setSelectedFile(null);
   };
   
   const handleRetry = () => {
@@ -137,6 +171,30 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       return previewUrl;
     }
   };
+  
+  if (imageToProcess) {
+    return (
+      <div className="space-y-2">
+        <p className="text-sm font-medium">{label}</p>
+        
+        {error && (
+          <Alert variant="destructive" className="mb-3">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Upload Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
+        <Card className="p-4">
+          <ImageCropper 
+            imageSrc={imageToProcess}
+            onCropComplete={handleCropComplete}
+            onCancel={handleCropCancel}
+          />
+        </Card>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-2">

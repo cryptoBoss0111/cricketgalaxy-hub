@@ -38,6 +38,7 @@ const MediaCard = ({
 
   // Generate image URL with cache busting
   const getImageUrl = () => {
+    // Append cache busting parameter using timestamp and retry count
     return `${cleanUrl}?t=${Date.now()}&r=${retryCount}`;
   };
 

@@ -12,6 +12,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import ImageCropper from './ImageCropper';
+import { uploadImageToStorage } from '@/integrations/supabase/media';
 
 interface MediaUploadDialogProps {
   isOpen: boolean;
@@ -38,17 +40,110 @@ const MediaUploadDialog = ({
 }: MediaUploadDialogProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [imageToProcess, setImageToProcess] = useState<string | null>(null);
+  const [processingFile, setProcessingFile] = useState<File | null>(null);
 
-  const handleFileSelection = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
+    
     if (e.target.files && e.target.files.length > 0) {
-      try {
-        // Log the file names that are being uploaded
-        console.log("Selected files:", Array.from(e.target.files).map(f => f.name));
-        await onFileUpload(e.target.files);
-      } catch (err: any) {
-        setError(err.message || 'Error uploading files');
+      const file = e.target.files[0];
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
       }
+      
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size should be less than 5MB');
+        return;
+      }
+      
+      // Create a URL for the image
+      const imageUrl = URL.createObjectURL(file);
+      setImageToProcess(imageUrl);
+      setProcessingFile(file);
+    }
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setError(null);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size should be less than 5MB');
+        return;
+      }
+      
+      // Create a URL for the image
+      const imageUrl = URL.createObjectURL(file);
+      setImageToProcess(imageUrl);
+      setProcessingFile(file);
+    }
+  };
+  
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!processingFile) {
+      setError('No file selected');
+      return;
+    }
+    
+    try {
+      // Create a file from the blob
+      const croppedFile = new File(
+        [croppedBlob], 
+        processingFile.name, 
+        { type: 'image/jpeg' }
+      );
+      
+      // Create a FileList-like object from the file
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(croppedFile);
+      const fileList = dataTransfer.files;
+      
+      // Upload the file
+      await onFileUpload(fileList);
+      
+      // Reset state
+      setImageToProcess(null);
+      setProcessingFile(null);
+      
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error uploading file');
+    }
+  };
+  
+  const handleCropCancel = () => {
+    // Clean up URL object
+    if (imageToProcess) {
+      URL.revokeObjectURL(imageToProcess);
+    }
+    
+    // Reset state
+    setImageToProcess(null);
+    setProcessingFile(null);
+    
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -58,7 +153,7 @@ const MediaUploadDialog = ({
         <DialogHeader>
           <DialogTitle>Upload Media Files</DialogTitle>
           <DialogDescription>
-            Select image files to upload to your media library
+            {imageToProcess ? 'Crop your image before uploading' : 'Select image files to upload to your media library'}
           </DialogDescription>
         </DialogHeader>
         
@@ -68,70 +163,86 @@ const MediaUploadDialog = ({
           </Alert>
         )}
         
-        <div 
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-            isDragging ? 'border-cricket-accent bg-cricket-accent/5' : 'border-gray-200'
-          }`}
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-        >
-          <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-            <Upload className="h-6 w-6 text-gray-500" />
-          </div>
-          <h3 className="text-base font-medium">Drag files here or click to browse</h3>
-          <p className="text-sm text-gray-500 mt-1 mb-4">
-            Upload JPG, PNG, GIF, or WebP files
-          </p>
-          <Input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFileSelection}
-            className="hidden"
-            id="file-upload"
+        {imageToProcess ? (
+          <ImageCropper
+            imageSrc={imageToProcess}
+            onCropComplete={handleCropComplete}
+            onCancel={handleCropCancel}
           />
-          <Button 
-            variant="outline" 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-          >
-            Select Files
-          </Button>
-        </div>
-        
-        {isUploading && (
-          <div className="mt-4">
-            <div className="text-sm text-gray-500 mb-2 flex justify-between">
-              <span>Uploading...</span>
-              <span>{uploadProgress}%</span>
+        ) : (
+          <>
+            <div 
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                isDragging ? 'border-cricket-accent bg-cricket-accent/5' : 'border-gray-200'
+              }`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDrop={handleDrop}
+            >
+              <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                <Upload className="h-6 w-6 text-gray-500" />
+              </div>
+              <h3 className="text-base font-medium">Drag files here or click to browse</h3>
+              <p className="text-sm text-gray-500 mt-1 mb-4">
+                Upload JPG, PNG, GIF, or WebP files
+              </p>
+              <Input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple={false}
+                onChange={handleFileSelection}
+                className="hidden"
+                id="file-upload"
+              />
+              <Button 
+                variant="outline" 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                Select Files
+              </Button>
             </div>
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-cricket-accent"
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
+            
+            {isUploading && (
+              <div className="mt-4">
+                <div className="text-sm text-gray-500 mb-2 flex justify-between">
+                  <span>Uploading...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-cricket-accent"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex p-3 border rounded-lg bg-amber-50 mt-2">
+              <Info className="h-5 w-5 text-amber-600 mr-2 flex-shrink-0" />
+              <p className="text-xs text-amber-700">
+                Files will be publicly accessible once uploaded. Make sure you have the rights to use these images.
+              </p>
             </div>
-          </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                disabled={isUploading}
+              >
+                Cancel
+              </Button>
+            </DialogFooter>
+          </>
         )}
-        
-        <div className="flex p-3 border rounded-lg bg-amber-50 mt-2">
-          <Info className="h-5 w-5 text-amber-600 mr-2 flex-shrink-0" />
-          <p className="text-xs text-amber-700">
-            Files will be publicly accessible once uploaded. Make sure you have the rights to use these images.
-          </p>
-        </div>
-        
-        <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-            disabled={isUploading}
-          >
-            Cancel
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
