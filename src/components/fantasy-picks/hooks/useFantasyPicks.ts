@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { FantasyPickDB } from '@/integrations/supabase/fantasy-picks';
 
 // Define our component's internal type
 export type FantasyPick = {
@@ -15,23 +15,6 @@ export type FantasyPick = {
   match_details: string;
   selection_reason: string;
   created_at: string;
-};
-
-// Database type is explicitly defined here to avoid circular imports
-type FantasyPickDbType = {
-  id: string;
-  player_name: string;
-  team: string;
-  role: string;
-  form: string;
-  image_url?: string;
-  stats?: string;
-  points_prediction: number;
-  match: string;
-  reason: string;
-  created_at: string;
-  updated_at?: string;
-  match_id?: string;
 };
 
 export const useFantasyPicks = () => {
@@ -53,7 +36,7 @@ export const useFantasyPicks = () => {
         
         if (data && data.length > 0) {
           // Transform the DB data to our component's expected format
-          const transformedData: FantasyPick[] = data.map((dbPick: FantasyPickDbType) => ({
+          const transformedData: FantasyPick[] = data.map((dbPick: FantasyPickDB) => ({
             id: dbPick.id,
             player_name: dbPick.player_name,
             team: dbPick.team,

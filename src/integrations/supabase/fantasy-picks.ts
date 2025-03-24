@@ -18,7 +18,7 @@ export interface FantasyPickDB {
   updated_at: string;
 }
 
-// Define the exact input type expected by the upsert function
+// Define a separate input type for upsert operations
 export interface FantasyPickUpsertInput {
   id?: string;
   player_name: string;
