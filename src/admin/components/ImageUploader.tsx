@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -82,26 +81,26 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     try {
       const originalName = selectedFile.name;
       
+      const extension = originalName.split('.').pop()?.toLowerCase() || 'jpg';
+      
       const safeBaseName = originalName
         .split('.')[0]
         .replace(/\s+/g, "_")
         .replace(/[^\w.-]/g, "");
       
-      const extension = originalName.split('.').pop()?.toLowerCase() || 'jpg';
       const safeName = `${safeBaseName}.${extension}`;
       
-      // Create a proper File object from the Blob with correct content type
       const croppedFile = new File(
         [croppedBlob], 
         safeName, 
-        { type: 'image/jpeg' }  // Explicit content type for cropped images
+        { type: selectedFile.type }
       );
       
       console.log("Starting image upload process with cropped image...");
       console.log("Sanitized filename:", safeName);
-      console.log("File content type:", croppedFile.type);
+      console.log("Original file type:", selectedFile.type);
+      console.log("File for upload:", croppedFile.name, croppedFile.type);
       
-      // Pass the File object directly to uploadImageToStorage
       const mediaRecord = await uploadImageToStorage(croppedFile);
       
       console.log("Upload successful, media record:", mediaRecord);

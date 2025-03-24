@@ -1,6 +1,27 @@
 
 import { supabase } from './client-core';
 
+// Helper function to infer content type from file extension
+const inferContentTypeFromFileName = (fileName: string): string => {
+  const extension = fileName.split('.').pop()?.toLowerCase() || '';
+  
+  switch (extension) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'gif':
+      return 'image/gif';
+    case 'webp':
+      return 'image/webp';
+    case 'svg':
+      return 'image/svg+xml';
+    default:
+      return 'application/octet-stream'; // Default fallback
+  }
+};
+
 // Upload file to storage with improved error handling and CORS support
 export const uploadImageToStorage = async (file: File, bucket = 'article_images') => {
   try {
@@ -27,15 +48,20 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     const timestamp = Date.now();
     const storedFileName = `${fileBaseName}_${timestamp}.${extension}`;
     
+    // Infer the correct content type from the file extension
+    const inferredContentType = inferContentTypeFromFileName(originalFileName);
+    
     console.log("Uploading image:", originalFileName);
     console.log("Stored as:", storedFileName);
-    console.log("Content type:", file.type);
+    console.log("Content type from file object:", file.type);
+    console.log("Inferred content type:", inferredContentType);
     
     // Set proper content type and caching headers
+    // Use the inferred content type based on the file extension, not the file.type
     const options = {
       cacheControl: '3600',
       upsert: false, // Don't overwrite files with the same name
-      contentType: file.type // Ensure proper content type is set
+      contentType: inferredContentType // Use inferred content type to ensure accuracy
     };
     
     // Upload the file to Supabase Storage as raw File object, NOT as string or FormData
@@ -69,7 +95,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
         stored_file_name: storedFileName,
         url: cleanUrl,
         size: file.size,
-        content_type: file.type // Store the content type in the database
+        content_type: inferredContentType // Store the inferred content type in the database
       })
       .select()
       .single();
@@ -164,26 +190,5 @@ export const deleteMediaFile = async (id: string) => {
   } catch (error) {
     console.error('Error in deleteMediaFile:', error);
     throw error;
-  }
-};
-
-// Helper function to infer content type from file extension
-const inferContentTypeFromFileName = (fileName: string): string => {
-  const extension = fileName.split('.').pop()?.toLowerCase() || '';
-  
-  switch (extension) {
-    case 'jpg':
-    case 'jpeg':
-      return 'image/jpeg';
-    case 'png':
-      return 'image/png';
-    case 'gif':
-      return 'image/gif';
-    case 'webp':
-      return 'image/webp';
-    case 'svg':
-      return 'image/svg+xml';
-    default:
-      return 'image/jpeg'; // Default fallback
   }
 };

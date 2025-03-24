@@ -103,11 +103,14 @@ const MediaUploadDialog = ({
     }
     
     try {
-      // Create a proper File object from the Blob with correct content type
+      // Preserve the original file extension for correct content type inference
+      const extension = processingFile.name.split('.').pop() || 'jpg';
+      
+      // Create a proper File object from the Blob with the original file name pattern
       const croppedFile = new File(
         [croppedBlob], 
-        processingFile.name, 
-        { type: 'image/jpeg' }  // Explicit content type for cropped images
+        `${processingFile.name.split('.')[0]}.${extension}`, 
+        { type: processingFile.type }  // Use original file's type as a starting point
       );
       
       console.log("Cropped file:", croppedFile.name, croppedFile.type, croppedFile.size);
