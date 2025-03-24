@@ -5,7 +5,8 @@ import {
   getFantasyPicks, 
   upsertFantasyPick, 
   deleteFantasyPick,
-  getUpcomingMatches
+  getUpcomingMatches,
+  getFantasyPicksByMatch
 } from '@/integrations/supabase/client';
 import AdminLayout from './AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -25,20 +26,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Edit, Trash2, Plus, Trophy, AlertTriangle } from 'lucide-react';
-import ImageUploader from './components/ImageUploader';
+import { Edit, Trash2, Plus, Trophy, AlertTriangle, Info } from 'lucide-react';
 import FantasyPickForm from './components/FantasyPickForm';
 
 type Match = {
@@ -71,6 +61,9 @@ const FantasyPicksManager = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [editingPick, setEditingPick] = useState<FantasyPickItem | null>(null);
   const [activeTab, setActiveTab] = useState('view');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [pickToDelete, setPickToDelete] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Fetch fantasy picks and matches data
@@ -105,10 +98,17 @@ const FantasyPicksManager = () => {
     setActiveTab('edit');
   };
 
-  const handleDeletePick = async (id: string) => {
+  const confirmDeletePick = (id: string) => {
+    setPickToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeletePick = async () => {
+    if (!pickToDelete) return;
+    
     try {
-      await deleteFantasyPick(id);
-      setPicks(picks.filter(pick => pick.id !== id));
+      await deleteFantasyPick(pickToDelete);
+      setPicks(picks.filter(pick => pick.id !== pickToDelete));
       toast({
         title: 'Fantasy pick deleted',
         description: 'Fantasy pick has been removed successfully',
@@ -120,11 +120,31 @@ const FantasyPicksManager = () => {
         title: 'Error',
         description: 'Failed to delete fantasy pick',
       });
+    } finally {
+      setPickToDelete(null);
+      setDeleteDialogOpen(false);
     }
   };
 
   const handleSavePick = async (pick: FantasyPickItem) => {
     try {
+      if (!pick.match_id) {
+        throw new Error('Please select a match for this fantasy pick');
+      }
+      
+      // Check if we're updating an existing pick or creating a new one
+      const isNewPick = !pick.id;
+      
+      if (isNewPick) {
+        // For new picks, check the number of existing picks for this match
+        const existingPicksForMatch = picks.filter(p => p.match_id === pick.match_id);
+        
+        if (existingPicksForMatch.length >= 4) {
+          throw new Error('Maximum of 4 fantasy picks allowed per match. Please select a different match or delete an existing pick.');
+        }
+      }
+      
+      // Save the pick
       const savedPick = await upsertFantasyPick(pick);
       
       if (pick.id) {
@@ -142,21 +162,51 @@ const FantasyPicksManager = () => {
         title: 'Fantasy pick saved',
         description: 'Fantasy pick has been saved successfully',
       });
-    } catch (error) {
+      
+      // After saving, check if we need to validate match requirements
+      validateMatchPicksRequirements();
+    } catch (error: any) {
       console.error('Error saving fantasy pick:', error);
+      setValidationError(error.message || 'Failed to save fantasy pick');
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to save fantasy pick',
+        description: error.message || 'Failed to save fantasy pick',
       });
     }
   };
 
+  // Group picks by match and count
   const matchPickCounts = picks.reduce((acc, pick) => {
-    const match = pick.match;
-    acc[match] = (acc[match] || 0) + 1;
+    const matchId = pick.match_id || '';
+    if (matchId) {
+      acc[matchId] = (acc[matchId] || 0) + 1;
+    }
     return acc;
   }, {} as Record<string, number>);
+
+  // Validate that matches have at least 2 picks
+  const validateMatchPicksRequirements = () => {
+    const matchesWithTooFewPicks = Object.entries(matchPickCounts)
+      .filter(([_, count]) => count < 2)
+      .map(([matchId]) => {
+        const match = matches.find(m => m.id === matchId);
+        return match ? `${match.team1} vs ${match.team2}` : matchId;
+      });
+    
+    if (matchesWithTooFewPicks.length > 0) {
+      setValidationError(`Some matches have fewer than 2 fantasy picks: ${matchesWithTooFewPicks.join(', ')}. Each match should have at least 2 picks.`);
+    } else {
+      setValidationError(null);
+    }
+  };
+
+  // Check validation when picks or matches change
+  useEffect(() => {
+    if (picks.length > 0 && matches.length > 0) {
+      validateMatchPicksRequirements();
+    }
+  }, [picks, matches]);
 
   return (
     <AdminLayout>
@@ -176,6 +226,14 @@ const FantasyPicksManager = () => {
             <Plus size={16} /> Add New Pick
           </Button>
         </div>
+
+        {validationError && (
+          <Alert variant="warning" className="mb-6 bg-amber-50 border-amber-300">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Important</AlertTitle>
+            <AlertDescription>{validationError}</AlertDescription>
+          </Alert>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
@@ -202,24 +260,39 @@ const FantasyPicksManager = () => {
               </Card>
             ) : (
               <>
-                {Object.entries(matchPickCounts).map(([match, count]) => {
-                  const isWarning = count > 4;
-                  return isWarning ? (
-                    <Alert variant="destructive" className="mb-4" key={match}>
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertTitle>Warning</AlertTitle>
-                      <AlertDescription>
-                        Match "{match}" has {count} picks. Maximum recommended is 4 picks per match.
-                      </AlertDescription>
-                    </Alert>
-                  ) : null;
+                {Object.entries(matchPickCounts).map(([matchId, count]) => {
+                  const match = matches.find(m => m.id === matchId);
+                  const matchName = match ? `${match.team1} vs ${match.team2}` : 'Unknown Match';
+                  
+                  const isTooMany = count > 4;
+                  const isTooFew = count < 2;
+                  
+                  if (isTooMany || isTooFew) {
+                    return (
+                      <Alert 
+                        variant={isTooMany ? "destructive" : "warning"} 
+                        className={isTooFew ? "bg-amber-50 border-amber-300" : undefined}
+                        key={matchId}
+                      >
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>{isTooMany ? "Too Many Picks" : "Too Few Picks"}</AlertTitle>
+                        <AlertDescription>
+                          {isTooMany 
+                            ? `Match "${matchName}" has ${count} picks. Maximum allowed is 4 picks per match.`
+                            : `Match "${matchName}" has only ${count} pick${count === 1 ? '' : 's'}. Minimum required is 2 picks per match.`
+                          }
+                        </AlertDescription>
+                      </Alert>
+                    );
+                  }
+                  return null;
                 })}
                 
                 <Card>
                   <CardHeader>
                     <CardTitle>All Fantasy Picks</CardTitle>
                     <CardDescription>
-                      View and manage all fantasy player picks. Recommended: up to 4 picks per match.
+                      View and manage all fantasy player picks. Each match should have 2-4 picks.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -265,7 +338,7 @@ const FantasyPicksManager = () => {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  onClick={() => handleDeletePick(pick.id)}
+                                  onClick={() => confirmDeletePick(pick.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -315,6 +388,24 @@ const FantasyPicksManager = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this fantasy pick? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePick} className="bg-red-500 hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };

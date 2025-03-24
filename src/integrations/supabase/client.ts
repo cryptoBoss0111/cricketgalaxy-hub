@@ -134,81 +134,29 @@ export const generateUniqueFileName = (fileName: string) => {
 };
 
 // Upload file to storage with improved error handling and retry logic
-export const uploadImageToStorage = async (file: File, bucketName = 'article_images') => {
-  if (!file) {
-    throw new Error('No file provided');
-  }
-  
-  // Generate unique filename
-  const timestamp = new Date().getTime();
-  const randomString = Math.random().toString(36).substring(2, 12);
-  const extension = file.name.split('.').pop();
-  const fileName = `${timestamp}-${randomString}.${extension}`;
-  
-  console.log(`Uploading file ${fileName} to ${bucketName}...`);
-  
-  // Try upload with exponential backoff (3 attempts)
-  let attempt = 0;
-  const maxAttempts = 3;
-  
-  while (attempt < maxAttempts) {
-    attempt++;
+export const uploadImageToStorage = async (file: File, bucket = 'article_images') => {
+  try {
+    // Create a unique file name
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExtension}`;
+    const filePath = `${bucket}/${fileName}`;
     
-    try {
-      // Set up CORS headers for fetch request
-      const uploadOptions = {
+    // Upload the file to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, file, {
         cacheControl: '3600',
-        upsert: true,
-        contentType: file.type,
-      };
-      
-      console.log(`Attempt ${attempt}/${maxAttempts} - Uploading to Supabase Storage...`);
-      
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(fileName, file, uploadOptions);
-      
-      if (error) {
-        console.error(`Storage upload error (attempt ${attempt}/${maxAttempts}):`, error);
-        
-        // If not the last attempt, wait before retrying
-        if (attempt < maxAttempts) {
-          const backoffMs = Math.pow(2, attempt) * 500; // Exponential backoff
-          console.log(`Retrying upload in ${backoffMs}ms...`);
-          await new Promise(resolve => setTimeout(resolve, backoffMs));
-          continue;
-        }
-        
-        throw error;
-      }
-      
-      if (!data) {
-        if (attempt < maxAttempts) {
-          const backoffMs = Math.pow(2, attempt) * 500;
-          console.log(`No data returned, retrying in ${backoffMs}ms...`);
-          await new Promise(resolve => setTimeout(resolve, backoffMs));
-          continue;
-        }
-        throw new Error("Upload failed with no error details");
-      }
-      
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(fileName);
-      
-      console.log("Image uploaded successfully, public URL:", publicUrl);
-      return publicUrl;
-    } catch (err) {
-      console.error(`Upload attempt ${attempt} failed with error:`, err);
-      if (attempt >= maxAttempts) {
-        throw err;
-      }
-      // Otherwise continue to next attempt
-    }
+        upsert: false,
+      });
+    
+    if (error) throw error;
+    
+    // Return the full public URL
+    return data.path;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    throw error;
   }
-  
-  throw new Error("All upload attempts failed");
 };
 
 // Get published articles for the public site
@@ -447,128 +395,145 @@ export const deletePlayerProfile = async (id: string) => {
 
 // Get upcoming matches
 export const getUpcomingMatches = async () => {
-  const { data, error } = await supabase
-    .from('upcoming_matches')
-    .select('*')
-    .order('match_time', { ascending: true });
-  
-  if (error) {
-    console.error("Error fetching upcoming matches:", error);
+  try {
+    const { data, error } = await supabase
+      .from('upcoming_matches')
+      .select('*')
+      .order('match_time', { ascending: true });
+      
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching upcoming matches:', error);
     throw error;
   }
-  
-  return data || [];
 };
 
-// Create or update match
-export const upsertMatch = async (matchData: any) => {
-  const { id, ...otherData } = matchData;
-  const method = id ? 'update' : 'insert';
-  
-  if (method === 'update') {
+export const getMatchById = async (id: string) => {
+  try {
     const { data, error } = await supabase
       .from('upcoming_matches')
-      .update({
-        ...otherData,
-        updated_at: new Date().toISOString()
-      })
+      .select('*')
       .eq('id', id)
-      .select();
-    
+      .single();
+      
     if (error) throw error;
     return data;
-  } else {
-    const { data, error } = await supabase
-      .from('upcoming_matches')
-      .insert({
-        ...otherData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select();
-    
-    if (error) throw error;
-    return data;
+  } catch (error) {
+    console.error('Error fetching match:', error);
+    throw error;
   }
 };
 
-// Delete match
+export const upsertMatch = async (match: any) => {
+  try {
+    const { data, error } = await supabase
+      .from('upcoming_matches')
+      .upsert(match)
+      .select()
+      .single();
+      
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error upserting match:', error);
+    throw error;
+  }
+};
+
 export const deleteMatch = async (id: string) => {
-  const { error } = await supabase
-    .from('upcoming_matches')
-    .delete()
-    .eq('id', id);
-  
-  if (error) throw error;
-  return true;
+  try {
+    const { error } = await supabase
+      .from('upcoming_matches')
+      .delete()
+      .eq('id', id);
+      
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error deleting match:', error);
+    throw error;
+  }
 };
 
 // Get fantasy picks with additional filtering options
-export const getFantasyPicks = async (matchId?: string, limit?: number) => {
-  let query = supabase
-    .from('fantasy_picks')
-    .select('*');
-  
-  if (matchId) {
-    query = query.eq('match_id', matchId);
-  }
-  
-  if (limit) {
-    query = query.limit(limit);
-  }
-    
-  query = query.order('points_prediction', { ascending: false });
-  
-  const { data, error } = await query;
-  
-  if (error) {
+export const getFantasyPicks = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('fantasy_picks')
+      .select('*')
+      .order('created_at', { ascending: false });
+      
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
     console.error('Error fetching fantasy picks:', error);
-    throw new Error('Failed to fetch fantasy picks');
+    throw error;
   }
-  
-  return data || [];
 };
 
-// Create or update fantasy pick
+export const getFantasyPicksByMatch = async (matchId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('fantasy_picks')
+      .select('*')
+      .eq('match_id', matchId)
+      .order('points_prediction', { ascending: false });
+      
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching fantasy picks for match:', error);
+    throw error;
+  }
+};
+
+export const getFantasyPickById = async (id: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('fantasy_picks')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error fetching fantasy pick:', error);
+    throw error;
+  }
+};
+
 export const upsertFantasyPick = async (pick: any) => {
-  // Ensure created_at and updated_at are set properly
-  const now = new Date().toISOString();
-  const payload = {
-    ...pick,
-    updated_at: now
-  };
-  
-  // For new picks, add created_at
-  if (!pick.id) {
-    payload.created_at = now;
-  }
-  
-  const { data, error } = await supabase
-    .from('fantasy_picks')
-    .upsert(payload)
-    .select();
-  
-  if (error) {
+  try {
+    // If id exists, update; otherwise insert
+    const { data, error } = await supabase
+      .from('fantasy_picks')
+      .upsert(pick)
+      .select()
+      .single();
+      
+    if (error) throw error;
+    return data;
+  } catch (error) {
     console.error('Error upserting fantasy pick:', error);
-    throw new Error('Failed to save fantasy pick');
+    throw error;
   }
-  
-  return data?.[0];
 };
 
-// Delete fantasy pick
 export const deleteFantasyPick = async (id: string) => {
-  const { error } = await supabase
-    .from('fantasy_picks')
-    .delete()
-    .eq('id', id);
-  
-  if (error) {
+  try {
+    const { error } = await supabase
+      .from('fantasy_picks')
+      .delete()
+      .eq('id', id);
+      
+    if (error) throw error;
+    return true;
+  } catch (error) {
     console.error('Error deleting fantasy pick:', error);
-    throw new Error('Failed to delete fantasy pick');
+    throw error;
   }
-  
-  return true;
 };
 
 // Get navigation items

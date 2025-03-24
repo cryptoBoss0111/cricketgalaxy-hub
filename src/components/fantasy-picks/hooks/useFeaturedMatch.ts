@@ -1,58 +1,68 @@
 
 import { useState, useEffect } from 'react';
-import { useFantasyPicks } from './useFantasyPicks';
-import { FantasyPick } from '@/components/fantasy-picks/FantasyPickCard';
+import { useFantasyPicks, FantasyPick } from './useFantasyPicks';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useFeaturedMatch = () => {
-  const { fantasyPicks, isLoading } = useFantasyPicks();
+  const { fantasyPicks, isLoading: isLoadingPicks } = useFantasyPicks();
   const [featuredMatch, setFeaturedMatch] = useState<string | null>(null);
   const [filteredPicks, setFilteredPicks] = useState<FantasyPick[]>([]);
-  
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    if (!isLoading && fantasyPicks.length > 0) {
-      // Group fantasy picks by match
-      const matchGroups = fantasyPicks.reduce((acc, pick) => {
-        const match = pick.match_details;
-        if (!acc[match]) {
-          acc[match] = [];
+    const fetchFeaturedMatch = async () => {
+      try {
+        // Attempt to get the most recent match with at least 2 fantasy picks
+        if (fantasyPicks.length > 0) {
+          // Group picks by match
+          const matchGroups = fantasyPicks.reduce<Record<string, FantasyPick[]>>((acc, pick) => {
+            if (!pick.match_details) return acc;
+            
+            if (!acc[pick.match_details]) {
+              acc[pick.match_details] = [];
+            }
+            acc[pick.match_details].push(pick);
+            return acc;
+          }, {});
+          
+          // Find matches with at least 2 picks
+          const validMatches = Object.entries(matchGroups)
+            .filter(([_, picks]) => picks.length >= 2)
+            .sort((a, b) => {
+              // Sort by most recent created_at date in each match group
+              const latestA = new Date(Math.max(...a[1].map(p => new Date(p.created_at).getTime())));
+              const latestB = new Date(Math.max(...b[1].map(p => new Date(p.created_at).getTime())));
+              return latestB.getTime() - latestA.getTime();
+            });
+            
+          // Use the most recent valid match
+          if (validMatches.length > 0) {
+            const [matchName, matchPicks] = validMatches[0];
+            setFeaturedMatch(matchName);
+            setFilteredPicks(matchPicks.slice(0, 4)); // Limit to 4 picks max
+          } else if (fantasyPicks.length >= 2) {
+            // Fallback: if no match has 2+ picks but we have at least 2 picks total
+            setFeaturedMatch('Featured Picks');
+            setFilteredPicks(fantasyPicks.slice(0, 4));
+          } else {
+            setFeaturedMatch(null);
+            setFilteredPicks([]);
+          }
+        } else {
+          setFeaturedMatch(null);
+          setFilteredPicks([]);
         }
-        acc[match].push(pick);
-        return acc;
-      }, {} as Record<string, FantasyPick[]>);
-      
-      // Find the match with the most picks (with a maximum of 4)
-      let maxPickCount = 0;
-      let featuredMatchName = null;
-      
-      for (const [match, picks] of Object.entries(matchGroups)) {
-        if (picks.length > maxPickCount && picks.length <= 4) {
-          maxPickCount = picks.length;
-          featuredMatchName = match;
-        }
+      } catch (error) {
+        console.error('Error fetching featured match:', error);
+        setFeaturedMatch(null);
+        setFilteredPicks([]);
+      } finally {
+        setIsLoading(isLoadingPicks);
       }
-      
-      // If we found a featured match, set it
-      if (featuredMatchName) {
-        setFeaturedMatch(featuredMatchName);
-        setFilteredPicks(matchGroups[featuredMatchName]);
-      } else {
-        // If no match has exactly 4 picks, just use the first match
-        const firstMatch = Object.keys(matchGroups)[0];
-        setFeaturedMatch(firstMatch);
-        setFilteredPicks(matchGroups[firstMatch].slice(0, 4));
-      }
-    }
-  }, [fantasyPicks, isLoading]);
-  
-  const changeActiveMatch = (matchName: string) => {
-    setFeaturedMatch(matchName);
-  };
-  
-  return {
-    featuredMatch,
-    filteredPicks,
-    isLoading,
-    allPicks: fantasyPicks,
-    changeActiveMatch,
-  };
+    };
+
+    fetchFeaturedMatch();
+  }, [fantasyPicks, isLoadingPicks]);
+
+  return { featuredMatch, filteredPicks, isLoading };
 };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -25,16 +24,20 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   const processSupabaseUrl = (url?: string): string | null => {
     if (!url) return null;
     
+    // If already a full URL, return as-is
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
     
+    // Otherwise, prepend the Supabase storage URL
     return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
   };
   
   useEffect(() => {
     if (existingImageUrl) {
-      setPreviewUrl(processSupabaseUrl(existingImageUrl));
+      const processedUrl = processSupabaseUrl(existingImageUrl);
+      console.log("Processing existing image URL:", existingImageUrl, "->", processedUrl);
+      setPreviewUrl(processedUrl);
     }
   }, [existingImageUrl]);
   
@@ -83,15 +86,8 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       
       console.log("Upload successful, image URL:", imageUrl);
       
-      // Extract just the path part from the full URL for storage
-      const pathOnly = imageUrl.includes('/public/') 
-        ? imageUrl.split('/public/')[1] 
-        : imageUrl;
-      
-      console.log("Storing path:", pathOnly);
-      
-      // Save the path only - it will be properly processed when displayed
-      onImageUploaded(pathOnly);
+      // Pass the path to the parent component
+      onImageUploaded(imageUrl);
       
       toast({
         title: "Image uploaded",

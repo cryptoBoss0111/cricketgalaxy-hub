@@ -83,6 +83,7 @@ const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
             alt={pick.player_name}
             className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-gray-200 dark:border-gray-700"
             onError={(e) => {
+              console.log("Image load error, using fallback");
               (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop';
             }}
           />

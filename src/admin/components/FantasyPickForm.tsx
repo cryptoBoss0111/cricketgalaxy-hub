@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 import ImageUploader from './ImageUploader';
 import { useToast } from '@/hooks/use-toast';
 import { uploadImageToStorage } from '@/integrations/supabase/client';
@@ -82,6 +84,7 @@ const FantasyPickForm: React.FC<FantasyPickFormProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -112,28 +115,36 @@ const FantasyPickForm: React.FC<FantasyPickFormProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    // Clear validation error when user makes changes
+    setValidationError(null);
   };
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData({ ...formData, [name]: value });
+    // Clear validation error when user makes changes
+    setValidationError(null);
   };
 
   const handleMatchSelect = (matchId: string) => {
     const match = matches.find(m => m.id === matchId);
     if (match) {
       setSelectedMatch(match);
+      setValidationError(null);
     }
   };
 
   const handleImageUploaded = (imageUrl: string) => {
+    console.log("Image URL received:", imageUrl);
     setFormData({ ...formData, image_url: imageUrl });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setValidationError(null);
 
     try {
+      // Basic validation
       if (!formData.player_name || !formData.team || !formData.match) {
         throw new Error('Please fill all required fields');
       }
@@ -152,9 +163,11 @@ const FantasyPickForm: React.FC<FantasyPickFormProps> = ({
         }));
       }
 
+      console.log("Submitting fantasy pick with data:", formData);
       await onSave(formData);
     } catch (error: any) {
       console.error('Error submitting form:', error);
+      setValidationError(error.message || 'Failed to save fantasy pick');
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -167,6 +180,14 @@ const FantasyPickForm: React.FC<FantasyPickFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {validationError && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{validationError}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div>
