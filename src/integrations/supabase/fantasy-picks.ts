@@ -66,10 +66,10 @@ export const saveFantasyPick = async (pick: Partial<FantasyPickDB>): Promise<Fan
     // Determine if this is an insert or update
     const isUpdate = Boolean(pick.id);
     
-    // Ensure we're passing a proper object for upsert, not an array
+    // Fix: Add onConflict parameter and cast 'pick' as an object to match expected type
     const { data, error } = await supabase
       .from('fantasy_picks')
-      .upsert(pick) // Fix: Remove the array brackets
+      .upsert(pick, { onConflict: 'id' })
       .select()
       .single();
     

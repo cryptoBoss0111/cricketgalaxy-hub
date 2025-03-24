@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -76,7 +75,7 @@ const FantasyTipsPage = () => {
     }
   });
 
-  // Fetch fantasy picks with explicit typing - fixed to avoid deep type instantiation
+  // Fix: Explicitly define the return type and avoid deeply nested type instantiation
   const { data: picks = [], isLoading: picksLoading } = useQuery({
     queryKey: ['fantasyPicks', selectedMatch],
     queryFn: async () => {
@@ -93,8 +92,8 @@ const FantasyTipsPage = () => {
       
       if (error) throw error;
       
-      // Transform the data for the component with explicit typing
-      return (data || []).map((pick: FantasyPickResponse): FantasyPick => ({
+      // Transform the data with specified type
+      return (data || []).map((pick: FantasyPickResponse) => ({
         id: pick.id,
         player_name: pick.player_name,
         team: pick.team,
@@ -107,7 +106,7 @@ const FantasyTipsPage = () => {
         selection_reason: pick.reason,
         created_at: pick.created_at,
         match_id: pick.match_id
-      }));
+      } as FantasyPick));
     }
   });
 

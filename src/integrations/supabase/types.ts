@@ -120,6 +120,7 @@ export type Database = {
           form: string
           id: string
           match: string
+          match_id: string | null
           player_name: string
           points_prediction: number
           reason: string
@@ -132,6 +133,7 @@ export type Database = {
           form: string
           id?: string
           match: string
+          match_id?: string | null
           player_name: string
           points_prediction: number
           reason: string
@@ -144,6 +146,7 @@ export type Database = {
           form?: string
           id?: string
           match?: string
+          match_id?: string | null
           player_name?: string
           points_prediction?: number
           reason?: string
@@ -151,7 +154,15 @@ export type Database = {
           team?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fantasy_picks_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "upcoming_matches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hero_slider: {
         Row: {
