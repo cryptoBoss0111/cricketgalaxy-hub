@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { Menu, X, Search, Moon, Sun, MessageSquare } from 'lucide-react';
@@ -74,7 +75,10 @@ export const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to="/" className="flex flex-col items-center">
+              <div className="text-xs text-cricket-accent font-medium mb-0.5">
+                Namaste 🙏🏻
+              </div>
               <span className="text-2xl font-heading font-bold bg-gradient-to-r from-cricket-accent to-cricket-secondary bg-clip-text text-transparent">
                 CricketExpress
               </span>
@@ -148,9 +152,14 @@ export const Navbar = () => {
               <SheetContent side="right" className="w-[300px]">
                 <div className="flex flex-col space-y-6 py-6">
                   <div className="flex items-center justify-between mb-6">
-                    <span className="text-xl font-heading font-bold bg-gradient-to-r from-cricket-accent to-cricket-secondary bg-clip-text text-transparent">
-                      CricketExpress
-                    </span>
+                    <div className="flex flex-col">
+                      <div className="text-xs text-cricket-accent font-medium mb-0.5">
+                        Namaste 🙏🏻
+                      </div>
+                      <span className="text-xl font-heading font-bold bg-gradient-to-r from-cricket-accent to-cricket-secondary bg-clip-text text-transparent">
+                        CricketExpress
+                      </span>
+                    </div>
                     <SheetTrigger asChild>
                       <Button variant="ghost" size="icon">
                         <X size={18} />
