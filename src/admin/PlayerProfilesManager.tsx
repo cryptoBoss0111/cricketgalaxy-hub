@@ -202,7 +202,9 @@ const PlayerProfilesManager = () => {
       // Upload image if selected
       let imageUrl = values.image;
       if (imageFile) {
-        imageUrl = await uploadImageToStorage(imageFile);
+        const mediaRecord = await uploadImageToStorage(imageFile);
+        // Extract the URL from the media record
+        imageUrl = mediaRecord.url;
       }
       
       // Prepare stats object with default values if empty

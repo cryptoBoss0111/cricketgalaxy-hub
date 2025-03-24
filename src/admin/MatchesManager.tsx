@@ -176,7 +176,9 @@ const MatchesManager = () => {
       // Upload image if selected
       let imageUrl = values.image;
       if (imageFile) {
-        imageUrl = await uploadImageToStorage(imageFile);
+        const mediaRecord = await uploadImageToStorage(imageFile);
+        // Extract the URL from the media record
+        imageUrl = mediaRecord.url;
       }
       
       // Format data and save match
