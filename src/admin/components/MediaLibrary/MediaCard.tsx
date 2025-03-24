@@ -23,24 +23,10 @@ const MediaCard = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [cleanUrl, setCleanUrl] = useState('');
   
   // Extract a more readable name from the filename
   const displayName = file.original_file_name.split('.')[0] || file.original_file_name;
   const fileExtension = file.original_file_name.split('.').pop()?.toLowerCase();
-
-  // Process URL on component mount or URL change
-  useEffect(() => {
-    // Ensure we have a clean base URL (no query parameters)
-    const baseUrl = file.url.split('?')[0];
-    setCleanUrl(baseUrl);
-  }, [file.url]);
-
-  // Generate image URL with cache busting
-  const getImageUrl = () => {
-    // Append cache busting parameter using timestamp and retry count
-    return `${cleanUrl}?t=${Date.now()}&r=${retryCount}`;
-  };
 
   // Function to handle image retry
   const handleRetry = (e: React.MouseEvent) => {
@@ -49,6 +35,14 @@ const MediaCard = ({
     setIsLoading(true);
     setHasError(false);
     setRetryCount(prev => prev + 1);
+  };
+
+  // Generate direct URL to image with cache busting
+  const getImageUrl = () => {
+    // Ensure we have a clean URL (no query parameters)
+    const baseUrl = file.url.split('?')[0];
+    // Add cache busting parameter
+    return `${baseUrl}?t=${Date.now()}&r=${retryCount}`;
   };
 
   return (
@@ -86,8 +80,8 @@ const MediaCard = ({
               console.log(`Image loaded successfully: ${file.original_file_name}`);
               setIsLoading(false);
             }}
-            onError={(e) => {
-              console.error(`Error loading image: ${file.original_file_name}`, e);
+            onError={() => {
+              console.error(`Error loading image: ${file.original_file_name}`);
               setHasError(true);
               setIsLoading(false);
             }}
@@ -118,7 +112,7 @@ const MediaCard = ({
             className="h-8 w-8"
             onClick={(e) => {
               e.stopPropagation();
-              onCopyUrl(cleanUrl);
+              onCopyUrl(file.url.split('?')[0]); // Use clean URL
             }}
             title="Copy URL"
           >

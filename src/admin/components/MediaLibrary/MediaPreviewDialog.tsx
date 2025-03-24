@@ -98,8 +98,8 @@ const MediaPreviewDialog = ({
                   console.log("Preview image loaded successfully");
                   setIsLoading(false);
                 }}
-                onError={(e) => {
-                  console.error("Error loading preview image:", e);
+                onError={() => {
+                  console.error("Error loading preview image");
                   setHasError(true);
                   setIsLoading(false);
                 }}
