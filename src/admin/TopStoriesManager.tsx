@@ -51,6 +51,7 @@ const TopStoriesManager = () => {
   const [featured, setFeatured] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [storyToDelete, setStoryToDelete] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -333,6 +334,70 @@ const TopStoriesManager = () => {
     }
   };
 
+  const saveChanges = async () => {
+    setIsSaving(true);
+    try {
+      // First, create an array of simplified story objects to save
+      const storiesToSave = topStories.map((story, index) => ({
+        article_id: story.article_id,
+        order_index: index,
+        featured: story.featured
+      }));
+      
+      // Use a transaction for this to ensure either all operations succeed or all fail
+      // First try updating with upsert rather than deleting and recreating
+      const { error } = await supabase.rpc('update_top_stories', {
+        stories_data: storiesToSave
+      });
+      
+      if (error) {
+        console.error("Error using RPC:", error);
+        
+        // Fallback approach: manual delete and insert
+        // Delete existing top stories one by one rather than with neq
+        for (const story of topStories) {
+          if (story.id) {
+            const { error: deleteError } = await supabase
+              .from('top_stories')
+              .delete()
+              .eq('id', story.id);
+            
+            if (deleteError) {
+              console.error("Error deleting story:", deleteError);
+            }
+          }
+        }
+        
+        // Now insert the new stories
+        const { error: insertError } = await supabase
+          .from('top_stories')
+          .insert(storiesToSave);
+        
+        if (insertError) {
+          throw insertError;
+        }
+      }
+      
+      toast({
+        title: "Changes saved",
+        description: "The top stories have been updated successfully",
+      });
+      
+      // Refresh the stories list
+      fetchTopStories();
+      
+    } catch (error) {
+      console.error('Error saving top stories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save changes. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const getArticleImage = (article?: Article) => {
     if (!article) return null;
     
@@ -350,12 +415,27 @@ const TopStoriesManager = () => {
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h1 className="text-3xl font-heading font-bold">Top Stories</h1>
-          <Button 
-            onClick={handleAddTopStory}
-            disabled={topStories.length >= 4}
-          >
-            <Plus className="h-4 w-4 mr-2" /> Add Top Story
-          </Button>
+          <div className="flex gap-3">
+            <Button 
+              onClick={handleAddTopStory}
+              disabled={topStories.length >= 4 || isSaving}
+            >
+              <Plus className="h-4 w-4 mr-2" /> Add Top Story
+            </Button>
+            <Button 
+              variant="default"
+              onClick={saveChanges}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <span className="animate-spin mr-2">⊝</span> Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
@@ -364,6 +444,18 @@ const TopStoriesManager = () => {
               Manage the top stories section on your homepage. You can add up to 4 stories, 
               reorder them, and mark certain stories as featured.
             </p>
+            
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded text-sm">
+              <h3 className="font-medium text-blue-800 mb-2">How to manage the homepage carousel:</h3>
+              <ul className="list-disc pl-5 space-y-1 text-blue-700">
+                <li>Articles marked with a ⭐ will appear in the homepage carousel</li>
+                <li>Up to 3 featured articles will be displayed in the carousel</li>
+                <li>Drag and drop to reorder the stories - this order will apply to both the top stories list and the carousel</li>
+                <li>Click the star icon to toggle whether a story appears in the carousel</li>
+                <li>Don't forget to click "Save Changes" when you're done</li>
+              </ul>
+            </div>
+
             {topStories.length >= 4 && (
               <div className="mt-2 p-2 bg-yellow-50 border border-yellow-100 rounded text-sm text-yellow-800">
                 Maximum of 4 top stories reached. Remove one to add another.
@@ -429,7 +521,7 @@ const TopStoriesManager = () => {
                           variant="ghost" 
                           size="icon"
                           onClick={() => moveStory(story.id, 'up')}
-                          disabled={index === 0}
+                          disabled={index === 0 || isSaving}
                         >
                           <ArrowUp className="h-4 w-4" />
                         </Button>
@@ -437,7 +529,7 @@ const TopStoriesManager = () => {
                           variant="ghost" 
                           size="icon"
                           onClick={() => moveStory(story.id, 'down')}
-                          disabled={index === topStories.length - 1}
+                          disabled={index === topStories.length - 1 || isSaving}
                         >
                           <ArrowDown className="h-4 w-4" />
                         </Button>
@@ -447,6 +539,7 @@ const TopStoriesManager = () => {
                         variant="outline" 
                         size="sm"
                         onClick={() => toggleFeatured(story.id)}
+                        disabled={isSaving}
                       >
                         <Star className={`h-4 w-4 mr-1 ${story.featured ? 'text-amber-500 fill-amber-500' : ''}`} />
                         {story.featured ? 'Unfeature' : 'Feature'}
@@ -456,6 +549,7 @@ const TopStoriesManager = () => {
                         variant="ghost" 
                         size="icon"
                         onClick={() => confirmDelete(story.id)}
+                        disabled={isSaving}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>

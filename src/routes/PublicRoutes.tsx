@@ -2,7 +2,7 @@
 import { Route, Routes } from "react-router-dom";
 import HomePage from "@/pages/home/HomePage";
 import NotFound from "@/pages/NotFound";
-import { CricketNewsPage } from "@/pages/cricket-news";
+import CricketNewsPage from "@/pages/cricket-news";
 import ArticleDetail from "@/pages/ArticleDetail";
 
 // PublicRoutes component that renders all public routes

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, ChevronRight } from 'lucide-react';
@@ -7,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { topStories as fallbackTopStories } from '../data/homeData';
 
-// Update the topStories interface to include the missing properties
 interface TopStory {
   id: string;
   title: string;
