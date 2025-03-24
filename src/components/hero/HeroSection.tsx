@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { getTopStories } from '@/integrations/supabase/client';
 import { HeroArticle } from './types';
 import { HeroContent } from './HeroContent';
 import { HeroImage } from './HeroImage';
 import { HeroControls } from './HeroControls';
-import { getCategoryUrl, getMockHeroArticles } from './heroUtils';
+import { getCategoryUrl, fetchHeroSliderArticles } from './heroUtils';
 
 export const HeroSection = () => {
   const { toast } = useToast();
@@ -15,56 +14,26 @@ export const HeroSection = () => {
   const [heroArticles, setHeroArticles] = useState<HeroArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch top stories from Supabase
+  // Fetch hero slider articles from Supabase
   useEffect(() => {
-    const fetchTopStories = async () => {
+    const fetchHeroArticles = async () => {
       try {
         setIsLoading(true);
-        const topStoriesData = await getTopStories();
-        
-        // Filter to get only featured stories and limit to 3
-        const featuredStories = topStoriesData
-          .filter(story => story.featured)
-          .slice(0, 3)
-          .map(story => ({
-            id: story.article_id,
-            title: story.articles.title,
-            excerpt: story.articles.excerpt || 'Read this exciting story...',
-            category: story.articles.category,
-            // Fixed: Using featured_image since cover_image doesn't exist in the type
-            imageUrl: story.articles.featured_image || 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop',
-            date: new Date(story.articles.published_at).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric'
-            }),
-            isFeaturedPick: Math.random() > 0.5 // Randomly mark some articles as featured picks
-          }));
-        
-        // If no featured stories, use fallback data
-        if (featuredStories.length === 0) {
-          console.log('No top stories found, returning mock data');
-          setHeroArticles(getMockHeroArticles());
-        } else {
-          setHeroArticles(featuredStories);
-        }
+        const articles = await fetchHeroSliderArticles();
+        setHeroArticles(articles);
       } catch (error) {
-        console.error('Error fetching top stories:', error);
-        // Toast notification for error
+        console.error('Error fetching hero slider articles:', error);
         toast({
-          title: "Error fetching featured articles",
+          title: "Error loading hero slider",
           description: "Could not load the featured articles. Using sample data instead.",
           variant: "destructive"
         });
-        
-        // Fallback to mock data in case of error
-        setHeroArticles(getMockHeroArticles());
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchTopStories();
+    fetchHeroArticles();
   }, [toast]);
   
   useEffect(() => {

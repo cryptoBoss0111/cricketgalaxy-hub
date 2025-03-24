@@ -87,6 +87,33 @@ export type Database = {
         }
         Relationships: []
       }
+      fan_polls: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          options: Json
+          question: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          options: Json
+          question: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          options?: Json
+          question?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       fantasy_picks: {
         Row: {
           created_at: string
@@ -125,6 +152,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      hero_slider: {
+        Row: {
+          article_id: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          order_index: number
+          updated_at: string | null
+        }
+        Insert: {
+          article_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index: number
+          updated_at?: string | null
+        }
+        Update: {
+          article_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hero_slider_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       navigation_items: {
         Row: {
@@ -191,6 +253,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      poll_votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          option_id: string
+          poll_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          option_id: string
+          poll_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          option_id?: string
+          poll_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "fan_polls"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       top_stories: {
         Row: {

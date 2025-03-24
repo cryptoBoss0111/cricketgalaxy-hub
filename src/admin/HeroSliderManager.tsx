@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ArrowUp, ArrowDown, Trash2, Star, ImageIcon } from 'lucide-react';
+import { Plus, ArrowUp, ArrowDown, Trash2, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -31,72 +31,69 @@ interface Article {
   featured_image?: string;
   cover_image?: string;
   category: string;
-  excerpt?: string;
 }
 
-interface TopStory {
+interface SliderItem {
   id: string;
   article_id: string;
   order_index: number;
-  featured: boolean;
+  is_active: boolean;
   article?: Article;
 }
 
-const TopStoriesManager = () => {
-  const [topStories, setTopStories] = useState<TopStory[]>([]);
+const HeroSliderManager = () => {
+  const [sliderItems, setSliderItems] = useState<SliderItem[]>([]);
   const [availableArticles, setAvailableArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<string>('');
-  const [featured, setFeatured] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [storyToDelete, setStoryToDelete] = useState<string | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchTopStories();
+    fetchSliderItems();
     fetchAvailableArticles();
   }, []);
 
-  const fetchTopStories = async () => {
+  const fetchSliderItems = async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('top_stories')
+        .from('hero_slider')
         .select(`
           id,
           article_id,
           order_index,
-          featured,
+          is_active,
           articles:article_id (
             id,
             title,
             featured_image,
             cover_image,
-            category,
-            excerpt
+            category
           )
         `)
         .order('order_index', { ascending: true });
       
       if (error) throw error;
       
-      const formattedStories: TopStory[] = (data || []).map(story => ({
-        id: story.id,
-        article_id: story.article_id,
-        order_index: story.order_index,
-        featured: story.featured,
-        article: story.articles as Article
+      const formattedItems: SliderItem[] = (data || []).map(item => ({
+        id: item.id,
+        article_id: item.article_id,
+        order_index: item.order_index,
+        is_active: item.is_active,
+        article: item.articles as Article
       }));
       
-      setTopStories(formattedStories);
+      setSliderItems(formattedItems);
     } catch (error) {
-      console.error('Error fetching top stories:', error);
+      console.error('Error fetching slider items:', error);
       toast({
         title: "Error",
-        description: "Failed to load top stories",
+        description: "Failed to load hero slider items",
         variant: "destructive",
       });
     } finally {
@@ -108,7 +105,7 @@ const TopStoriesManager = () => {
     try {
       const { data, error } = await supabase
         .from('articles')
-        .select('id, title, featured_image, cover_image, category, excerpt')
+        .select('id, title, featured_image, cover_image, category')
         .eq('published', true)
         .order('published_at', { ascending: false });
       
@@ -125,44 +122,43 @@ const TopStoriesManager = () => {
     }
   };
 
-  const handleAddTopStory = () => {
+  const handleAddSliderItem = () => {
     setSelectedArticle('');
-    setFeatured(false);
     setDialogOpen(true);
   };
 
   const confirmDelete = (id: string) => {
-    setStoryToDelete(id);
+    setItemToDelete(id);
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteStory = async () => {
-    if (!storyToDelete) return;
+  const handleDeleteItem = async () => {
+    if (!itemToDelete) return;
     
     try {
       const { error } = await supabase
-        .from('top_stories')
+        .from('hero_slider')
         .delete()
-        .eq('id', storyToDelete);
+        .eq('id', itemToDelete);
       
       if (error) throw error;
       
-      setTopStories(topStories.filter(story => story.id !== storyToDelete));
+      setSliderItems(sliderItems.filter(item => item.id !== itemToDelete));
       
       toast({
-        title: "Story removed",
-        description: "The article has been removed from top stories",
+        title: "Item deleted",
+        description: "The slider item has been successfully removed",
       });
     } catch (error) {
-      console.error('Error deleting top story:', error);
+      console.error('Error deleting slider item:', error);
       toast({
         title: "Error",
-        description: "Failed to remove story",
+        description: "Failed to delete slider item",
         variant: "destructive",
       });
     } finally {
       setDeleteDialogOpen(false);
-      setStoryToDelete(null);
+      setItemToDelete(null);
     }
   };
 
@@ -170,110 +166,99 @@ const TopStoriesManager = () => {
     if (!selectedArticle) {
       toast({
         title: "No article selected",
-        description: "Please select an article to add to top stories",
+        description: "Please select an article to add to the slider",
         variant: "destructive",
       });
       return;
     }
 
-    // Check if article is already in top stories
-    if (topStories.some(story => story.article_id === selectedArticle)) {
+    // Check if article is already in slider
+    if (sliderItems.some(item => item.article_id === selectedArticle)) {
       toast({
-        title: "Already in top stories",
-        description: "This article is already a top story",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Limit to 4 top stories
-    if (topStories.length >= 4) {
-      toast({
-        title: "Maximum reached",
-        description: "You can only have up to 4 top stories. Remove one first.",
+        title: "Article already in slider",
+        description: "This article is already part of the hero slider",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      // Add the new story with the next order index
-      const nextOrderIndex = topStories.length > 0 
-        ? Math.max(...topStories.map(story => story.order_index)) + 1 
+      // Add the new item with the next order index
+      const nextOrderIndex = sliderItems.length > 0 
+        ? Math.max(...sliderItems.map(item => item.order_index)) + 1 
         : 0;
       
       const { data, error } = await supabase
-        .from('top_stories')
+        .from('hero_slider')
         .insert({
           article_id: selectedArticle,
           order_index: nextOrderIndex,
-          featured: featured
+          is_active: true
         })
         .select(`
           id,
           article_id,
           order_index,
-          featured,
+          is_active,
           articles:article_id (
             id,
             title,
             featured_image,
             cover_image,
-            category,
-            excerpt
+            category
           )
         `)
         .single();
       
       if (error) throw error;
       
-      const newStory: TopStory = {
+      const newItem: SliderItem = {
         id: data.id,
         article_id: data.article_id,
         order_index: data.order_index,
-        featured: data.featured,
+        is_active: data.is_active,
         article: data.articles as Article
       };
       
-      setTopStories([...topStories, newStory]);
+      setSliderItems([...sliderItems, newItem]);
       
       toast({
-        title: "Story added",
-        description: "The article has been added to top stories",
+        title: "Item added",
+        description: "The article has been added to the hero slider",
       });
       
       setDialogOpen(false);
     } catch (error) {
-      console.error('Error adding top story:', error);
+      console.error('Error adding slider item:', error);
       toast({
         title: "Error",
-        description: "Failed to add story",
+        description: "Failed to add article to slider",
         variant: "destructive",
       });
     }
   };
 
-  const moveStory = async (id: string, direction: 'up' | 'down') => {
-    const currentIndex = topStories.findIndex(story => story.id === id);
+  const moveItem = async (id: string, direction: 'up' | 'down') => {
+    const currentIndex = sliderItems.findIndex(item => item.id === id);
     if (currentIndex === -1) return;
     
     const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     
     // Check bounds
-    if (newIndex < 0 || newIndex >= topStories.length) return;
+    if (newIndex < 0 || newIndex >= sliderItems.length) return;
     
-    const targetStory = topStories[newIndex];
+    const targetItem = sliderItems[newIndex];
     
     try {
       // Swap order indices in database
       const updates = [
-        { id: id, order_index: targetStory.order_index },
-        { id: targetStory.id, order_index: topStories[currentIndex].order_index }
+        { id: id, order_index: targetItem.order_index },
+        { id: targetItem.id, order_index: sliderItems[currentIndex].order_index }
       ];
       
       for (const update of updates) {
         const { error } = await supabase
-          .from('top_stories')
+          .from('hero_slider')
           .update({ order_index: update.order_index })
           .eq('id', update.id);
         
@@ -281,53 +266,53 @@ const TopStoriesManager = () => {
       }
       
       // Update local state
-      const newTopStories = [...topStories];
-      [newTopStories[currentIndex], newTopStories[newIndex]] = [newTopStories[newIndex], newTopStories[currentIndex]];
+      const newSliderItems = [...sliderItems];
+      [newSliderItems[currentIndex], newSliderItems[newIndex]] = [newSliderItems[newIndex], newSliderItems[currentIndex]];
       
       // Fix order indices in state
-      newTopStories.forEach((story, index) => {
-        story.order_index = index;
+      newSliderItems.forEach((item, index) => {
+        item.order_index = index;
       });
       
-      setTopStories(newTopStories);
+      setSliderItems(newSliderItems);
     } catch (error) {
-      console.error('Error reordering top stories:', error);
+      console.error('Error reordering slider items:', error);
       toast({
         title: "Error",
-        description: "Failed to reorder stories",
+        description: "Failed to reorder slider items",
         variant: "destructive",
       });
     }
   };
 
-  const toggleFeatured = async (id: string) => {
-    const story = topStories.find(story => story.id === id);
-    if (!story) return;
+  const toggleActive = async (id: string) => {
+    const item = sliderItems.find(item => item.id === id);
+    if (!item) return;
     
     try {
       const { error } = await supabase
-        .from('top_stories')
-        .update({ featured: !story.featured })
+        .from('hero_slider')
+        .update({ is_active: !item.is_active })
         .eq('id', id);
       
       if (error) throw error;
       
       // Update local state
-      setTopStories(topStories.map(story => 
-        story.id === id ? { ...story, featured: !story.featured } : story
+      setSliderItems(sliderItems.map(item => 
+        item.id === id ? { ...item, is_active: !item.is_active } : item
       ));
       
       toast({
-        title: story.featured ? "Feature removed" : "Story featured",
-        description: story.featured 
-          ? "The story is no longer featured" 
-          : "The story is now featured",
+        title: item.is_active ? "Item hidden" : "Item visible",
+        description: item.is_active 
+          ? "The slider item will no longer appear in the hero section" 
+          : "The slider item will now appear in the hero section",
       });
     } catch (error) {
-      console.error('Error toggling featured status:', error);
+      console.error('Error toggling slider item status:', error);
       toast({
         title: "Error",
-        description: "Failed to update featured status",
+        description: "Failed to update slider item status",
         variant: "destructive",
       });
     }
@@ -349,50 +334,42 @@ const TopStoriesManager = () => {
     <AdminLayout>
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h1 className="text-3xl font-heading font-bold">Top Stories</h1>
-          <Button 
-            onClick={handleAddTopStory}
-            disabled={topStories.length >= 4}
-          >
-            <Plus className="h-4 w-4 mr-2" /> Add Top Story
+          <h1 className="text-3xl font-heading font-bold">Hero Slider</h1>
+          <Button onClick={handleAddSliderItem}>
+            <Plus className="h-4 w-4 mr-2" /> Add Article to Slider
           </Button>
         </div>
 
         <div className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
           <div className="mb-4">
             <p className="text-gray-500">
-              Manage the top stories section on your homepage. You can add up to 4 stories, 
-              reorder them, and mark certain stories as featured.
+              Manage the articles that appear in the hero slider at the top of your website. 
+              You can add, remove, reorder, and toggle visibility for each slider item.
             </p>
-            {topStories.length >= 4 && (
-              <div className="mt-2 p-2 bg-yellow-50 border border-yellow-100 rounded text-sm text-yellow-800">
-                Maximum of 4 top stories reached. Remove one to add another.
-              </div>
-            )}
           </div>
           
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cricket-accent"></div>
             </div>
-          ) : topStories.length === 0 ? (
+          ) : sliderItems.length === 0 ? (
             <div className="text-center py-12">
-              <h3 className="text-xl font-medium text-gray-500">No top stories found</h3>
-              <p className="text-gray-400 mt-2">Start by adding articles to your top stories section.</p>
-              <Button variant="outline" className="mt-4" onClick={handleAddTopStory}>
-                <Plus className="mr-2 h-4 w-4" /> Add Top Story
+              <h3 className="text-xl font-medium text-gray-500">No slider items found</h3>
+              <p className="text-gray-400 mt-2">Start by adding articles to your hero slider.</p>
+              <Button variant="outline" className="mt-4" onClick={handleAddSliderItem}>
+                <Plus className="mr-2 h-4 w-4" /> Add Slider Item
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              {topStories.map((story, index) => (
-                <Card key={story.id} className="p-4">
+              {sliderItems.map((item, index) => (
+                <Card key={item.id} className="p-4">
                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                     <div className="w-20 h-20 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
-                      {getArticleImage(story.article) ? (
+                      {getArticleImage(item.article) ? (
                         <img 
-                          src={getArticleImage(story.article)!} 
-                          alt={story.article?.title} 
+                          src={getArticleImage(item.article)!} 
+                          alt={item.article?.title} 
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -403,24 +380,24 @@ const TopStoriesManager = () => {
                     </div>
                     
                     <div className="flex-1">
-                      <div className="flex items-center">
-                        <h3 className="font-medium truncate" title={story.article?.title}>
-                          {story.article?.title}
-                        </h3>
-                        {story.featured && (
-                          <div className="ml-2 flex items-center">
-                            <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                          </div>
-                        )}
-                      </div>
+                      <h3 className="font-medium truncate" title={item.article?.title}>
+                        {item.article?.title}
+                      </h3>
                       <p className="text-sm text-gray-500">
-                        {story.article?.category}
+                        {item.article?.category}
                       </p>
-                      {story.article?.excerpt && (
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                          {story.article.excerpt}
-                        </p>
-                      )}
+                      <div className="flex items-center mt-1">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          item.is_active 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {item.is_active ? 'Visible' : 'Hidden'}
+                        </span>
+                        <span className="text-xs text-gray-500 ml-2">
+                          Order: {item.order_index + 1}
+                        </span>
+                      </div>
                     </div>
                     
                     <div className="flex gap-2 items-center">
@@ -428,7 +405,7 @@ const TopStoriesManager = () => {
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          onClick={() => moveStory(story.id, 'up')}
+                          onClick={() => moveItem(item.id, 'up')}
                           disabled={index === 0}
                         >
                           <ArrowUp className="h-4 w-4" />
@@ -436,26 +413,24 @@ const TopStoriesManager = () => {
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          onClick={() => moveStory(story.id, 'down')}
-                          disabled={index === topStories.length - 1}
+                          onClick={() => moveItem(item.id, 'down')}
+                          disabled={index === sliderItems.length - 1}
                         >
                           <ArrowDown className="h-4 w-4" />
                         </Button>
                       </div>
                       
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => toggleFeatured(story.id)}
-                      >
-                        <Star className={`h-4 w-4 mr-1 ${story.featured ? 'text-amber-500 fill-amber-500' : ''}`} />
-                        {story.featured ? 'Unfeature' : 'Feature'}
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          checked={item.is_active}
+                          onCheckedChange={() => toggleActive(item.id)}
+                        />
+                      </div>
                       
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        onClick={() => confirmDelete(story.id)}
+                        onClick={() => confirmDelete(item.id)}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
@@ -468,17 +443,17 @@ const TopStoriesManager = () => {
         </div>
       </div>
       
-      {/* Add Story Dialog */}
+      {/* Add Article Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Top Story</DialogTitle>
+            <DialogTitle>Add Article to Slider</DialogTitle>
             <DialogDescription>
-              Select an article to add to the top stories section on your homepage.
+              Select an article to add to the hero slider on your homepage.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="py-4 space-y-4">
+          <div className="py-4">
             <Select value={selectedArticle} onValueChange={setSelectedArticle}>
               <SelectTrigger>
                 <SelectValue placeholder="Select an article" />
@@ -491,20 +466,6 @@ const TopStoriesManager = () => {
                 ))}
               </SelectContent>
             </Select>
-            
-            <div className="flex items-center space-x-2">
-              <Switch 
-                id="featured"
-                checked={featured}
-                onCheckedChange={setFeatured}
-              />
-              <label 
-                htmlFor="featured" 
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Feature this story
-              </label>
-            </div>
           </div>
           
           <DialogFooter>
@@ -512,7 +473,7 @@ const TopStoriesManager = () => {
               Cancel
             </Button>
             <Button onClick={handleSubmit}>
-              Add Story
+              Add to Slider
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -522,16 +483,16 @@ const TopStoriesManager = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove Top Story</DialogTitle>
+            <DialogTitle>Remove from Slider</DialogTitle>
             <DialogDescription>
-              Are you sure you want to remove this article from top stories?
+              Are you sure you want to remove this article from the hero slider?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteStory}>
+            <Button variant="destructive" onClick={handleDeleteItem}>
               Remove
             </Button>
           </DialogFooter>
@@ -541,4 +502,4 @@ const TopStoriesManager = () => {
   );
 };
 
-export default TopStoriesManager;
+export default HeroSliderManager;

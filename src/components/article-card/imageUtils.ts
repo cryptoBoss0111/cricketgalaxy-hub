@@ -7,7 +7,7 @@ const RELIABLE_FALLBACKS = [
   'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=600&auto=format&fit=crop'
 ];
 
-// Simplified URL validation - just ensure we have a string
+// Simplified URL validation
 export const isValidImageUrl = (url?: string): boolean => {
   return !!url && url.trim() !== '';
 };
@@ -16,12 +16,7 @@ export const isValidImageUrl = (url?: string): boolean => {
 export const getFullImageUrl = (url: string): string => {
   if (!url) return DEFAULT_PLACEHOLDER;
   
-  // If URL already includes the Supabase domain, return as is
-  if (url.includes('swiftskcxeoyomwwmkms.supabase.co')) {
-    return url;
-  }
-  
-  // If URL already starts with http(s), it's already a full URL
+  // If URL already includes http(s), it's already a full URL
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
@@ -32,7 +27,6 @@ export const getFullImageUrl = (url: string): string => {
   }
   
   // For Supabase storage paths, construct the full URL
-  // If it's an article_images path or other storage path
   return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
 };
 

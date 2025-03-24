@@ -1,3 +1,4 @@
+
 import { Navigate } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import AdminDashboard from "@/admin/Dashboard";
@@ -6,6 +7,8 @@ import ArticleForm from "@/admin/ArticleForm";
 import Analytics from "@/admin/Analytics";
 import NavigationManager from "@/admin/NavigationManager";
 import TopStoriesManager from "@/admin/TopStoriesManager";
+import FanPollManager from "@/admin/FanPollManager";
+import HeroSliderManager from "@/admin/HeroSliderManager";
 import FantasyPicksManager from "@/admin/FantasyPicksManager";
 import MatchesManager from "@/admin/MatchesManager";
 import PlayerProfilesManager from "@/admin/PlayerProfilesManager";

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { 
@@ -16,7 +15,9 @@ import {
   BarChart2,
   Navigation,
   TrendingUp,
-  Award
+  Award,
+  Layers,
+  PieChart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
@@ -57,9 +58,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   useEffect(() => {
     let isMounted = true;
     
-    // Check if the user is authenticated
     const verifyAdmin = async () => {
-      // Skip if we've already done this check or component is unmounting
       if (!isMounted || authCheckComplete.current) return;
       
       try {
@@ -89,7 +88,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           }
         }
         
-        // Do a single fast check of admin status
         const { isAdmin } = await checkAdminStatus();
         
         if (!isAdmin && isMounted) {
@@ -108,7 +106,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       }
     };
     
-    // Handle responsive behavior
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
       if (window.innerWidth >= 768) {
@@ -119,7 +116,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     handleResize();
     window.addEventListener('resize', handleResize);
     
-    // Only verify once
     if (!authCheckComplete.current) {
       verifyAdmin();
     }
@@ -132,7 +128,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   
   const handleLogout = async () => {
     try {
-      // Clear authentication data
       const { success } = await signOutAdmin();
       
       if (success) {
@@ -156,7 +151,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     }
   };
   
-  // Show loading state while verifying
   if (isVerifying) {
     return (
       <div className="h-screen flex items-center justify-center">
@@ -180,16 +174,28 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       active: location.pathname.includes('/admin/articles')
     },
     {
-      icon: <Navigation size={20} />,
-      label: 'Navigation',
-      href: '/admin/navigation',
-      active: location.pathname === '/admin/navigation'
+      icon: <Layers size={20} />,
+      label: 'Hero Slider',
+      href: '/admin/hero-slider',
+      active: location.pathname === '/admin/hero-slider'
     },
     {
       icon: <TrendingUp size={20} />,
       label: 'Top Stories',
       href: '/admin/top-stories',
       active: location.pathname === '/admin/top-stories'
+    },
+    {
+      icon: <PieChart size={20} />,
+      label: 'Fan Polls',
+      href: '/admin/fan-polls',
+      active: location.pathname === '/admin/fan-polls'
+    },
+    {
+      icon: <Navigation size={20} />,
+      label: 'Navigation',
+      href: '/admin/navigation',
+      active: location.pathname === '/admin/navigation'
     },
     {
       icon: <Award size={20} />,
@@ -231,7 +237,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   
   return (
     <div className={cn("min-h-screen bg-gray-50", isCollapsed && !isMobile ? "admin-collapsed" : "")}>
-      {/* Mobile Header */}
       {isMobile && (
         <div className="fixed top-0 left-0 right-0 h-16 bg-white z-50 border-b flex items-center justify-between px-4">
           <div className="flex items-center space-x-4">
@@ -257,7 +262,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         </div>
       )}
       
-      {/* Mobile Sidebar Overlay */}
       {isMobile && isMobileMenuOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40"
@@ -265,7 +269,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         />
       )}
       
-      {/* Sidebar */}
       <aside 
         className={cn(
           "fixed inset-y-0 left-0 z-40 bg-gradient-to-b from-cricket-primary to-cricket-secondary text-white transition-all",
@@ -382,7 +385,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         </div>
       </aside>
       
-      {/* Main Content */}
       <main 
         className={cn(
           "transition-all duration-200", 

@@ -1,5 +1,6 @@
 
 import { HeroArticle } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
 // Convert category to URL-friendly format
 export const getCategoryUrl = (category: string): string => {
@@ -17,7 +18,58 @@ export const getCategoryUrl = (category: string): string => {
   return categoryMap[category] || 'cricket-news';
 };
 
-// Mock data for fallback when no featured stories are found
+// Fetch hero slider items from Supabase
+export const fetchHeroSliderArticles = async (): Promise<HeroArticle[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('hero_slider')
+      .select(`
+        id,
+        article_id,
+        order_index,
+        is_active,
+        articles:article_id (
+          id,
+          title,
+          excerpt,
+          featured_image,
+          cover_image,
+          category,
+          published_at
+        )
+      `)
+      .eq('is_active', true)
+      .order('order_index', { ascending: true });
+      
+    if (error) throw error;
+    
+    if (!data || data.length === 0) {
+      return getMockHeroArticles();
+    }
+    
+    return data.map(item => {
+      const article = item.articles as any;
+      return {
+        id: article.id,
+        title: article.title,
+        excerpt: article.excerpt || 'Read this exciting story...',
+        category: article.category,
+        imageUrl: article.featured_image || article.cover_image || null,
+        date: new Date(article.published_at).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        }),
+        isFeaturedPick: false
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching hero slider articles:', error);
+    return getMockHeroArticles();
+  }
+};
+
+// Mock data for fallback when no hero articles are found
 export const getMockHeroArticles = (): HeroArticle[] => [
   {
     id: '1',
