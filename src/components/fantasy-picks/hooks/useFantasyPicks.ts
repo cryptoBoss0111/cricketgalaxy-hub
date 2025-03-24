@@ -17,7 +17,22 @@ export type FantasyPick = {
   created_at: string;
 };
 
-// Database type is defined in the supabase client file
+// Database type is explicitly defined here to avoid circular imports
+type FantasyPickDbType = {
+  id: string;
+  player_name: string;
+  team: string;
+  role: string;
+  form: string;
+  image_url?: string;
+  stats?: string;
+  points_prediction: number;
+  match: string;
+  reason: string;
+  created_at: string;
+  updated_at?: string;
+  match_id?: string;
+};
 
 export const useFantasyPicks = () => {
   const [fantasyPicks, setFantasyPicks] = useState<FantasyPick[]>([]);
@@ -38,7 +53,7 @@ export const useFantasyPicks = () => {
         
         if (data && data.length > 0) {
           // Transform the DB data to our component's expected format
-          const transformedData: FantasyPick[] = data.map((dbPick: any) => ({
+          const transformedData: FantasyPick[] = data.map((dbPick: FantasyPickDbType) => ({
             id: dbPick.id,
             player_name: dbPick.player_name,
             team: dbPick.team,
