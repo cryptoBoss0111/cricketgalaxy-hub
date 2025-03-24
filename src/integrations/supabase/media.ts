@@ -14,14 +14,17 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       throw new Error("Please upload a valid image file");
     }
 
-    // Use the original filename 
+    // Use the original filename but sanitize it
     const originalFileName = file.name;
     
-    // Create a unique stored filename to prevent collisions while preserving original name
-    const timestamp = Date.now();
-    // Sanitize the filename to avoid URL encoding issues - remove spaces and special characters
-    const fileBaseName = originalFileName.split('.')[0].replace(/[^a-zA-Z0-9]/g, '_');
+    // Sanitize filename to remove spaces and special characters
+    const fileBaseName = file.name
+      .split('.')[0]
+      .replace(/\s+/g, "_")         // Replace spaces with underscores
+      .replace(/[^\w.-]/g, "");     // Remove any special characters except word chars, dots and hyphens
+    
     const extension = originalFileName.split('.').pop()?.toLowerCase() || '';
+    const timestamp = Date.now();
     const storedFileName = `${fileBaseName}_${timestamp}.${extension}`;
     
     console.log("Uploading image:", originalFileName);

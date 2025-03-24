@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/card';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { uploadImageToStorage } from '@/integrations/supabase/media';
@@ -27,7 +26,6 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   
   useEffect(() => {
     if (existingImageUrl) {
-      // Clean the URL by removing any query parameters
       const cleanedUrl = existingImageUrl.split('?')[0];
       setPreviewUrl(cleanedUrl);
       setCleanUrl(cleanedUrl);
@@ -60,10 +58,8 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       return;
     }
     
-    // Set the file for cropping
     setSelectedFile(file);
     
-    // Create preview from the selected file
     const fileReader = new FileReader();
     fileReader.onload = () => {
       if (typeof fileReader.result === 'string') {
@@ -83,25 +79,31 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     setError(null);
     
     try {
-      // Create a file from the blob
-      const croppedFile = new File([croppedBlob], selectedFile.name, { type: 'image/jpeg' });
+      const originalName = selectedFile.name;
+      
+      const safeBaseName = originalName
+        .split('.')[0]
+        .replace(/\s+/g, "_")
+        .replace(/[^\w.-]/g, "");
+      
+      const extension = originalName.split('.').pop()?.toLowerCase() || 'jpg';
+      const safeName = `${safeBaseName}.${extension}`;
+      
+      const croppedFile = new File([croppedBlob], safeName, { type: 'image/jpeg' });
       
       console.log("Starting image upload process with cropped image...");
+      console.log("Sanitized filename:", safeName);
       
-      // Upload the image to Supabase and get media record
       const mediaRecord = await uploadImageToStorage(croppedFile);
       
       console.log("Upload successful, media record:", mediaRecord);
       
-      // Ensure the URL is clean (no query parameters)
       const cleanedUrl = mediaRecord.url.split('?')[0];
       setCleanUrl(cleanedUrl);
       setPreviewUrl(cleanedUrl);
       
-      // Pass the URL to the parent component
       onImageUploaded(cleanedUrl);
       
-      // Reset cropping state
       setImageToProcess(null);
       setSelectedFile(null);
       
@@ -130,12 +132,10 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   };
   
   const handleCropCancel = () => {
-    // Clean up URL object if it's not a data URL
     if (imageToProcess && !imageToProcess.startsWith('data:')) {
       URL.revokeObjectURL(imageToProcess);
     }
     
-    // Reset cropping state
     setImageToProcess(null);
     setSelectedFile(null);
   };
@@ -155,16 +155,12 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     setRetryCount(prev => prev + 1);
   };
   
-  // Create a URL with cache busting for external images
   const getImageUrl = () => {
     if (!previewUrl) return null;
     
-    // If it's a data URL, return as is
     if (previewUrl.startsWith('data:')) return previewUrl;
     
-    // If it's a network URL, add cache busting
     try {
-      // Use cleanUrl if available, otherwise use previewUrl but clean it first
       const baseUrl = cleanUrl || previewUrl.split('?')[0];
       return `${baseUrl}?t=${Date.now()}&r=${retryCount}`;
     } catch {
