@@ -1,8 +1,9 @@
 
 export interface MediaFile {
-  name: string;
-  publicUrl: string;
-  size: number;
+  id: string;
+  original_file_name: string;
+  stored_file_name: string;
+  url: string;
   created_at: string;
-  metadata?: any;
+  size?: number;
 }

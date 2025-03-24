@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { uploadImageToStorage } from '@/integrations/supabase/client';
+import { uploadImageToStorage } from '@/integrations/supabase/media';
 import { Image, Upload, X, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -65,13 +65,13 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     try {
       console.log("Starting image upload process...");
       
-      // Upload the image to Supabase and get direct URL
-      const imageUrl = await uploadImageToStorage(file, 'article_images');
+      // Upload the image to Supabase and get media record
+      const mediaRecord = await uploadImageToStorage(file);
       
-      console.log("Upload successful, image URL:", imageUrl);
+      console.log("Upload successful, media record:", mediaRecord);
       
       // Pass the URL to the parent component
-      onImageUploaded(imageUrl);
+      onImageUploaded(mediaRecord.url);
       
       toast({
         title: "Image uploaded",

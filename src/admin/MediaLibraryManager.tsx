@@ -4,7 +4,7 @@ import { Upload, RotateCw } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getMediaFiles, deleteMediaFile, uploadImageToStorage } from '@/integrations/supabase/client';
+import { getMediaFiles, deleteMediaFile, uploadImageToStorage } from '@/integrations/supabase/media';
 import { 
   MediaGrid, 
   MediaSearchBar, 
@@ -36,16 +36,9 @@ const MediaLibraryManager = () => {
       const files = await getMediaFiles();
       console.log("Fetched media files:", files);
       
-      const transformedFiles: MediaFile[] = files.map(file => ({
-        name: file.name,
-        publicUrl: file.publicUrl,
-        size: file.metadata?.size || 0,
-        created_at: file.created_at,
-        metadata: file.metadata
-      }));
-      
-      setMediaFiles(transformedFiles);
-      setFilteredFiles(transformedFiles);
+      // Files are already in the correct format from the database
+      setMediaFiles(files);
+      setFilteredFiles(files);
     } catch (error) {
       console.error('Error fetching media files:', error);
       toast({
@@ -74,7 +67,7 @@ const MediaLibraryManager = () => {
     
     const query = searchQuery.toLowerCase();
     const filtered = mediaFiles.filter(file => 
-      file.name.toLowerCase().includes(query)
+      file.original_file_name.toLowerCase().includes(query)
     );
     setFilteredFiles(filtered);
   };
@@ -124,6 +117,7 @@ const MediaLibraryManager = () => {
           description: `Successfully uploaded ${successCount} ${successCount === 1 ? 'file' : 'files'}`,
         });
         
+        // Refresh the media library after successful upload
         await fetchMediaFiles();
       }
       
@@ -150,9 +144,9 @@ const MediaLibraryManager = () => {
     if (!selectedFile) return;
     
     try {
-      await deleteMediaFile(selectedFile.name);
+      await deleteMediaFile(selectedFile.id);
       
-      setMediaFiles(mediaFiles.filter(file => file.name !== selectedFile.name));
+      setMediaFiles(mediaFiles.filter(file => file.id !== selectedFile.id));
       
       toast({
         title: 'Success',

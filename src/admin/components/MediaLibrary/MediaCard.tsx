@@ -1,9 +1,9 @@
 
+import { useState, useEffect } from 'react';
 import { Copy, Trash2, Image as ImageIcon, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MediaFile } from './types';
-import { useState, useEffect } from 'react';
 
 interface MediaCardProps {
   file: MediaFile;
@@ -26,8 +26,8 @@ const MediaCard = ({
   const [imageSrc, setImageSrc] = useState('');
   
   // Extract a more readable name from the filename
-  const displayName = file.name.split('.')[0] || file.name;
-  const fileExtension = file.name.split('.').pop()?.toLowerCase();
+  const displayName = file.original_file_name.split('.')[0] || file.original_file_name;
+  const fileExtension = file.original_file_name.split('.').pop()?.toLowerCase();
 
   // Generate a new image URL with enhanced cache busting parameters
   useEffect(() => {
@@ -35,7 +35,7 @@ const MediaCard = ({
     const random = Math.floor(Math.random() * 1000000);
     
     // Add specific parameters to help with debugging
-    const url = new URL(file.publicUrl);
+    const url = new URL(file.url);
     url.searchParams.set('t', timestamp.toString());
     url.searchParams.set('r', random.toString());
     url.searchParams.set('retry', retryCount.toString());
@@ -43,19 +43,19 @@ const MediaCard = ({
     
     setImageSrc(url.toString());
     console.log(`Loading card image with URL: ${url.toString()}`);
-  }, [file.publicUrl, retryCount]);
+  }, [file.url, retryCount]);
 
   // Function to handle image retry
   const handleRetry = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log(`Manually retrying image: ${file.name}`);
+    console.log(`Manually retrying image: ${file.original_file_name}`);
     setIsLoading(true);
     setHasError(false);
     setRetryCount(prev => prev + 1);
   };
 
   return (
-    <Card key={file.name} className="overflow-hidden hover:shadow-md transition-shadow">
+    <Card key={file.id} className="overflow-hidden hover:shadow-md transition-shadow">
       <div 
         className="relative h-36 bg-gray-100 cursor-pointer"
         onClick={() => onPreview(file)}
@@ -82,16 +82,16 @@ const MediaCard = ({
         ) : (
           <img 
             src={imageSrc}
-            alt={file.name} 
+            alt={file.original_file_name} 
             className={`absolute inset-0 w-full h-full object-cover p-2 transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             crossOrigin="anonymous"
             loading="lazy"
             onLoad={() => {
-              console.log(`Image loaded successfully: ${file.name}`);
+              console.log(`Image loaded successfully: ${file.original_file_name}`);
               setIsLoading(false);
             }}
             onError={(e) => {
-              console.error(`Error loading image: ${file.name}`, e);
+              console.error(`Error loading image: ${file.original_file_name}`, e);
               setHasError(true);
               setIsLoading(false);
             }}
@@ -100,11 +100,11 @@ const MediaCard = ({
       </div>
       
       <CardContent className="p-3">
-        <div className="text-sm font-medium truncate mb-1" title={file.name}>
+        <div className="text-sm font-medium truncate mb-1" title={file.original_file_name}>
           {displayName}
         </div>
         <div className="text-xs text-gray-500 flex justify-between">
-          <span>{formatFileSize(file.size)}</span>
+          <span>{file.size ? formatFileSize(file.size) : ""}</span>
           {fileExtension && <span className="text-gray-400">.{fileExtension}</span>}
           {hasError && (
             <span className="text-amber-500 flex items-center">
@@ -121,7 +121,7 @@ const MediaCard = ({
             className="h-8 w-8"
             onClick={(e) => {
               e.stopPropagation();
-              onCopyUrl(file.publicUrl);
+              onCopyUrl(file.url);
             }}
             title="Copy URL"
           >

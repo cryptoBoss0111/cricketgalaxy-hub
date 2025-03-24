@@ -199,6 +199,30 @@ export type Database = {
           },
         ]
       }
+      media: {
+        Row: {
+          created_at: string
+          id: string
+          original_file_name: string
+          stored_file_name: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          original_file_name: string
+          stored_file_name: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          original_file_name?: string
+          stored_file_name?: string
+          url?: string
+        }
+        Relationships: []
+      }
       navigation_items: {
         Row: {
           created_at: string

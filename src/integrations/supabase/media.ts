@@ -2,7 +2,7 @@
 import { supabase } from './client-core';
 
 // Upload file to storage with improved error handling
-export const uploadImageToStorage = async (file: File, bucket = 'article_images') => {
+export const uploadImageToStorage = async (file: File, bucket = 'media') => {
   try {
     // Check if file exists
     if (!file) {
@@ -14,33 +14,29 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       throw new Error("Please upload a valid image file");
     }
 
-    // Use the original filename directly without modification
-    const fileName = file.name;
-    const filePath = `${fileName}`;
+    // Use the original filename 
+    const originalFileName = file.name;
     
-    console.log("Uploading image with original filename:", fileName);
+    // Create a unique stored filename to prevent collisions while preserving original name
+    const timestamp = new Date().getTime();
+    const randomString = Math.random().toString(36).substring(2, 8);
+    const extension = originalFileName.split('.').pop()?.toLowerCase() || '';
+    const storedFileName = `${originalFileName.split('.')[0]}_${timestamp}_${randomString}.${extension}`;
     
-    // Get the current session to check authentication status
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      console.error("Session error:", sessionError);
-      // Proceed with anon upload if there's a session error
-    } else {
-      console.log("Session status:", sessionData.session ? "Authenticated" : "Not authenticated");
-    }
+    console.log("Uploading image:", originalFileName);
+    console.log("Stored as:", storedFileName);
     
     // Set proper content type and caching headers
     const options = {
-      cacheControl: '0', // Disable cache to ensure freshness
-      upsert: true,
+      cacheControl: '3600',
+      upsert: false, // Don't overwrite files with the same name
       contentType: file.type
     };
     
     // Upload the file to Supabase Storage
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file, options);
+      .upload(storedFileName, file, options);
     
     if (error) {
       console.error("Storage upload error:", error);
@@ -49,72 +45,53 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     
     console.log("Upload successful, data:", data);
     
-    // Get the public URL with a timestamp to prevent caching
-    const timestamp = new Date().getTime();
+    // Get the public URL
     const { data: { publicUrl } } = supabase
       .storage
       .from(bucket)
       .getPublicUrl(data.path);
     
-    // Add cache busting parameter
-    const urlWithCacheBust = `${publicUrl}?t=${timestamp}`;
-    console.log("Generated public URL with cache busting:", urlWithCacheBust);
+    // Save record to the media table
+    const { data: mediaRecord, error: mediaError } = await supabase
+      .from('media')
+      .insert({
+        original_file_name: originalFileName,
+        stored_file_name: storedFileName,
+        url: publicUrl
+      })
+      .select()
+      .single();
     
-    // Return the public URL
-    return urlWithCacheBust;
+    if (mediaError) {
+      console.error("Error saving to media table:", mediaError);
+      throw mediaError;
+    }
+    
+    console.log("Media record created:", mediaRecord);
+    
+    // Return the media record
+    return mediaRecord;
   } catch (error) {
     console.error('Error uploading image:', error);
     throw error;
   }
 };
 
-// Get all media files
-export const getMediaFiles = async (bucketName = 'article_images') => {
+// Get all media files from the database
+export const getMediaFiles = async () => {
   try {
-    // Ensure bucket exists
-    await ensureBucketExists(bucketName);
-    
-    // List files in the bucket
     const { data, error } = await supabase
-      .storage
-      .from(bucketName)
-      .list('', {
-        limit: 100,
-        offset: 0,
-        sortBy: { column: 'created_at', order: 'desc' }
-      });
+      .from('media')
+      .select('*')
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error("Error fetching media files:", error);
       throw error;
     }
     
-    if (!data || data.length === 0) {
-      console.log("No files found in bucket:", bucketName);
-      return [];
-    }
-    
-    // Add public URLs to each file with timestamp to prevent caching
-    const timestamp = new Date().getTime();
-    const filesWithUrls = data
-      .filter(file => !file.id.startsWith('.') && file.id !== '.emptyFolderPlaceholder')
-      .map(file => {
-        const { data: { publicUrl } } = supabase
-          .storage
-          .from(bucketName)
-          .getPublicUrl(file.name);
-        
-        // Add cache busting parameter
-        const urlWithCacheBust = `${publicUrl}?t=${timestamp}&r=${Math.random().toString(36).substring(2, 8)}`;
-        
-        return {
-          ...file,
-          publicUrl: urlWithCacheBust
-        };
-      });
-    
-    console.log(`Successfully fetched ${filesWithUrls.length} files from bucket:`, bucketName);
-    return filesWithUrls || [];
+    console.log(`Successfully fetched ${data.length} media records`);
+    return data || [];
   } catch (error) {
     console.error('Error in getMediaFiles:', error);
     return [];
@@ -122,62 +99,46 @@ export const getMediaFiles = async (bucketName = 'article_images') => {
 };
 
 // Delete media file
-export const deleteMediaFile = async (fileName: string, bucketName = 'article_images') => {
+export const deleteMediaFile = async (id: string) => {
   try {
-    console.log("Attempting to delete file:", fileName, "from bucket:", bucketName);
+    // First, get the file details
+    const { data: fileData, error: fetchError } = await supabase
+      .from('media')
+      .select('*')
+      .eq('id', id)
+      .single();
     
-    // Extract just the filename from a full URL if needed
-    const actualFileName = fileName.includes('/') 
-      ? fileName.split('/').pop()?.split('?')[0] // Remove query parameters
-      : fileName.split('?')[0]; // Remove query parameters
-    
-    if (!actualFileName) {
-      throw new Error("Invalid file name");
+    if (fetchError) {
+      console.error("Error fetching file data for deletion:", fetchError);
+      throw fetchError;
     }
     
-    const { error } = await supabase
+    // Delete from storage
+    const { error: storageError } = await supabase
       .storage
-      .from(bucketName)
-      .remove([actualFileName]);
+      .from('media')
+      .remove([fileData.stored_file_name]);
     
-    if (error) {
-      console.error("Error deleting media file:", error);
-      throw error;
+    if (storageError) {
+      console.error("Error deleting from storage:", storageError);
+      // Continue to delete the database record even if storage deletion fails
     }
     
-    console.log("Successfully deleted file:", actualFileName);
+    // Delete from database
+    const { error: dbError } = await supabase
+      .from('media')
+      .delete()
+      .eq('id', id);
+    
+    if (dbError) {
+      console.error("Error deleting from media table:", dbError);
+      throw dbError;
+    }
+    
+    console.log("Successfully deleted file:", fileData.original_file_name);
     return true;
   } catch (error) {
     console.error('Error in deleteMediaFile:', error);
     throw error;
-  }
-};
-
-// Ensure bucket exists, create if it doesn't
-export const ensureBucketExists = async (bucketName: string) => {
-  try {
-    // First, check if bucket exists
-    const { data: buckets, error: bucketError } = await supabase
-      .storage
-      .listBuckets();
-    
-    if (bucketError) {
-      console.error("Error fetching buckets:", bucketError);
-      throw bucketError;
-    }
-    
-    const bucketExists = buckets.some(bucket => bucket.name === bucketName);
-    
-    if (!bucketExists) {
-      console.log(`Bucket '${bucketName}' does not exist. Will try to use it anyway.`);
-    } else {
-      console.log(`Bucket '${bucketName}' exists.`);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error ensuring bucket exists:", error);
-    // Just log the error but continue, as the bucket might exist even if we can't confirm it
-    return true;
   }
 };
