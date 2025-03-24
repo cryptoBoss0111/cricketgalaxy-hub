@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { supabase, type FantasyPickDB } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
-// Define our component's internal type that extends what we get from DB
+// Define our component's internal type
 export type FantasyPick = {
   id: string;
   player_name: string;
@@ -16,6 +16,8 @@ export type FantasyPick = {
   selection_reason: string;
   created_at: string;
 };
+
+// Database type is defined in the supabase client file
 
 export const useFantasyPicks = () => {
   const [fantasyPicks, setFantasyPicks] = useState<FantasyPick[]>([]);
@@ -36,7 +38,7 @@ export const useFantasyPicks = () => {
         
         if (data && data.length > 0) {
           // Transform the DB data to our component's expected format
-          const transformedData: FantasyPick[] = data.map((dbPick: FantasyPickDB) => ({
+          const transformedData: FantasyPick[] = data.map((dbPick: any) => ({
             id: dbPick.id,
             player_name: dbPick.player_name,
             team: dbPick.team,
