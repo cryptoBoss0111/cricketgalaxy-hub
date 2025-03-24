@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { BadgeDollarSign } from 'lucide-react';
+import { useFreeWar } from './FreeWarProvider';
 
 interface StickyButtonProps {
   onClick: () => void;
@@ -10,6 +11,7 @@ interface StickyButtonProps {
 
 const StickyButton = ({ onClick }: StickyButtonProps) => {
   const { toast } = useToast();
+  const { showPopup } = useFreeWar();
   
   const handleClick = () => {
     toast({
@@ -18,7 +20,8 @@ const StickyButton = ({ onClick }: StickyButtonProps) => {
       duration: 5000,
     });
     
-    onClick();
+    // Show the popup instead of directly going to selection modal
+    showPopup();
   };
   
   return (

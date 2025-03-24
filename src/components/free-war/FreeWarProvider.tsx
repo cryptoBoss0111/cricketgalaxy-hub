@@ -21,7 +21,6 @@ export const useFreeWar = () => {
 export const FreeWarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
-  const [hasClosedPopup, setHasClosedPopup] = useState(false);
   const [hasScrolledPastThreshold, setHasScrolledPastThreshold] = useState(false);
 
   // Show popup automatically when the component mounts (user lands on the page)
@@ -54,8 +53,8 @@ export const FreeWarProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (hasPassedThreshold && !hasScrolledPastThreshold) {
         setHasScrolledPastThreshold(true);
         
-        // Only show popup if it hasn't been closed before and isn't already open
-        if (!hasClosedPopup && !isPopupOpen && !isSelectionModalOpen) {
+        // Only show popup if it isn't already open and player selection modal isn't open
+        if (!isPopupOpen && !isSelectionModalOpen) {
           setIsPopupOpen(true);
         }
       }
@@ -63,19 +62,17 @@ export const FreeWarProvider: React.FC<{ children: React.ReactNode }> = ({ child
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasClosedPopup, hasScrolledPastThreshold, isPopupOpen, isSelectionModalOpen]);
+  }, [hasScrolledPastThreshold, isPopupOpen, isSelectionModalOpen]);
 
   // Handle popup close
   const handlePopupClose = () => {
     setIsPopupOpen(false);
-    setHasClosedPopup(true);
   };
 
   // Handle join now button click
   const handleJoinNow = () => {
     setIsPopupOpen(false);
     setIsSelectionModalOpen(true);
-    setHasClosedPopup(true);
   };
 
   // Context value
@@ -105,7 +102,7 @@ export const FreeWarProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       {/* Sticky Button - always visible when popup/modal is not open */}
       {!isPopupOpen && !isSelectionModalOpen && (
-        <StickyButton onClick={() => setIsSelectionModalOpen(true)} />
+        <StickyButton onClick={() => setIsPopupOpen(true)} />
       )}
     </FreeWarContext.Provider>
   );
