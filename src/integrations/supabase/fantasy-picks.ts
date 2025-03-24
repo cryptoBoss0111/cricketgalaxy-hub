@@ -42,7 +42,7 @@ export const getFantasyPicks = async (): Promise<FantasyPickDB[]> => {
       .order('created_at', { ascending: false });
       
     if (error) throw error;
-    return data || [];
+    return data as FantasyPickDB[] || [];
   } catch (error) {
     console.error('Error fetching fantasy picks:', error);
     return [];
@@ -58,7 +58,7 @@ export const getFantasyPicksByMatch = async (matchId: string): Promise<FantasyPi
       .order('points_prediction', { ascending: false });
       
     if (error) throw error;
-    return data || [];
+    return data as FantasyPickDB[] || [];
   } catch (error) {
     console.error('Error fetching fantasy picks for match:', error);
     return [];
