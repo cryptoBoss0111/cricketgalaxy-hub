@@ -60,16 +60,47 @@ export const getFantasyPickById = async (id: string): Promise<FantasyPickDB | nu
   }
 };
 
+// Define a more specific type for upsert operation that ensures required fields are present
+type UpsertFantasyPick = {
+  id?: string;
+  player_name: string;
+  team: string;
+  points_prediction: number;
+  role: string;
+  form: string;
+  reason: string;
+  match: string;
+  match_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  image_url?: string;
+  stats?: string;
+};
+
 // Save or update a fantasy pick
 export const saveFantasyPick = async (pick: Partial<FantasyPickDB>): Promise<FantasyPickDB | null> => {
   try {
     // Determine if this is an insert or update
     const isUpdate = Boolean(pick.id);
     
-    // Fix: Add onConflict parameter and cast 'pick' as an object to match expected type
+    // Validate required fields for new entries
+    if (!isUpdate) {
+      // Check that all required fields are present for new picks
+      const requiredFields = ['player_name', 'team', 'role', 'form', 'match', 'reason', 'points_prediction'];
+      for (const field of requiredFields) {
+        if (!(field in pick) || pick[field as keyof typeof pick] === undefined) {
+          throw new Error(`Required field '${field}' is missing`);
+        }
+      }
+    }
+    
+    // Type assertion to ensure the object meets the required format for upsert
+    const upsertData = pick as UpsertFantasyPick;
+    
+    // Fix: Add onConflict parameter and ensure proper type casting
     const { data, error } = await supabase
       .from('fantasy_picks')
-      .upsert(pick, { onConflict: 'id' })
+      .upsert(upsertData, { onConflict: 'id' })
       .select()
       .single();
     
