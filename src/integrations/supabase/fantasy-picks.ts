@@ -1,5 +1,5 @@
 
-import { supabase } from './client';
+import { supabase } from './client-core';
 
 // Define a specific type for fantasy picks returned from the database
 export interface FantasyPickDB {
