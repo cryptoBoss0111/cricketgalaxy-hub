@@ -49,9 +49,16 @@ const MediaUploadDialog = ({
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please select an image file');
+      // Validate file type - only allow JPEG files
+      if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
+        setError('Please select only JPEG files (.jpg or .jpeg)');
+        return;
+      }
+      
+      // Validate file extension
+      const extension = file.name.split('.').pop()?.toLowerCase() || '';
+      if (extension !== 'jpg' && extension !== 'jpeg') {
+        setError('Only .jpg and .jpeg files are allowed');
         return;
       }
       
@@ -77,9 +84,16 @@ const MediaUploadDialog = ({
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please select an image file');
+      // Validate file type - only allow JPEG files
+      if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
+        setError('Please select only JPEG files (.jpg or .jpeg)');
+        return;
+      }
+      
+      // Validate file extension
+      const extension = file.name.split('.').pop()?.toLowerCase() || '';
+      if (extension !== 'jpg' && extension !== 'jpeg') {
+        setError('Only .jpg and .jpeg files are allowed');
         return;
       }
       
@@ -103,14 +117,15 @@ const MediaUploadDialog = ({
     }
     
     try {
-      // Preserve the original file extension for correct content type inference
-      const extension = processingFile.name.split('.').pop() || 'jpg';
+      // Always use jpg/jpeg extension for consistency
+      const extension = processingFile.name.split('.').pop()?.toLowerCase();
+      const useExtension = (extension === 'jpg' || extension === 'jpeg') ? extension : 'jpg';
       
       // Create a proper File object from the Blob with the original file name pattern
       const croppedFile = new File(
         [croppedBlob], 
-        `${processingFile.name.split('.')[0]}.${extension}`, 
-        { type: processingFile.type }  // Use original file's type as a starting point
+        `${processingFile.name.split('.')[0]}.${useExtension}`, 
+        { type: 'image/jpeg' }  // Always use image/jpeg
       );
       
       console.log("Cropped file:", croppedFile.name, croppedFile.type, croppedFile.size);
@@ -158,7 +173,7 @@ const MediaUploadDialog = ({
         <DialogHeader>
           <DialogTitle>Upload Media Files</DialogTitle>
           <DialogDescription>
-            {imageToProcess ? 'Crop your image before uploading' : 'Select image files to upload to your media library'}
+            {imageToProcess ? 'Crop your image before uploading' : 'Select JPEG images to upload to your media library'}
           </DialogDescription>
         </DialogHeader>
         
@@ -195,12 +210,12 @@ const MediaUploadDialog = ({
               </div>
               <h3 className="text-base font-medium">Drag files here or click to browse</h3>
               <p className="text-sm text-gray-500 mt-1 mb-4">
-                Upload JPG, PNG, GIF, or WebP files
+                Upload JPEG files only (.jpg, .jpeg)
               </p>
               <Input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg"
                 multiple={false}
                 onChange={handleFileSelection}
                 className="hidden"
@@ -233,7 +248,7 @@ const MediaUploadDialog = ({
             <div className="flex p-3 border rounded-lg bg-amber-50 mt-2">
               <Info className="h-5 w-5 text-amber-600 mr-2 flex-shrink-0" />
               <p className="text-xs text-amber-700">
-                Files will be publicly accessible once uploaded. Make sure you have the rights to use these images.
+                Only JPEG files (.jpg, .jpeg) are allowed. Files will be publicly accessible once uploaded.
               </p>
             </div>
             

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -38,11 +39,24 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     
     setError(null);
     
-    if (!file.type.startsWith('image/')) {
-      setError("Please upload an image file");
+    // Validate file type - only allow JPEG files
+    if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
+      setError("Please upload only JPEG files (.jpg or .jpeg)");
       toast({
         title: "Invalid file type",
-        description: "Please upload an image file",
+        description: "Please upload only JPEG files (.jpg or .jpeg)",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate file extension
+    const extension = file.name.split('.').pop()?.toLowerCase() || '';
+    if (extension !== 'jpg' && extension !== 'jpeg') {
+      setError("Only .jpg and .jpeg files are allowed");
+      toast({
+        title: "Invalid file format",
+        description: "Only .jpg and .jpeg files are allowed",
         variant: "destructive",
       });
       return;
@@ -81,19 +95,21 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     try {
       const originalName = selectedFile.name;
       
-      const extension = originalName.split('.').pop()?.toLowerCase() || 'jpg';
+      // Ensure we're using jpg/jpeg extension
+      const extension = originalName.split('.').pop()?.toLowerCase();
+      const useExtension = (extension === 'jpg' || extension === 'jpeg') ? extension : 'jpg';
       
       const safeBaseName = originalName
         .split('.')[0]
         .replace(/\s+/g, "_")
         .replace(/[^\w.-]/g, "");
       
-      const safeName = `${safeBaseName}.${extension}`;
+      const safeName = `${safeBaseName}.${useExtension}`;
       
       const croppedFile = new File(
         [croppedBlob], 
         safeName, 
-        { type: selectedFile.type }
+        { type: 'image/jpeg' }  // Always use image/jpeg
       );
       
       console.log("Starting image upload process with cropped image...");
@@ -258,7 +274,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
                 <span className="font-medium text-primary">Click to upload</span> or drag and drop
               </div>
               <div className="text-xs text-gray-400">
-                PNG, JPG or WEBP (max. 5MB)
+                JPEG files only (.jpg, .jpeg) - max. 5MB
               </div>
               {isUploading && (
                 <div className="mt-2 animate-pulse text-xs">Uploading...</div>
@@ -269,7 +285,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
             type="file" 
             className="hidden" 
             onChange={handleFileChange}
-            accept="image/*"
+            accept="image/jpeg"
             disabled={isUploading}
           />
         </label>

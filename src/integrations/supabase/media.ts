@@ -1,4 +1,3 @@
-
 import { supabase } from './client-core';
 
 // Helper function to infer content type from file extension
@@ -9,16 +8,9 @@ const inferContentTypeFromFileName = (fileName: string): string => {
     case 'jpg':
     case 'jpeg':
       return 'image/jpeg';
-    case 'png':
-      return 'image/png';
-    case 'gif':
-      return 'image/gif';
-    case 'webp':
-      return 'image/webp';
-    case 'svg':
-      return 'image/svg+xml';
     default:
-      return 'application/octet-stream'; // Default fallback
+      // Only allow jpeg files, but provide a safe fallback
+      return 'image/jpeg';
   }
 };
 
@@ -30,13 +22,19 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       throw new Error("No file provided for upload");
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      throw new Error("Please upload a valid image file");
+    // Validate file type - only allow JPEG images
+    if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
+      throw new Error("Please upload only JPEG files (.jpg or .jpeg)");
     }
 
     // Use the original filename but sanitize it
     const originalFileName = file.name;
+    
+    // Check for valid extension
+    const extension = originalFileName.split('.').pop()?.toLowerCase() || '';
+    if (extension !== 'jpg' && extension !== 'jpeg') {
+      throw new Error("Only .jpg and .jpeg files are allowed");
+    }
     
     // Sanitize filename to remove spaces and special characters
     const fileBaseName = file.name
@@ -44,7 +42,6 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       .replace(/\s+/g, "_")         // Replace spaces with underscores
       .replace(/[^\w.-]/g, "");     // Remove any special characters except word chars, dots and hyphens
     
-    const extension = originalFileName.split('.').pop()?.toLowerCase() || '';
     const timestamp = Date.now();
     const storedFileName = `${fileBaseName}_${timestamp}.${extension}`;
     
@@ -57,14 +54,13 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     console.log("Inferred content type:", inferredContentType);
     
     // Set proper content type and caching headers
-    // Use the inferred content type based on the file extension, not the file.type
     const options = {
       cacheControl: '3600',
       upsert: false, // Don't overwrite files with the same name
       contentType: inferredContentType // Use inferred content type to ensure accuracy
     };
     
-    // Upload the file to Supabase Storage as raw File object, NOT as string or FormData
+    // Upload the file to Supabase Storage as raw File object
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(storedFileName, file, options);
@@ -137,7 +133,7 @@ export const getMediaFiles = async () => {
     const cleanData = data?.map(item => ({
       ...item,
       url: item.url.split('?')[0], // Ensure URL is clean
-      content_type: item.content_type || inferContentTypeFromFileName(item.original_file_name) // Ensure content_type exists
+      content_type: item.content_type || 'image/jpeg' // Ensure content_type exists, default to JPEG
     }));
     
     console.log(`Successfully fetched ${cleanData?.length} media records`);
