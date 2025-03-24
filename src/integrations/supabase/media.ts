@@ -4,10 +4,17 @@ import { supabase } from './client-core';
 // Generate a unique filename for uploads that preserves the original filename
 export const generateUniqueFileName = (fileName: string) => {
   const timestamp = new Date().getTime();
-  const randomString = Math.random().toString(36).substring(2, 8);
-  const extension = fileName.split('.').pop();
+  const randomString = Math.random().toString(36).substring(2, 6);
+  
+  // Extract extension and base name
+  const extension = fileName.split('.').pop()?.toLowerCase();
   const baseName = fileName.split('.').slice(0, -1).join('.');
-  return `${baseName}-${randomString}.${extension}`;
+  
+  // Clean the base name to remove any special characters
+  const cleanBaseName = baseName.replace(/[^a-zA-Z0-9_-]/g, '_');
+  
+  // Return a filename that contains the original name for better readability
+  return `${cleanBaseName}-${randomString}.${extension}`;
 };
 
 // Upload file to storage with improved error handling
@@ -44,7 +51,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(filePath, file, {
-        cacheControl: '3600',
+        cacheControl: '0', // Disable caching to make sure we always get the newest version
         upsert: true, // Set to true to overwrite if file exists
         contentType: file.type // Explicitly set the content type
       });
@@ -60,13 +67,17 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     
     console.log("Upload successful, data:", data);
     
-    // Get the public URL
+    // Get the public URL with cache-busting parameter
+    const timestamp = new Date().getTime();
     const { data: { publicUrl } } = supabase
       .storage
       .from(bucket)
       .getPublicUrl(data.path);
     
-    console.log("Generated public URL:", publicUrl);
+    // Add cache-busting parameter to force reloading of the image
+    const urlWithCacheBusting = `${publicUrl}?t=${timestamp}`;
+    
+    console.log("Generated public URL:", urlWithCacheBusting);
     
     // Return the full public URL
     return publicUrl;
@@ -129,17 +140,13 @@ export const getMediaFiles = async (bucketName = 'article_images') => {
     }
     
     // Add public URLs to each file
+    const timestamp = new Date().getTime();
     const filesWithUrls = data.filter(file => !file.id.startsWith('.'))
       .map(file => {
         const { data: { publicUrl } } = supabase
           .storage
           .from(bucketName)
-          .getPublicUrl(file.name, {
-            download: false,
-            transform: {
-              quality: 80 // Slightly reduce quality to improve loading speed
-            }
-          });
+          .getPublicUrl(file.name);
         
         return {
           ...file,

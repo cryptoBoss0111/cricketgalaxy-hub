@@ -1,7 +1,8 @@
 
-import { Image } from 'lucide-react';
+import { Image, RotateCw } from 'lucide-react';
 import MediaCard from './MediaCard';
 import { MediaFile } from './types';
+import { Button } from '@/components/ui/button';
 
 interface MediaGridProps {
   files: MediaFile[];
@@ -16,6 +17,7 @@ interface MediaGridProps {
   onCopyUrl: (url: string) => void;
   onDelete: (file: MediaFile) => void;
   formatFileSize: (bytes: number) => string;
+  onRefresh?: () => void; // Add refresh functionality
 }
 
 const MediaGrid = ({
@@ -30,7 +32,8 @@ const MediaGrid = ({
   onPreview,
   onCopyUrl,
   onDelete,
-  formatFileSize
+  formatFileSize,
+  onRefresh
 }: MediaGridProps) => {
   if (isLoading) {
     return (
@@ -60,12 +63,12 @@ const MediaGrid = ({
           <>
             <h3 className="text-xl font-medium text-gray-500">No media files yet</h3>
             <p className="text-gray-400 mt-2 mb-6">Upload images to use in your articles and content</p>
-            <button 
+            <Button 
               className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
               onClick={onUploadClick}
             >
               Upload Files
-            </button>
+            </Button>
           </>
         )}
       </div>
@@ -73,24 +76,39 @@ const MediaGrid = ({
   }
 
   return (
-    <div 
-      className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 transition-colors ${
-        isDragging ? 'ring-2 ring-cricket-accent ring-offset-2 bg-cricket-accent/5 rounded-lg p-4' : ''
-      }`}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-    >
-      {files.map((file) => (
-        <MediaCard
-          key={file.name}
-          file={file}
-          onPreview={onPreview}
-          onCopyUrl={onCopyUrl}
-          onDelete={onDelete}
-          formatFileSize={formatFileSize}
-        />
-      ))}
+    <div className="space-y-4">
+      {onRefresh && (
+        <div className="flex justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onRefresh}
+            className="flex items-center"
+          >
+            <RotateCw className="h-4 w-4 mr-2" /> Refresh Images
+          </Button>
+        </div>
+      )}
+      
+      <div 
+        className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 transition-colors ${
+          isDragging ? 'ring-2 ring-cricket-accent ring-offset-2 bg-cricket-accent/5 rounded-lg p-4' : ''
+        }`}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+      >
+        {files.map((file) => (
+          <MediaCard
+            key={file.name}
+            file={file}
+            onPreview={onPreview}
+            onCopyUrl={onCopyUrl}
+            onDelete={onDelete}
+            formatFileSize={formatFileSize}
+          />
+        ))}
+      </div>
     </div>
   );
 };

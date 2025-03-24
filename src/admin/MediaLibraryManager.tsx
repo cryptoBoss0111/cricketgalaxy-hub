@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from 'react';
-import { Upload } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Upload, RotateCw } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -26,18 +26,11 @@ const MediaLibraryManager = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   const { toast } = useToast();
   
-  useEffect(() => {
-    fetchMediaFiles();
-  }, []);
-  
-  useEffect(() => {
-    filterMediaFiles();
-  }, [searchQuery, mediaFiles]);
-  
-  const fetchMediaFiles = async () => {
+  const fetchMediaFiles = useCallback(async () => {
     setIsLoading(true);
     try {
       const files = await getMediaFiles();
@@ -63,7 +56,15 @@ const MediaLibraryManager = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+  
+  useEffect(() => {
+    fetchMediaFiles();
+  }, [fetchMediaFiles, refreshTrigger]);
+  
+  useEffect(() => {
+    filterMediaFiles();
+  }, [searchQuery, mediaFiles]);
   
   const filterMediaFiles = () => {
     if (!searchQuery) {
@@ -227,6 +228,14 @@ const MediaLibraryManager = () => {
     }
   };
   
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+    toast({
+      title: "Refreshing",
+      description: "Refreshing media library..."
+    });
+  };
+  
   return (
     <AdminLayout>
       <div className="p-6">
@@ -235,9 +244,14 @@ const MediaLibraryManager = () => {
             <h1 className="text-3xl font-heading font-bold">Media Library</h1>
             <p className="text-gray-500 mt-1">Manage images and media files</p>
           </div>
-          <Button onClick={() => setIsUploadDialogOpen(true)}>
-            <Upload className="h-4 w-4 mr-2" /> Upload Files
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleRefresh} className="flex items-center">
+              <RotateCw className="h-4 w-4 mr-2" /> Refresh
+            </Button>
+            <Button onClick={() => setIsUploadDialogOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" /> Upload Files
+            </Button>
+          </div>
         </div>
         
         <MediaSearchBar 
@@ -258,6 +272,7 @@ const MediaLibraryManager = () => {
           onCopyUrl={copyToClipboard}
           onDelete={confirmDelete}
           formatFileSize={formatFileSize}
+          onRefresh={handleRefresh}
         />
       </div>
       
