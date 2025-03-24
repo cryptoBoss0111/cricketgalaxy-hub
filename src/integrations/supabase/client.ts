@@ -521,7 +521,22 @@ export const getFantasyPickById = async (id: string): Promise<FantasyPickDB | nu
   }
 };
 
-export const upsertFantasyPick = async (pick: Partial<FantasyPickDB>): Promise<FantasyPickDB | null> => {
+// Fix the type definitions in the upsert function to match what the database expects
+export const upsertFantasyPick = async (pick: {
+  id?: string;
+  player_name: string;
+  team: string;
+  role: string;
+  form: string;
+  match: string;
+  match_id?: string;
+  reason: string;
+  points_prediction: number;
+  image_url?: string;
+  stats?: string;
+  created_at?: string;
+  updated_at?: string;
+}): Promise<FantasyPickDB | null> => {
   try {
     // If id exists, update; otherwise insert
     const { data, error } = await supabase

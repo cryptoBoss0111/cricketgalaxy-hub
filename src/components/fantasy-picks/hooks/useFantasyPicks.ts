@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase, type FantasyPickDB } from '@/integrations/supabase/client';
 
