@@ -6,4 +6,5 @@ export interface MediaFile {
   url: string;
   created_at: string;
   size?: number;
+  content_type?: string;
 }

@@ -1,8 +1,9 @@
 
 import { useState } from 'react';
-import { Copy, Trash2, Image as ImageIcon, AlertCircle, RefreshCw } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Copy, Eye, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { MediaFile } from './types';
 
 interface MediaCardProps {
@@ -20,121 +21,92 @@ const MediaCard = ({
   onDelete,
   formatFileSize
 }: MediaCardProps) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
   
-  // Extract a more readable name from the filename
-  const displayName = file.original_file_name.split('.')[0] || file.original_file_name;
-  const fileExtension = file.original_file_name.split('.').pop()?.toLowerCase();
-
-  // Function to handle image retry
-  const handleRetry = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsLoading(true);
-    setHasError(false);
-    setRetryCount(prev => prev + 1);
+  const handleImageLoad = () => {
+    setIsImageLoaded(true);
+  };
+  
+  const handleImageError = () => {
+    console.error(`Failed to load image: ${file.url}`);
+    setImageLoadError(true);
   };
 
-  // Generate direct URL to Supabase storage - ALWAYS use this format
-  const getImageUrl = () => {
-    // Directly construct the Supabase storage URL
-    const directUrl = `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/article_images/${file.stored_file_name}`;
-    // Add cache busting parameter for refreshes
-    const urlWithCacheBusting = `${directUrl}?t=${Date.now()}&r=${retryCount}`;
-    console.log("MediaCard - Using image URL:", directUrl);
-    return urlWithCacheBusting;
-  };
-
+  // Ensure the URL is clean (no query parameters) to avoid CORS issues
+  const imageUrl = file.url.split('?')[0];
+  
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
-      <div 
-        className="relative h-36 bg-gray-100 cursor-pointer"
-        onClick={() => onPreview(file)}
-      >
-        {isLoading && !hasError && (
+    <Card className="overflow-hidden transition-all hover:shadow-md">
+      <div className="aspect-square relative bg-gray-100">
+        {!isImageLoaded && !imageLoadError && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-4 border-cricket-accent border-t-transparent"></div>
+            <Skeleton className="h-full w-full" />
           </div>
         )}
         
-        {hasError ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-gray-50">
-            <ImageIcon className="h-10 w-10 text-gray-300 mb-2" />
-            <p className="text-xs text-gray-400 text-center mb-2">Image not available</p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-xs py-1 px-2 h-auto flex items-center"
-              onClick={handleRetry}
-            >
-              <RefreshCw className="h-3 w-3 mr-1" /> Retry
-            </Button>
+        {imageLoadError ? (
+          <div className="h-full flex flex-col items-center justify-center p-4">
+            <ImageIcon className="h-12 w-12 text-gray-300 mb-2" />
+            <span className="text-sm text-gray-400 text-center">
+              Unable to load image
+            </span>
           </div>
         ) : (
-          <img 
-            src={getImageUrl()}
-            alt={file.original_file_name} 
-            className={`absolute inset-0 w-full h-full object-cover p-2 transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          <img
+            src={imageUrl}
+            alt={file.original_file_name}
+            className={`w-full h-full object-contain ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
             loading="lazy"
-            onLoad={() => {
-              console.log(`Image loaded successfully: ${file.original_file_name}`);
-              setIsLoading(false);
-            }}
-            onError={(e) => {
-              console.error(`Error loading image: ${file.original_file_name}`, e);
-              setHasError(true);
-              setIsLoading(false);
-            }}
             crossOrigin="anonymous"
           />
         )}
       </div>
       
-      <CardContent className="p-3">
-        <div className="text-sm font-medium truncate mb-1" title={file.original_file_name}>
-          {displayName}
-        </div>
-        <div className="text-xs text-gray-500 flex justify-between">
-          <span>{file.size ? formatFileSize(file.size) : ""}</span>
-          {fileExtension && <span className="text-gray-400">.{fileExtension}</span>}
-          {hasError && (
-            <span className="text-amber-500 flex items-center">
-              <AlertCircle className="h-3 w-3 mr-1" />
-              Error
-            </span>
-          )}
+      <div className="p-3">
+        <h3 className="text-sm font-medium truncate" title={file.original_file_name}>
+          {file.original_file_name}
+        </h3>
+        
+        <div className="text-xs text-gray-500 mt-1 flex justify-between">
+          <span>{file.size ? formatFileSize(file.size) : 'Unknown size'}</span>
+          <span>{file.content_type || 'Image'}</span>
         </div>
         
-        <div className="flex justify-between mt-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+        <div className="flex justify-between mt-3">
+          <Button
+            variant="outline"
+            size="icon"
             className="h-8 w-8"
-            onClick={(e) => {
-              e.stopPropagation();
-              // Copy direct Supabase storage URL
-              const directUrl = `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/article_images/${file.stored_file_name}`;
-              onCopyUrl(directUrl);
-            }}
+            onClick={() => onPreview(file)}
+            title="Preview"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onCopyUrl(file.url)}
             title="Copy URL"
           >
             <Copy className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(file);
-            }}
-            title="Delete file"
+          
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
+            onClick={() => onDelete(file)}
+            title="Delete"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };

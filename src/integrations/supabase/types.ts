@@ -201,6 +201,7 @@ export type Database = {
       }
       media: {
         Row: {
+          content_type: string | null
           created_at: string
           id: string
           original_file_name: string
@@ -209,6 +210,7 @@ export type Database = {
           url: string
         }
         Insert: {
+          content_type?: string | null
           created_at?: string
           id?: string
           original_file_name: string
@@ -217,6 +219,7 @@ export type Database = {
           url: string
         }
         Update: {
+          content_type?: string | null
           created_at?: string
           id?: string
           original_file_name?: string

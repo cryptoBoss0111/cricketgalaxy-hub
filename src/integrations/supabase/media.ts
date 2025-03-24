@@ -107,10 +107,11 @@ export const getMediaFiles = async () => {
       throw error;
     }
     
-    // Make sure all URLs are clean (no query parameters)
+    // Make sure all URLs are clean (no query parameters) and have proper content type
     const cleanData = data?.map(item => ({
       ...item,
-      url: item.url.split('?')[0] // Ensure URL is clean
+      url: item.url.split('?')[0], // Ensure URL is clean
+      content_type: item.content_type || inferContentTypeFromFileName(item.original_file_name) // Ensure content_type exists
     }));
     
     console.log(`Successfully fetched ${cleanData?.length} media records`);
@@ -163,5 +164,26 @@ export const deleteMediaFile = async (id: string) => {
   } catch (error) {
     console.error('Error in deleteMediaFile:', error);
     throw error;
+  }
+};
+
+// Helper function to infer content type from file extension
+const inferContentTypeFromFileName = (fileName: string): string => {
+  const extension = fileName.split('.').pop()?.toLowerCase() || '';
+  
+  switch (extension) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'gif':
+      return 'image/gif';
+    case 'webp':
+      return 'image/webp';
+    case 'svg':
+      return 'image/svg+xml';
+    default:
+      return 'image/jpeg'; // Default fallback
   }
 };
