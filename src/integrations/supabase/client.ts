@@ -489,7 +489,7 @@ export const getFantasyPicks = async (): Promise<FantasyPickDB[]> => {
   }
 };
 
-export const getFantasyPicksByMatch = async (matchId: string) => {
+export const getFantasyPicksByMatch = async (matchId: string): Promise<FantasyPickDB[]> => {
   try {
     const { data, error } = await supabase
       .from('fantasy_picks')
@@ -498,14 +498,14 @@ export const getFantasyPicksByMatch = async (matchId: string) => {
       .order('points_prediction', { ascending: false });
       
     if (error) throw error;
-    return data || [];
+    return (data || []) as FantasyPickDB[];
   } catch (error) {
     console.error('Error fetching fantasy picks for match:', error);
-    throw error;
+    return [];
   }
 };
 
-export const getFantasyPickById = async (id: string) => {
+export const getFantasyPickById = async (id: string): Promise<FantasyPickDB | null> => {
   try {
     const { data, error } = await supabase
       .from('fantasy_picks')
@@ -514,14 +514,14 @@ export const getFantasyPickById = async (id: string) => {
       .single();
       
     if (error) throw error;
-    return data;
+    return data as FantasyPickDB;
   } catch (error) {
     console.error('Error fetching fantasy pick:', error);
-    throw error;
+    return null;
   }
 };
 
-export const upsertFantasyPick = async (pick: any) => {
+export const upsertFantasyPick = async (pick: Partial<FantasyPickDB>): Promise<FantasyPickDB | null> => {
   try {
     // If id exists, update; otherwise insert
     const { data, error } = await supabase
@@ -531,14 +531,14 @@ export const upsertFantasyPick = async (pick: any) => {
       .single();
       
     if (error) throw error;
-    return data;
+    return data as FantasyPickDB;
   } catch (error) {
     console.error('Error upserting fantasy pick:', error);
-    throw error;
+    return null;
   }
 };
 
-export const deleteFantasyPick = async (id: string) => {
+export const deleteFantasyPick = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('fantasy_picks')
@@ -549,7 +549,7 @@ export const deleteFantasyPick = async (id: string) => {
     return true;
   } catch (error) {
     console.error('Error deleting fantasy pick:', error);
-    throw error;
+    return false;
   }
 };
 

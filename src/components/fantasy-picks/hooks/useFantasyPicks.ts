@@ -1,23 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-
-// Define a type that matches what's returned by the getFantasyPicks function
-type FantasyPickFromDB = {
-  id: string;
-  player_name: string;
-  team: string;
-  role: string;
-  form: string;
-  points_prediction: number;
-  reason: string;
-  match: string;
-  match_id?: string;
-  image_url?: string;
-  stats?: string;
-  created_at: string;
-  updated_at: string;
-};
+import { supabase, type FantasyPickDB } from '@/integrations/supabase/client';
 
 // Define our component's internal type that extends what we get from DB
 export type FantasyPick = {
@@ -53,7 +35,7 @@ export const useFantasyPicks = () => {
         
         if (data && data.length > 0) {
           // Transform the DB data to our component's expected format
-          const transformedData: FantasyPick[] = data.map((dbPick: FantasyPickFromDB) => ({
+          const transformedData: FantasyPick[] = data.map((dbPick: FantasyPickDB) => ({
             id: dbPick.id,
             player_name: dbPick.player_name,
             team: dbPick.team,

@@ -1,8 +1,7 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import FantasySectionHeader from './FantasySectionHeader';
 import FantasyPicksGrid from './FantasyPicksGrid';
-import { useFantasyPicks } from './hooks/useFantasyPicks';
 import { useFeaturedMatch } from './hooks/useFeaturedMatch';
 
 const FantasyPicksSection: React.FC = () => {

@@ -2,14 +2,20 @@
 import { useState, useEffect } from 'react';
 import { useFantasyPicks, FantasyPick } from './useFantasyPicks';
 
-export const useFeaturedMatch = () => {
+interface FeaturedMatchResult {
+  featuredMatch: string | null;
+  filteredPicks: FantasyPick[];
+  isLoading: boolean;
+}
+
+export const useFeaturedMatch = (): FeaturedMatchResult => {
   const { fantasyPicks, isLoading: isLoadingPicks } = useFantasyPicks();
   const [featuredMatch, setFeaturedMatch] = useState<string | null>(null);
   const [filteredPicks, setFilteredPicks] = useState<FantasyPick[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchFeaturedMatch = () => {
+    const identifyFeaturedMatch = () => {
       try {
         // Attempt to get the most recent match with at least 2 fantasy picks
         if (fantasyPicks.length > 0) {
@@ -57,7 +63,7 @@ export const useFeaturedMatch = () => {
           setFilteredPicks([]);
         }
       } catch (error) {
-        console.error('Error fetching featured match:', error);
+        console.error('Error identifying featured match:', error);
         setFeaturedMatch(null);
         setFilteredPicks([]);
       } finally {
@@ -65,7 +71,7 @@ export const useFeaturedMatch = () => {
       }
     };
 
-    fetchFeaturedMatch();
+    identifyFeaturedMatch();
   }, [fantasyPicks, isLoadingPicks]);
 
   return { featuredMatch, filteredPicks, isLoading };
