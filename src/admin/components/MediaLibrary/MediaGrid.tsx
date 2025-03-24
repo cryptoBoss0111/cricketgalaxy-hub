@@ -111,7 +111,7 @@ const MediaGrid = ({
       >
         {files.map((file) => (
           <MediaCard
-            key={file.name + "-" + file.created_at}
+            key={file.name + "-" + file.created_at + "-" + Math.random().toString(36).substring(2, 8)}
             file={file}
             onPreview={onPreview}
             onCopyUrl={onCopyUrl}

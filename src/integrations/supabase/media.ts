@@ -14,7 +14,7 @@ export const generateUniqueFileName = (fileName: string) => {
   const cleanBaseName = baseName.replace(/[^a-zA-Z0-9_-]/g, '_');
   
   // Return a filename that preserves the original name
-  return `${cleanBaseName}_${randomString}.${extension}`;
+  return `${cleanBaseName}_${randomString}_${timestamp}.${extension}`;
 };
 
 // Upload file to storage with improved error handling
@@ -49,7 +49,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     
     // Set proper content type and caching headers
     const options = {
-      cacheControl: '3600', // 1 hour cache, balance between performance and freshness
+      cacheControl: '0', // Disable cache to ensure freshness
       upsert: true,
       contentType: file.type
     };
@@ -66,16 +66,19 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     
     console.log("Upload successful, data:", data);
     
-    // Get the public URL
+    // Get the public URL with a timestamp to prevent caching
+    const timestamp = new Date().getTime();
     const { data: { publicUrl } } = supabase
       .storage
       .from(bucket)
       .getPublicUrl(data.path);
     
-    console.log("Generated public URL:", publicUrl);
+    // Add cache busting parameter
+    const urlWithCacheBust = `${publicUrl}?t=${timestamp}`;
+    console.log("Generated public URL with cache busting:", urlWithCacheBust);
     
     // Return the public URL
-    return publicUrl;
+    return urlWithCacheBust;
   } catch (error) {
     console.error('Error uploading image:', error);
     throw error;
@@ -108,7 +111,8 @@ export const getMediaFiles = async (bucketName = 'article_images') => {
       return [];
     }
     
-    // Add public URLs to each file
+    // Add public URLs to each file with timestamp to prevent caching
+    const timestamp = new Date().getTime();
     const filesWithUrls = data
       .filter(file => !file.id.startsWith('.') && file.id !== '.emptyFolderPlaceholder')
       .map(file => {
@@ -117,9 +121,12 @@ export const getMediaFiles = async (bucketName = 'article_images') => {
           .from(bucketName)
           .getPublicUrl(file.name);
         
+        // Add cache busting parameter
+        const urlWithCacheBust = `${publicUrl}?t=${timestamp}&r=${Math.random().toString(36).substring(2, 8)}`;
+        
         return {
           ...file,
-          publicUrl
+          publicUrl: urlWithCacheBust
         };
       });
     
@@ -138,8 +145,8 @@ export const deleteMediaFile = async (fileName: string, bucketName = 'article_im
     
     // Extract just the filename from a full URL if needed
     const actualFileName = fileName.includes('/') 
-      ? fileName.split('/').pop() 
-      : fileName;
+      ? fileName.split('/').pop()?.split('?')[0] // Remove query parameters
+      : fileName.split('?')[0]; // Remove query parameters
     
     if (!actualFileName) {
       throw new Error("Invalid file name");

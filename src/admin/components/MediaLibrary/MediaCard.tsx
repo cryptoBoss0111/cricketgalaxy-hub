@@ -4,7 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MediaFile } from './types';
 import { useState, useEffect } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface MediaCardProps {
   file: MediaFile;
@@ -30,11 +29,20 @@ const MediaCard = ({
   const displayName = file.name.split('.')[0] || file.name;
   const fileExtension = file.name.split('.').pop()?.toLowerCase();
 
-  // Generate a new image URL with cache busting parameters
+  // Generate a new image URL with enhanced cache busting parameters
   useEffect(() => {
     const timestamp = new Date().getTime();
     const random = Math.floor(Math.random() * 1000000);
-    setImageSrc(`${file.publicUrl}?t=${timestamp}&r=${random}&retry=${retryCount}`);
+    
+    // Add specific parameters to help with debugging
+    const url = new URL(file.publicUrl);
+    url.searchParams.set('t', timestamp.toString());
+    url.searchParams.set('r', random.toString());
+    url.searchParams.set('retry', retryCount.toString());
+    url.searchParams.set('card', 'true');
+    
+    setImageSrc(url.toString());
+    console.log(`Loading card image with URL: ${url.toString()}`);
   }, [file.publicUrl, retryCount]);
 
   // Function to handle image retry

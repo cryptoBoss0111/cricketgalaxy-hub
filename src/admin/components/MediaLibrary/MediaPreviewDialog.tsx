@@ -47,9 +47,16 @@ const MediaPreviewDialog = ({
       // Generate a unique URL with enhanced cache busting
       const timestamp = new Date().getTime();
       const random = Math.floor(Math.random() * 1000000);
-      setImageSrc(`${selectedFile.publicUrl}?t=${timestamp}&r=${random}&retry=${retryCount}`);
       
-      console.log(`Preview image URL: ${selectedFile.publicUrl} with params t=${timestamp}&r=${random}`);
+      // Create URL with specific parameters for debugging
+      const url = new URL(selectedFile.publicUrl);
+      url.searchParams.set('t', timestamp.toString());
+      url.searchParams.set('r', random.toString());
+      url.searchParams.set('retry', retryCount.toString());
+      url.searchParams.set('preview', 'true');
+      
+      setImageSrc(url.toString());
+      console.log(`Preview image URL: ${url.toString()}`);
     }
   }, [isOpen, selectedFile, retryCount]);
 
@@ -59,6 +66,18 @@ const MediaPreviewDialog = ({
       setImageLoaded(false);
       setHasError(false);
       setRetryCount(prev => prev + 1);
+    }
+  };
+  
+  // Get clean URL for copying - without cache busting parameters
+  const getCleanUrl = (url: string) => {
+    try {
+      const cleanUrl = new URL(url);
+      // Create base URL without parameters
+      return cleanUrl.origin + cleanUrl.pathname;
+    } catch (e) {
+      console.error("Error cleaning URL:", e);
+      return url;
     }
   };
   
@@ -133,12 +152,12 @@ const MediaPreviewDialog = ({
               <div className="space-y-1">
                 <p className="text-xs font-medium text-gray-500">URL</p>
                 <div className="flex items-center">
-                  <p className="text-sm truncate flex-1">{selectedFile.publicUrl}</p>
+                  <p className="text-sm truncate flex-1">{getCleanUrl(selectedFile.publicUrl)}</p>
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     className="h-6 w-6 ml-1"
-                    onClick={() => onCopyUrl(selectedFile.publicUrl)}
+                    onClick={() => onCopyUrl(getCleanUrl(selectedFile.publicUrl))}
                   >
                     <Copy className="h-3 w-3" />
                   </Button>
@@ -164,7 +183,7 @@ const MediaPreviewDialog = ({
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => onCopyUrl(selectedFile.publicUrl)}
+                onClick={() => onCopyUrl(getCleanUrl(selectedFile.publicUrl))}
               >
                 <Copy className="h-4 w-4 mr-2" /> Copy URL
               </Button>
