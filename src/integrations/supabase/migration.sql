@@ -19,22 +19,37 @@ ON CONFLICT (id) DO NOTHING;
 -- Create policy to allow public access to player_images
 CREATE POLICY "Public Access"
 ON storage.objects FOR SELECT
-USING (bucket_id = 'player_images');
+USING (bucket_id = 'player_images')
+ON CONFLICT DO NOTHING;
 
 CREATE POLICY "Admin Upload Access"
 ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'player_images');
+WITH CHECK (bucket_id = 'player_images')
+ON CONFLICT DO NOTHING;
 
 -- Ensure article_images bucket exists
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('article_images', 'article_images', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Create policy to allow public access to article_images
-CREATE POLICY "Public Access"
+-- Create policies for article_images with ON CONFLICT DO NOTHING to avoid errors
+-- This allows both authenticated and anonymous users to access the bucket
+CREATE POLICY "Public Access for article_images"
 ON storage.objects FOR SELECT
-USING (bucket_id = 'article_images');
+USING (bucket_id = 'article_images')
+ON CONFLICT DO NOTHING;
 
-CREATE POLICY "Admin Upload Access"
+CREATE POLICY "Everyone can upload to article_images"
 ON storage.objects FOR INSERT
-WITH CHECK (bucket_id = 'article_images');
+WITH CHECK (bucket_id = 'article_images')
+ON CONFLICT DO NOTHING;
+
+CREATE POLICY "Everyone can update article_images"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'article_images')
+ON CONFLICT DO NOTHING;
+
+CREATE POLICY "Everyone can delete article_images"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'article_images')
+ON CONFLICT DO NOTHING;

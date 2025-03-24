@@ -101,15 +101,17 @@ const MediaLibraryManager = () => {
             continue;
           }
           
+          console.log(`Starting upload for file ${i+1}/${fileArray.length}: ${file.name}`);
           await uploadImageToStorage(file);
           successCount++;
           
           setUploadProgress(Math.floor(((i + 1) / fileArray.length) * 100));
-        } catch (fileError) {
+          console.log(`File ${i+1}/${fileArray.length} upload complete. Progress: ${Math.floor(((i + 1) / fileArray.length) * 100)}%`);
+        } catch (fileError: any) {
           console.error(`Error uploading ${file.name}:`, fileError);
           toast({
             title: 'Upload Error',
-            description: `Failed to upload ${file.name}`,
+            description: fileError.message || `Failed to upload ${file.name}`,
             variant: 'destructive'
           });
         }
@@ -121,15 +123,15 @@ const MediaLibraryManager = () => {
           description: `Successfully uploaded ${successCount} ${successCount === 1 ? 'file' : 'files'}`,
         });
         
-        fetchMediaFiles();
+        await fetchMediaFiles();
       }
       
       setIsUploadDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during file upload:', error);
       toast({
         title: 'Upload Error',
-        description: 'An error occurred during file upload',
+        description: error.message || 'An error occurred during file upload',
         variant: 'destructive'
       });
     } finally {

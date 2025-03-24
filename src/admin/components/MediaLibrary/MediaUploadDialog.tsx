@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface MediaUploadDialogProps {
   isOpen: boolean;
@@ -36,6 +37,18 @@ const MediaUploadDialog = ({
   onDrop
 }: MediaUploadDialogProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFileSelection = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    if (e.target.files && e.target.files.length > 0) {
+      try {
+        await onFileUpload(e.target.files);
+      } catch (err: any) {
+        setError(err.message || 'Error uploading files');
+      }
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -46,6 +59,12 @@ const MediaUploadDialog = ({
             Select image files to upload to your media library
           </DialogDescription>
         </DialogHeader>
+        
+        {error && (
+          <Alert variant="destructive" className="mb-3">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         
         <div 
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
@@ -67,11 +86,7 @@ const MediaUploadDialog = ({
             type="file"
             accept="image/*"
             multiple
-            onChange={(e) => {
-              if (e.target.files && e.target.files.length > 0) {
-                onFileUpload(e.target.files);
-              }
-            }}
+            onChange={handleFileSelection}
             className="hidden"
             id="file-upload"
           />

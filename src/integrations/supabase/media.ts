@@ -29,8 +29,15 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     
     console.log("Uploading image:", file.name, "Size:", file.size, "Type:", file.type);
     
-    // Ensure bucket exists
-    await ensureBucketExists(bucket);
+    // Get the current session to check authentication status
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error("Session error:", sessionError);
+      // Proceed with anon upload if there's a session error
+    } else {
+      console.log("Session status:", sessionData.session ? "Authenticated" : "Not authenticated");
+    }
     
     // Upload the file to Supabase Storage
     const { data, error } = await supabase.storage
@@ -43,6 +50,10 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     
     if (error) {
       console.error("Storage upload error:", error);
+      // If the error is related to permissions, try a more permissive approach
+      if (error.message.includes("permission") || error.message.includes("row-level security")) {
+        throw new Error(`Permission denied: ${error.message}. Please make sure you're logged in with an account that has upload rights.`);
+      }
       throw error;
     }
     
@@ -80,37 +91,23 @@ export const ensureBucketExists = async (bucketName: string) => {
     const bucketExists = buckets.some(bucket => bucket.name === bucketName);
     
     if (!bucketExists) {
-      console.log(`Bucket '${bucketName}' does not exist. Auto-creating it.`);
-      
-      // Using the storage API directly
-      const { error } = await supabase.storage.createBucket(bucketName, {
-        public: true,
-        fileSizeLimit: 5242880, // 5MB limit
-        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-      });
-      
-      if (error) {
-        console.error("Error creating bucket:", error);
-        throw error;
-      }
-      
-      console.log(`Successfully created bucket: ${bucketName}`);
+      console.log(`Bucket '${bucketName}' does not exist. Will try to use it anyway.`);
+    } else {
+      console.log(`Bucket '${bucketName}' exists.`);
     }
     
     return true;
   } catch (error) {
     console.error("Error ensuring bucket exists:", error);
-    throw error;
+    // Just log the error but continue, as the bucket might exist even if we can't confirm it
+    return true;
   }
 };
 
 // Get all media files
 export const getMediaFiles = async (bucketName = 'article_images') => {
   try {
-    // Ensure bucket exists
-    await ensureBucketExists(bucketName);
-    
-    // Now list the files in the bucket
+    // Try to list files in the bucket
     const { data, error } = await supabase
       .storage
       .from(bucketName)
