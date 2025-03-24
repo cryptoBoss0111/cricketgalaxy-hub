@@ -28,8 +28,9 @@ const MediaCard = ({
   const displayName = file.original_file_name.split('.')[0] || file.original_file_name;
   const fileExtension = file.original_file_name.split('.').pop()?.toLowerCase();
 
-  // Add cache busting parameter to URL
-  const imageUrl = `${file.url}?t=${Date.now()}&r=${retryCount}`;
+  // Add cache busting parameter to URL and ensure clean base URL
+  const baseUrl = file.url.split('?')[0]; // Ensure we have a clean base URL
+  const imageUrl = `${baseUrl}?t=${Date.now()}&r=${retryCount}`;
 
   // Function to handle image retry
   const handleRetry = (e: React.MouseEvent) => {

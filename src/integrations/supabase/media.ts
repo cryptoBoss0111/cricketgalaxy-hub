@@ -54,7 +54,8 @@ export const uploadImageToStorage = async (file: File, bucket = 'media') => {
       .from(bucket)
       .getPublicUrl(data.path);
     
-    // Make sure the URL doesn't have any query parameters that might cause CORS issues
+    // Ensure we have no query parameters that might cause CORS issues
+    // For Supabase storage URLs, everything before the first question mark is the actual file URL
     const cleanUrl = publicUrl.split('?')[0];
     
     console.log("Clean public URL:", cleanUrl);
@@ -99,8 +100,14 @@ export const getMediaFiles = async () => {
       throw error;
     }
     
-    console.log(`Successfully fetched ${data.length} media records`);
-    return data || [];
+    // Make sure all URLs are clean (no query parameters)
+    const cleanData = data?.map(item => ({
+      ...item,
+      url: item.url.split('?')[0] // Ensure URL is clean
+    }));
+    
+    console.log(`Successfully fetched ${cleanData?.length} media records`);
+    return cleanData || [];
   } catch (error) {
     console.error('Error in getMediaFiles:', error);
     return [];

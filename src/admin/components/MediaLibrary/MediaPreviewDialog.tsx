@@ -31,8 +31,9 @@ const MediaPreviewDialog = ({
   
   if (!selectedFile) return null;
 
-  // Add cache busting parameter to URL
-  const imageUrl = `${selectedFile.url}?t=${Date.now()}&r=${retryCount}`;
+  // Ensure we have a clean base URL and add cache busting parameter
+  const baseUrl = selectedFile.url.split('?')[0]; // Ensure we have a clean base URL
+  const imageUrl = `${baseUrl}?t=${Date.now()}&r=${retryCount}`;
 
   const handleRetry = () => {
     console.log(`Retrying image load: ${selectedFile.original_file_name}`);
@@ -44,8 +45,8 @@ const MediaPreviewDialog = ({
   const handleDownload = () => {
     // Create a link element with download attribute
     const link = document.createElement('a');
-    // Use the original URL for download
-    link.href = selectedFile.url;
+    // Use the clean URL for download
+    link.href = baseUrl;
     link.download = selectedFile.original_file_name;
     document.body.appendChild(link);
     link.click();
@@ -102,7 +103,7 @@ const MediaPreviewDialog = ({
                 <li><span className="font-medium">Name:</span> {selectedFile.original_file_name}</li>
                 {selectedFile.size && <li><span className="font-medium">Size:</span> {formatFileSize(selectedFile.size)}</li>}
                 <li><span className="font-medium">Uploaded:</span> {formatDate(selectedFile.created_at)}</li>
-                <li className="truncate"><span className="font-medium">URL:</span> {selectedFile.url}</li>
+                <li className="truncate"><span className="font-medium">URL:</span> {baseUrl}</li>
               </ul>
             </div>
             
@@ -110,7 +111,7 @@ const MediaPreviewDialog = ({
               <div className="flex space-x-2">
                 <Button 
                   variant="outline" 
-                  onClick={() => onCopyUrl(selectedFile.url)}
+                  onClick={() => onCopyUrl(baseUrl)}
                   className="flex items-center"
                 >
                   <Copy className="h-4 w-4 mr-2" /> Copy URL
