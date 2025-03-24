@@ -14,15 +14,18 @@ import FantasyPicksSection from '@/components/fantasy-picks/FantasyPicksSection'
 import { FanPollSection } from '@/pages/home/sections/FanPollSection';
 import Chatbot from '@/components/Chatbot';
 import Footer from '@/components/Footer';
+import { useTheme } from '@/components/ThemeProvider';
 
 const Index = () => {
+  const { theme } = useTheme();
+  
   // Effect to log articles data for debugging image issues
   useEffect(() => {
     console.log("Fetching articles from Supabase");
   }, []);
   
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-cricket-dark">
+    <div className={`min-h-screen flex flex-col ${theme === "dark" ? "dark bg-cricket-dark" : "bg-gray-50"}`}>
       <LiveMatchesBar />
       <Navbar />
       

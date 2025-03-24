@@ -11,9 +11,11 @@ import { TrendingPlayersSection } from './sections/TrendingPlayersSection';
 import { QuickStatsSection } from './sections/QuickStatsSection';
 import { FanPollSection } from './sections/FanPollSection';
 import FantasyPicksSection from '@/components/FantasyPicksSection';
+import { useTheme } from '@/components/ThemeProvider';
 
 const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const { theme } = useTheme();
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -43,7 +45,7 @@ const HomePage = () => {
   }
   
   return (
-    <>
+    <div className={theme === "dark" ? "dark" : ""}>
       <LiveMatchesBar />
       <Navbar />
       <main>
@@ -72,7 +74,7 @@ const HomePage = () => {
         <Footer />
       </main>
       <Chatbot />
-    </>
+    </div>
   );
 };
 

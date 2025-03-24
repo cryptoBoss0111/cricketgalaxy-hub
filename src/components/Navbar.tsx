@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { useChatbot } from '@/contexts/ChatbotContext';
+import { useTheme } from '@/components/ThemeProvider';
 import AdminLoginButton from "./AdminLoginButton";
 
 interface NavLinkItem {
@@ -29,10 +30,10 @@ const navLinks: NavLinkItem[] = [
 
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
   const { toggleChatbot } = useChatbot();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,11 +45,11 @@ export const Navbar = () => {
   }, []);
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
     
     toast({
-      title: isDarkMode ? "Light mode activated" : "Dark mode activated",
+      title: theme === "dark" ? "Light mode activated" : "Dark mode activated",
       description: "Your theme preference has been updated.",
       duration: 2000,
     });
@@ -65,6 +66,8 @@ export const Navbar = () => {
       setSearchQuery('');
     }
   };
+
+  const isDarkMode = theme === "dark";
 
   return (
     <header className={cn(
