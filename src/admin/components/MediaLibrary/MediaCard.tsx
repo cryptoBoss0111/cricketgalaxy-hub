@@ -36,13 +36,13 @@ const MediaCard = ({
     setRetryCount(prev => prev + 1);
   };
 
-  // Generate direct URL to Supabase storage
+  // Generate direct URL to Supabase storage - ALWAYS use this format
   const getImageUrl = () => {
     // Directly construct the Supabase storage URL
     const directUrl = `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/article_images/${file.stored_file_name}`;
-    // Add cache busting parameter
+    // Add cache busting parameter for refreshes
     const urlWithCacheBusting = `${directUrl}?t=${Date.now()}&r=${retryCount}`;
-    console.log("Constructed image URL:", directUrl);
+    console.log("MediaCard - Using image URL:", directUrl);
     return urlWithCacheBusting;
   };
 
