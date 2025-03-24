@@ -79,10 +79,11 @@ export const getMediaFiles = async (bucketName = 'article_images') => {
     if (!bucketExists) {
       console.log(`Bucket '${bucketName}' does not exist. Auto-creating it.`);
       try {
-        // Try to create the bucket through the Supabase client
-        const { error } = await supabase.rpc('create_storage_bucket', {
-          name: bucketName,
-          public: true
+        // Using the storage API directly instead of RPC
+        const { error } = await supabase.storage.createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB limit
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
         });
         
         if (error) {
