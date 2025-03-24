@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -221,7 +222,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
             </div>
           ) : (
             <img 
-              src={getImageUrl() || ''} 
+              src={getImageUrl() || ''}
               alt="Preview" 
               className="w-full h-48 object-cover"
               onError={() => {
