@@ -67,6 +67,8 @@ const MediaUploadDialog = ({
       const imageUrl = URL.createObjectURL(file);
       setImageToProcess(imageUrl);
       setProcessingFile(file);
+      
+      console.log("Selected file:", file.name, file.type, file.size);
     }
   };
   
@@ -98,6 +100,8 @@ const MediaUploadDialog = ({
       const imageUrl = URL.createObjectURL(file);
       setImageToProcess(imageUrl);
       setProcessingFile(file);
+      
+      console.log("Dropped file:", file.name, file.type, file.size);
     }
   };
   
@@ -108,19 +112,19 @@ const MediaUploadDialog = ({
     }
     
     try {
+      const originalType = processingFile.type;
+      console.log("Original file type:", originalType);
+      
       const extension = processingFile.name.split('.').pop()?.toLowerCase();
       const useExtension = (extension === 'jpg' || extension === 'jpeg') ? extension : 'jpg';
-      
-      const originalMimeType = processingFile.type;
-      console.log("Original file MIME type:", originalMimeType);
       
       const croppedFile = new File(
         [croppedBlob], 
         `${processingFile.name.split('.')[0]}.${useExtension}`, 
-        { type: originalMimeType }
+        { type: originalType }
       );
       
-      console.log("Cropped file:", croppedFile.name, croppedFile.type, croppedFile.size);
+      console.log("Created cropped file:", croppedFile.name, "with type:", croppedFile.type);
       
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(croppedFile);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -73,6 +72,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     }
     
     setSelectedFile(file);
+    console.log("Selected file:", file.name, file.type, file.size);
     
     const fileReader = new FileReader();
     fileReader.onload = () => {
@@ -93,6 +93,7 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     setError(null);
     
     try {
+      // CRITICAL FIX: We must preserve the original MIME type
       const originalName = selectedFile.name;
       const originalMimeType = selectedFile.type;
       console.log("Original file MIME type:", originalMimeType);
@@ -108,17 +109,17 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
       
       const safeName = `${safeBaseName}.${useExtension}`;
       
-      // CRITICAL FIX: Preserve the original MIME type
+      // Create a file with the EXACT same MIME type
       const croppedFile = new File(
         [croppedBlob], 
         safeName, 
-        { type: originalMimeType }
+        { type: originalMimeType } // Keep the exact same MIME type
       );
       
-      console.log("Starting image upload process with cropped image...");
+      console.log("Starting image upload process...");
       console.log("Sanitized filename:", safeName);
-      console.log("Original file type:", selectedFile.type);
-      console.log("File for upload:", croppedFile.name, croppedFile.type);
+      console.log("Original file type:", originalMimeType);
+      console.log("File for upload:", croppedFile.name, "with type:", croppedFile.type);
       
       const mediaRecord = await uploadImageToStorage(croppedFile);
       

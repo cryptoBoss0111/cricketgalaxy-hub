@@ -1,3 +1,4 @@
+
 import { supabase } from './client-core';
 
 // Helper function to infer content type from file extension
@@ -45,18 +46,19 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     const timestamp = Date.now();
     const storedFileName = `${fileBaseName}_${timestamp}.${extension}`;
     
-    // CRITICAL FIX: Do not attempt to infer or change the file's MIME type
-    // Use the file's actual type directly
     console.log("Uploading image:", originalFileName);
     console.log("Stored as:", storedFileName);
     console.log("Content type from file object:", file.type);
     
     // Set caching headers but do NOT override content type
+    // CRITICAL FIX: Pass the file's type directly without any inference or transformation
     const options = {
       cacheControl: '3600',
-      upsert: false, // Don't overwrite files with the same name
-      contentType: file.type // Use the file's actual MIME type
+      upsert: false,
+      contentType: file.type // Use exact file.type from the browser
     };
+    
+    console.log("Upload options:", options);
     
     // Upload the file directly to Supabase Storage without any transformation
     const { data, error } = await supabase.storage
@@ -89,7 +91,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
         stored_file_name: storedFileName,
         url: cleanUrl,
         size: file.size,
-        content_type: file.type // Use the file's actual MIME type
+        content_type: file.type // Save the original file type
       })
       .select()
       .single();
