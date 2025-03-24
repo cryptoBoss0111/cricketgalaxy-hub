@@ -27,6 +27,27 @@ import { Trophy, Filter, Calendar, User } from 'lucide-react';
 import { formatDistance } from 'date-fns';
 import FantasyPickCard, { FantasyPick } from '@/components/fantasy-picks/FantasyPickCard';
 
+type Match = {
+  id: string;
+  team1: string;
+  team2: string;
+  match_time: string;
+};
+
+type FantasyPickResponse = {
+  id: string;
+  player_name: string;
+  team: string;
+  role: string;
+  form: string;
+  image_url?: string;
+  stats?: string;
+  points_prediction: number;
+  match: string;
+  reason: string;
+  created_at: string;
+};
+
 const FantasyTipsPage = () => {
   const [searchParams] = useSearchParams();
   const matchFilter = searchParams.get('match');
@@ -34,6 +55,7 @@ const FantasyTipsPage = () => {
   const [selectedMatch, setSelectedMatch] = useState<string | null>(matchFilter);
   const navigate = useNavigate();
 
+  // Fetch matches
   const { data: matches = [], isLoading: matchesLoading } = useQuery({
     queryKey: ['upcomingMatches'],
     queryFn: async () => {
@@ -47,6 +69,7 @@ const FantasyTipsPage = () => {
     }
   });
 
+  // Fetch fantasy picks
   const { data: picks = [], isLoading: picksLoading } = useQuery({
     queryKey: ['fantasyPicks', selectedMatch],
     queryFn: async () => {
@@ -64,7 +87,7 @@ const FantasyTipsPage = () => {
       if (error) throw error;
       
       // Transform the data for the component
-      return data.map((pick: any) => ({
+      return data.map((pick: FantasyPickResponse) => ({
         id: pick.id,
         player_name: pick.player_name,
         team: pick.team,

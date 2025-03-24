@@ -9,7 +9,7 @@ export const useFeaturedMatch = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchFeaturedMatch = async () => {
+    const fetchFeaturedMatch = () => {
       try {
         // Attempt to get the most recent match with at least 2 fantasy picks
         if (fantasyPicks.length > 0) {
