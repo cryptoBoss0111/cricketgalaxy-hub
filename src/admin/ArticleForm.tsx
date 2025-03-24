@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -29,7 +28,6 @@ import { Info, AlertCircle } from 'lucide-react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { bypassRLSArticleSave } from '@/utils/adminAuth';
 
-// Define the schema for article form validation with required fields
 const articleSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100, "Title is too long"),
   content: z.string().min(50, "Content must be at least 50 characters"),
@@ -37,18 +35,16 @@ const articleSchema = z.object({
   meta_description: z.string().max(160, "Meta description must be less than 160 characters").optional(),
   category: z.string().min(1, "Please select a category"),
   published: z.boolean().default(false),
-  cover_image: z.string().min(1, "Cover image is required for published articles").optional(),
-  featured_image: z.string().min(1, "Featured image is required for published articles").optional(),
+  image_url: z.string().min(1, "Article image is required for published articles").optional(),
   tags: z.string().optional()
 }).refine((data) => {
-  // If article is being published, ensure required fields are filled
   if (data.published) {
-    return !!data.cover_image && !!data.featured_image && !!data.excerpt;
+    return !!data.image_url && !!data.excerpt;
   }
   return true;
 }, {
-  message: "Cover image, featured image, and excerpt are required for published articles",
-  path: ["published"] // Show the error on the published field
+  message: "Article image and excerpt are required for published articles",
+  path: ["published"]
 });
 
 type ArticleFormValues = z.infer<typeof articleSchema>;
@@ -67,8 +63,7 @@ const ArticleForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  
-  // Initialize the form with react-hook-form
+
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleSchema),
     defaultValues: {
@@ -78,29 +73,22 @@ const ArticleForm = () => {
       meta_description: '',
       category: '',
       published: false,
-      cover_image: '',
-      featured_image: '',
+      image_url: '',
       tags: ''
     },
-    mode: 'onChange' // Validate on change for better user experience
+    mode: 'onChange'
   });
 
-  // Get form values for validation
   const watchPublished = form.watch("published");
-  const watchCoverImage = form.watch("cover_image");
-  const watchFeaturedImage = form.watch("featured_image");
+  const watchImageUrl = form.watch("image_url");
   const watchExcerpt = form.watch("excerpt");
 
-  // Check for validation warnings when publish checkbox is checked
   useEffect(() => {
     const warnings: string[] = [];
     
     if (watchPublished) {
-      if (!watchCoverImage) {
-        warnings.push("Cover image is required for published articles");
-      }
-      if (!watchFeaturedImage) {
-        warnings.push("Featured image is required for published articles");
+      if (!watchImageUrl) {
+        warnings.push("Article image is required for published articles");
       }
       if (!watchExcerpt || watchExcerpt.length < 10) {
         warnings.push("A descriptive excerpt (min 10 characters) is required for published articles");
@@ -108,18 +96,15 @@ const ArticleForm = () => {
     }
     
     setValidationWarnings(warnings);
-  }, [watchPublished, watchCoverImage, watchFeaturedImage, watchExcerpt]);
+  }, [watchPublished, watchImageUrl, watchExcerpt]);
 
-  // Check authentication and setup admin ID
   useEffect(() => {
     let isMounted = true;
     
     const checkAuth = async () => {
       try {
-        // Refresh session first to ensure we have fresh tokens
         await refreshAdminSession();
         
-        // Then verify admin status
         const adminStatus = await verifyAdmin();
         
         if (!adminStatus) {
@@ -133,11 +118,9 @@ const ArticleForm = () => {
           return false;
         }
         
-        // Get current session
         const { data: sessionData } = await supabase.auth.getSession();
         let userId = sessionData.session?.user?.id;
         
-        // Try to get admin info from localStorage if session doesn't have it
         if (!userId) {
           const adminUserStr = localStorage.getItem('adminUser');
           if (adminUserStr) {
@@ -151,7 +134,6 @@ const ArticleForm = () => {
           }
         }
         
-        // If we still don't have a user ID, redirect to login
         if (!userId) {
           toast({
             title: "Authentication Required",
@@ -179,9 +161,7 @@ const ArticleForm = () => {
     
     checkAuth().then(isAuth => {
       if (isAuth && isMounted) {
-        // Fetch categories for dropdown
         fetchCategories();
-        // If editing, fetch article data
         if (id) {
           fetchArticle(id);
         }
@@ -193,7 +173,6 @@ const ArticleForm = () => {
     };
   }, [id, navigate, toast, verifyAdmin, refreshAdminSession]);
 
-  // Fetch existing categories
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
@@ -203,7 +182,6 @@ const ArticleForm = () => {
       
       if (error) throw error;
       
-      // Extract unique categories
       const uniqueCategories = Array.from(new Set(data?.map(item => item.category)));
       setCategories(uniqueCategories);
     } catch (error) {
@@ -211,7 +189,6 @@ const ArticleForm = () => {
     }
   };
 
-  // Fetch article data if editing
   const fetchArticle = async (articleId: string) => {
     setIsLoading(true);
     try {
@@ -224,6 +201,8 @@ const ArticleForm = () => {
       if (error) throw error;
       
       if (data) {
+        const imageUrl = data.cover_image || data.featured_image || '';
+        
         form.reset({
           title: data.title,
           content: data.content,
@@ -231,14 +210,11 @@ const ArticleForm = () => {
           meta_description: data.meta_description || '',
           category: data.category,
           published: data.published || false,
-          cover_image: data.cover_image || '',
-          featured_image: data.featured_image || '',
+          image_url: imageUrl,
           tags: data.tags ? data.tags.join(', ') : ''
         });
 
-        // Set content blocks if they exist
         if (data.content_blocks && Array.isArray(data.content_blocks)) {
-          // Convert the JSON data to ContentBlock type
           const blocks = data.content_blocks as unknown as ContentBlock[];
           setContentBlocks(blocks);
         }
@@ -256,23 +232,12 @@ const ArticleForm = () => {
     }
   };
 
-  // Validate the form before submission
   const validateForm = (values: ArticleFormValues): boolean => {
-    // Additional validations for published articles
     if (values.published) {
-      if (!values.cover_image) {
-        form.setError("cover_image", {
+      if (!values.image_url) {
+        form.setError("image_url", {
           type: "manual",
-          message: "Cover image is required for published articles"
-        });
-        setActiveTab('seo');
-        return false;
-      }
-      
-      if (!values.featured_image) {
-        form.setError("featured_image", {
-          type: "manual",
-          message: "Featured image is required for published articles"
+          message: "Article image is required for published articles"
         });
         setActiveTab('seo');
         return false;
@@ -291,9 +256,7 @@ const ArticleForm = () => {
     return true;
   };
 
-  // Handle form submission
   const onSubmit = async (values: ArticleFormValues) => {
-    // Validate the form first
     if (!validateForm(values)) {
       toast({
         title: "Validation Error",
@@ -307,7 +270,6 @@ const ArticleForm = () => {
     setSaveError(null);
     
     try {
-      // Double-check admin status before saving
       if (!adminId || !isAdmin) {
         console.log("Verifying admin status before saving...");
         const adminCheck = await verifyAdmin();
@@ -322,13 +284,11 @@ const ArticleForm = () => {
         }
       }
       
-      // Explicitly refresh the session before saving
       console.log("Refreshing session before saving article...");
       const sessionRefreshed = await refreshAdminSession();
       
       if (!sessionRefreshed) {
         console.log("Session refresh failed, trying local admin ID as fallback");
-        // If session refresh fails, check if we have a local admin ID to use as fallback
         if (!adminId) {
           toast({
             title: "Session Expired",
@@ -338,13 +298,11 @@ const ArticleForm = () => {
           navigate('/admin/login');
           return;
         }
-        // Otherwise continue with the existing adminId from localStorage
         console.log("Using cached admin ID:", adminId);
       } else {
         console.log("Session refreshed successfully");
       }
       
-      // Ensure we have an admin ID
       const effectiveAdminId = adminId;
       if (!effectiveAdminId) {
         toast({
@@ -356,7 +314,6 @@ const ArticleForm = () => {
         return;
       }
       
-      // Prepare tags array
       const tagsArray = values.tags ? values.tags.split(',').map(tag => tag.trim()) : [];
       
       const articleData = {
@@ -366,8 +323,8 @@ const ArticleForm = () => {
         meta_description: values.meta_description || null,
         category: values.category,
         published: values.published,
-        cover_image: values.cover_image || null,
-        featured_image: values.featured_image || null,
+        cover_image: values.image_url || null,
+        featured_image: values.image_url || null,
         content_blocks: contentBlocks,
         tags: tagsArray.length > 0 ? tagsArray : null,
         updated_at: new Date().toISOString(),
@@ -380,7 +337,6 @@ const ArticleForm = () => {
       let result;
       
       try {
-        // Try RLS bypass method first
         if (id) {
           const { data } = await bypassRLSArticleSave(articleData, true, id);
           result = data;
@@ -394,9 +350,7 @@ const ArticleForm = () => {
         console.error("RLS bypass failed, trying direct method:", bypassError);
         setSaveError(`RLS bypass error: ${bypassError.message || 'Unknown error'}`);
         
-        // Fall back to direct method
         if (id) {
-          // Update existing article
           const { data, error } = await supabase
             .from('articles')
             .update(articleData)
@@ -410,7 +364,6 @@ const ArticleForm = () => {
           
           result = data;
         } else {
-          // Create new article
           const { data, error } = await supabase
             .from('articles')
             .insert({
@@ -437,12 +390,10 @@ const ArticleForm = () => {
       
       console.log("Save successful, result:", result);
       
-      // Redirect to articles list
       navigate('/admin/articles');
     } catch (error: any) {
       console.error('Error saving article:', error);
       
-      // More descriptive error message
       let errorMessage = "Failed to save article";
       if (error.message) {
         errorMessage = error.message;
@@ -461,7 +412,7 @@ const ArticleForm = () => {
       setIsSubmitting(false);
     }
   };
-  
+
   if (isLoading) {
     return (
       <AdminLayout>
@@ -485,7 +436,6 @@ const ArticleForm = () => {
           <Button onClick={() => navigate('/admin/articles')}>Back to Articles</Button>
         </div>
         
-        {/* Show admin status */}
         {isAdmin ? (
           <Alert className="bg-green-50 border-green-200">
             <Info className="h-4 w-4 text-green-600" />
@@ -504,7 +454,6 @@ const ArticleForm = () => {
           </Alert>
         )}
         
-        {/* Show error message if there was a problem saving */}
         {saveError && (
           <Alert variant="destructive">
             <Info className="h-4 w-4" />
@@ -515,7 +464,6 @@ const ArticleForm = () => {
           </Alert>
         )}
         
-        {/* Show validation warnings */}
         {validationWarnings.length > 0 && watchPublished && (
           <Alert variant="warning" className="bg-amber-50 border-amber-200">
             <AlertCircle className="h-4 w-4 text-amber-600" />
@@ -564,7 +512,6 @@ const ArticleForm = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* Include standard categories */}
                           <SelectItem value="IPL 2025">IPL 2025</SelectItem>
                           <SelectItem value="Analysis">Analysis</SelectItem>
                           <SelectItem value="Match Preview">Match Preview</SelectItem>
@@ -574,7 +521,6 @@ const ArticleForm = () => {
                           <SelectItem value="Fantasy Tips">Fantasy Tips</SelectItem>
                           <SelectItem value="World Cup">World Cup</SelectItem>
                           
-                          {/* Include any additional categories from the database */}
                           {categories
                             .filter(category => !["IPL 2025", "Analysis", "Match Preview", "Match Review", 
                                                 "Women's Cricket", "Player Profile", "Fantasy Tips", "World Cup"]
@@ -610,7 +556,7 @@ const ArticleForm = () => {
               <TabsList className="grid grid-cols-3 mb-6">
                 <TabsTrigger value="content">Content</TabsTrigger>
                 <TabsTrigger value="blocks">Content Blocks</TabsTrigger>
-                <TabsTrigger value="seo">SEO & Images</TabsTrigger>
+                <TabsTrigger value="seo">SEO & Image</TabsTrigger>
               </TabsList>
               
               <TabsContent value="content" className="space-y-6">
@@ -680,50 +626,29 @@ const ArticleForm = () => {
               
               <TabsContent value="seo" className="space-y-6">
                 <Card className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">
-                        Cover Image {watchPublished && <span className="text-red-500">*</span>}
-                      </h3>
-                      <FormField
-                        control={form.control}
-                        name="cover_image"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <ImageUploader
-                                existingImageUrl={field.value}
-                                onImageUploaded={(url) => form.setValue('cover_image', url)}
-                                label={`Article Cover Image ${watchPublished ? '(Required)' : ''}`}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">
-                        Featured Image {watchPublished && <span className="text-red-500">*</span>}
-                      </h3>
-                      <FormField
-                        control={form.control}
-                        name="featured_image"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <ImageUploader
-                                existingImageUrl={field.value}
-                                onImageUploaded={(url) => form.setValue('featured_image', url)}
-                                label={`Featured Image (Homepage) ${watchPublished ? '(Required)' : ''}`}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">
+                      Article Image {watchPublished && <span className="text-red-500">*</span>}
+                    </h3>
+                    <FormField
+                      control={form.control}
+                      name="image_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <ImageUploader
+                              existingImageUrl={field.value}
+                              onImageUploaded={(url) => form.setValue('image_url', url)}
+                              label={`Article Image ${watchPublished ? '(Required)' : ''}`}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                          <p className="text-sm text-gray-500 mt-2">
+                            This image will be used as both the article cover image and featured image.
+                          </p>
+                        </FormItem>
+                      )}
+                    />
                   </div>
                   
                   <div className="mt-6">

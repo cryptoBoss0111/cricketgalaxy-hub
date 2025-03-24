@@ -11,8 +11,6 @@ interface TopStory {
   title: string;
   excerpt: string;
   imageUrl: string;
-  cover_image?: string;
-  featured_image?: string;
   category: string;
   author: string;
   date: string;
@@ -38,7 +36,6 @@ export const TopStoriesSection = () => {
               id,
               title,
               excerpt,
-              featured_image,
               cover_image,
               category,
               author_id,
@@ -63,9 +60,7 @@ export const TopStoriesSection = () => {
             id: article.id,
             title: article.title,
             excerpt: article.excerpt || 'Read this exciting article...',
-            imageUrl: article.featured_image || '',
-            featured_image: article.featured_image,
-            cover_image: article.cover_image,
+            imageUrl: article.cover_image || '',
             category: article.category,
             author: article.author_id ? `Author ${article.author_id.slice(0, 8)}` : 'CricketExpress Staff',
             date: new Date(article.published_at).toLocaleDateString('en-US', {
@@ -134,11 +129,7 @@ export const TopStoriesSection = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {topStories.map((story, index) => {
-            console.log(`Story ${index} image URLs:`, {
-              imageUrl: story.imageUrl,
-              coverImage: story.cover_image,
-              featuredImage: story.featured_image
-            });
+            console.log(`Story ${index} image URL:`, story.imageUrl);
             
             return (
               <ArticleCard
@@ -147,8 +138,6 @@ export const TopStoriesSection = () => {
                 title={story.title}
                 excerpt={story.excerpt}
                 imageUrl={story.imageUrl}
-                cover_image={story.cover_image}
-                featured_image={story.featured_image}
                 category={story.category}
                 author={story.author}
                 date={story.date}

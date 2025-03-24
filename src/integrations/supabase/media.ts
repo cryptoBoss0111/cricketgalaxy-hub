@@ -9,7 +9,7 @@ export const generateUniqueFileName = (fileName: string) => {
   return `${timestamp}-${randomString}.${extension}`;
 };
 
-// Upload file to storage with improved error handling and retry logic
+// Upload file to storage with improved error handling
 export const uploadImageToStorage = async (file: File, bucket = 'article_images') => {
   try {
     // Create a unique file name
@@ -27,8 +27,14 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     
     if (error) throw error;
     
+    // Get the public URL
+    const { data: { publicUrl } } = supabase
+      .storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+    
     // Return the full public URL
-    return data.path;
+    return publicUrl;
   } catch (error) {
     console.error('Error uploading image:', error);
     throw error;

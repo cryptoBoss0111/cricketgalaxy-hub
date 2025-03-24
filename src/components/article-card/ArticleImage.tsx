@@ -9,8 +9,6 @@ interface ArticleImageProps {
   id: string | number;
   title: string;
   imageUrl?: string;
-  cover_image?: string;
-  featured_image?: string;
   category: string;
 }
 
@@ -18,15 +16,9 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
   id,
   title,
   imageUrl,
-  cover_image,
-  featured_image,
   category
 }) => {
-  console.log(`ArticleImage rendering for "${title}" with:`, {
-    featured_image,
-    cover_image,
-    imageUrl
-  });
+  console.log(`ArticleImage rendering for "${title}" with:`, { imageUrl });
 
   // Use our custom hook for image handling
   const {
@@ -35,7 +27,7 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
     imageError,
     handleImageLoad,
     handleImageError
-  } = useArticleImage(title, featured_image, cover_image, imageUrl);
+  } = useArticleImage(title, imageUrl);
 
   return (
     <Link to={`/article/${id}`} className="block relative overflow-hidden aspect-video">

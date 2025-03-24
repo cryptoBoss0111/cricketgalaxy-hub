@@ -68,10 +68,17 @@ export async function getFantasyPicksByMatch(matchId: string): Promise<FantasyPi
       .order('points_prediction', { ascending: false });
       
     if (error) throw error;
-    // Fix by explicitly handling null data case separately
+    
+    // Return empty array if no data
     if (!data) return [];
-    // Then cast to the correct type
-    return data as FantasyPickDB[];
+    
+    // Type casting with explicit array creation to avoid deep instantiation
+    const result: FantasyPickDB[] = [];
+    data.forEach(item => {
+      result.push(item as FantasyPickDB);
+    });
+    
+    return result;
   } catch (error) {
     console.error('Error fetching fantasy picks for match:', error);
     return [];
@@ -146,9 +153,17 @@ export async function getTopFantasyPicks(limit: number = 4): Promise<FantasyPick
       .limit(limit);
       
     if (error) throw error;
-    // Fix type issue by explicit conversion with null check
+    
+    // Return empty array if no data
     if (!data) return [];
-    return data as FantasyPickDB[];
+    
+    // Type casting with explicit array creation to avoid deep instantiation
+    const result: FantasyPickDB[] = [];
+    data.forEach(item => {
+      result.push(item as FantasyPickDB);
+    });
+    
+    return result;
   } catch (error) {
     console.error('Error fetching top fantasy picks:', error);
     return [];
@@ -167,9 +182,17 @@ export async function getRecentFantasyPicks(limit: number = 10): Promise<Fantasy
       .limit(limit);
       
     if (error) throw error;
-    // Fix type issue by explicit conversion with null check
+    
+    // Return empty array if no data
     if (!data) return [];
-    return data as FantasyPickDB[];
+    
+    // Type casting with explicit array creation to avoid deep instantiation
+    const result: FantasyPickDB[] = [];
+    data.forEach(item => {
+      result.push(item as FantasyPickDB);
+    });
+    
+    return result;
   } catch (error) {
     console.error('Error fetching recent fantasy picks:', error);
     return [];

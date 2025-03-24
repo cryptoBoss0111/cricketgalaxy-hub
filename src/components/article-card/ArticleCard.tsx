@@ -9,8 +9,6 @@ interface ArticleCardProps {
   title: string;
   excerpt?: string;
   imageUrl?: string;
-  cover_image?: string;
-  featured_image?: string;
   category: string;
   author: string;
   date: string;
@@ -23,8 +21,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   title,
   excerpt,
   imageUrl,
-  cover_image,
-  featured_image,
   category,
   author,
   date,
@@ -40,8 +36,6 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
         id={id}
         title={title}
         imageUrl={imageUrl}
-        cover_image={cover_image}
-        featured_image={featured_image}
         category={category}
       />
       

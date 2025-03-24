@@ -1,18 +1,21 @@
 
 import { useState, useEffect } from 'react';
 
+// Default fallback image
 const DEFAULT_PLACEHOLDER = '/placeholder.svg';
+
+// Reliable fallback images for when Supabase images fail
 const RELIABLE_FALLBACKS = [
   'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=600&auto=format&fit=crop',
   'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=600&auto=format&fit=crop'
 ];
 
-// Simplified URL validation
+// Check if a URL is valid
 export const isValidImageUrl = (url?: string): boolean => {
-  return !!url && url.trim() !== '';
+  return Boolean(url && url.trim() !== '');
 };
 
-// Simplified URL processing function
+// Get a complete image URL
 export const getFullImageUrl = (url: string): string => {
   if (!url) return DEFAULT_PLACEHOLDER;
   
@@ -26,33 +29,27 @@ export const getFullImageUrl = (url: string): string => {
     return url;
   }
   
-  // For Supabase storage paths, construct the full URL
-  return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
+  // If it's not a full URL or local path, assume it's a relative path
+  // and convert to an absolute URL
+  return `${window.location.origin}/${url}`;
 };
 
 // Simplified hook for article image handling
-export const useArticleImage = (title: string, featured_image?: string, cover_image?: string, imageUrl?: string) => {
+export const useArticleImage = (title: string, imageUrl?: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [imageSource, setImageSource] = useState<string>('');
   
-  // Choose the first available image source
+  // Choose the image source
   useEffect(() => {
     setIsLoading(true);
     setImageError(false);
     
-    // Process and prioritize image URLs
-    let sourceUrl: string | undefined;
+    let sourceUrl: string;
     
-    if (isValidImageUrl(featured_image)) {
-      sourceUrl = getFullImageUrl(featured_image!);
-      console.log(`Using featured_image for "${title}": ${sourceUrl}`);
-    } else if (isValidImageUrl(cover_image)) {
-      sourceUrl = getFullImageUrl(cover_image!);
-      console.log(`Using cover_image for "${title}": ${sourceUrl}`);
-    } else if (isValidImageUrl(imageUrl)) {
+    if (isValidImageUrl(imageUrl)) {
       sourceUrl = getFullImageUrl(imageUrl!);
-      console.log(`Using imageUrl for "${title}": ${sourceUrl}`);
+      console.log(`Using image for "${title}": ${sourceUrl}`);
     } else {
       // If no valid image source, use a fallback
       sourceUrl = RELIABLE_FALLBACKS[0];
@@ -60,7 +57,7 @@ export const useArticleImage = (title: string, featured_image?: string, cover_im
     }
     
     setImageSource(sourceUrl);
-  }, [title, featured_image, cover_image, imageUrl]);
+  }, [title, imageUrl]);
   
   // Handle successful image load
   const handleImageLoad = () => {

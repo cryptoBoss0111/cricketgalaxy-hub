@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -5,7 +6,6 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { uploadImageToStorage } from '@/integrations/supabase/client';
 import { Image, Upload, X, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 interface ImageUploaderProps {
   onImageUploaded: (imageUrl: string) => void;
@@ -18,26 +18,10 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const { isAdmin } = useAdminAuth();
-  
-  // Simplified URL processing for preview
-  const processSupabaseUrl = (url?: string): string | null => {
-    if (!url) return null;
-    
-    // If already a full URL, return as-is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    
-    // Otherwise, prepend the Supabase storage URL
-    return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
-  };
   
   useEffect(() => {
     if (existingImageUrl) {
-      const processedUrl = processSupabaseUrl(existingImageUrl);
-      console.log("Processing existing image URL:", existingImageUrl, "->", processedUrl);
-      setPreviewUrl(processedUrl);
+      setPreviewUrl(existingImageUrl);
     }
   }, [existingImageUrl]);
   
@@ -81,12 +65,12 @@ const ImageUploader = ({ onImageUploaded, existingImageUrl, label = "Upload Imag
     try {
       console.log("Starting image upload process...");
       
-      // Upload the image to Supabase
+      // Upload the image to Supabase and get direct URL
       const imageUrl = await uploadImageToStorage(file, 'article_images');
       
       console.log("Upload successful, image URL:", imageUrl);
       
-      // Pass the path to the parent component
+      // Pass the URL to the parent component
       onImageUploaded(imageUrl);
       
       toast({

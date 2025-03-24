@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Clock, Calendar, User, Tag } from 'lucide-react';
@@ -13,7 +12,6 @@ import Chatbot from '@/components/Chatbot';
 import ArticleCard from '@/components/ArticleCard';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Reliable fallback images for when Supabase images fail
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?q=80&w=600&auto=format&fit=crop',
   'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?q=80&w=600&auto=format&fit=crop',
@@ -43,18 +41,15 @@ const ArticleDetail = () => {
           setArticle(articleData);
           console.log("Article data:", articleData);
           
-          // Try to set the main image from article data
-          if (articleData.featured_image || articleData.cover_image) {
-            setMainImage(articleData.featured_image || articleData.cover_image);
+          if (articleData.cover_image) {
+            setMainImage(articleData.cover_image);
             setImageLoading(true);
             setImageFailed(false);
           }
           
-          // Fetch related articles with the same category
           const { getArticlesByCategory } = await import('@/integrations/supabase/client');
           const relatedData = await getArticlesByCategory(articleData.category);
           
-          // Filter out the current article and limit to 3 articles
           const filtered = relatedData
             .filter(relatedArticle => relatedArticle.id !== id)
             .slice(0, 3);
@@ -81,33 +76,27 @@ const ArticleDetail = () => {
     
     fetchArticle();
     
-    // Scroll to top when article changes
     window.scrollTo(0, 0);
   }, [id, toast]);
   
-  // Handle main image error
   const handleImageError = () => {
     console.error(`Image load failed: ${mainImage}`);
     setImageFailed(true);
     
-    // Use a fallback image
     const randomFallback = FALLBACK_IMAGES[Math.floor(Math.random() * FALLBACK_IMAGES.length)];
     if (mainImage !== randomFallback) {
       setMainImage(randomFallback);
       setImageLoading(true);
     } else {
-      // If we're already using a fallback, just show it
       setImageLoading(false);
     }
   };
   
-  // Handle successful image load
   const handleImageLoad = () => {
     console.log(`Image loaded successfully: ${mainImage}`);
     setImageLoading(false);
   };
   
-  // Format date for display
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Unknown date';
     const date = new Date(dateString);
@@ -118,7 +107,6 @@ const ArticleDetail = () => {
     });
   };
   
-  // Calculate read time (1 minute per 200 words)
   const calculateReadTime = (content: string) => {
     if (!content) return '1 min read';
     const words = content.split(/\s+/).length;
@@ -126,7 +114,6 @@ const ArticleDetail = () => {
     return `${minutes} min read`;
   };
   
-  // Render loading state
   if (loading) {
     return (
       <>
@@ -152,7 +139,6 @@ const ArticleDetail = () => {
     );
   }
   
-  // Render article not found
   if (!article) {
     return (
       <>
@@ -179,7 +165,6 @@ const ArticleDetail = () => {
       <LiveMatchesBar />
       <Navbar />
       <main>
-        {/* Article header */}
         <section className="py-8 md:py-12 border-b">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
@@ -218,7 +203,6 @@ const ArticleDetail = () => {
           </div>
         </section>
         
-        {/* Featured image - improved with fallback handling */}
         <section className="py-8">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
@@ -240,19 +224,16 @@ const ArticleDetail = () => {
           </div>
         </section>
         
-        {/* Article content */}
         <section className="py-8 md:py-12">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               <div className="prose prose-lg max-w-none">
-                {/* Render content paragraphs */}
                 {article.content.split('\n').map((paragraph: string, index: number) => {
                   if (paragraph.trim().length === 0) return null;
                   return <p key={index}>{paragraph}</p>;
                 })}
               </div>
               
-              {/* Tags */}
               {article.tags && article.tags.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2 mt-8 pt-6 border-t">
                   <span className="text-sm font-medium flex items-center">
@@ -269,7 +250,6 @@ const ArticleDetail = () => {
           </div>
         </section>
         
-        {/* Related articles */}
         {relatedArticles.length > 0 && (
           <section className="py-12 bg-gray-50">
             <div className="container mx-auto px-4">

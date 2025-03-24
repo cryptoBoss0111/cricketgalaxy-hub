@@ -1,4 +1,3 @@
-
 import { supabase } from './client-core';
 
 // Get published articles for the public site
@@ -30,7 +29,7 @@ export const getPublishedArticles = async (category?: string, limit = 10) => {
           id: 'mock-article-1',
           title: 'India vs Australia: 3rd Test Preview',
           excerpt: 'Preview of the upcoming test match between India and Australia',
-          featured_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop',
+          cover_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop',
           category: 'Match Previews',
           content: 'Full content of the article goes here',
           published: true,
@@ -42,7 +41,7 @@ export const getPublishedArticles = async (category?: string, limit = 10) => {
           id: 'mock-article-2',
           title: 'Top 10 Players to Watch in IPL 2025',
           excerpt: 'The rising stars to keep an eye on in this IPL season',
-          featured_image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop',
+          cover_image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop',
           category: 'IPL',
           content: 'Full content of the article goes here',
           published: true,
@@ -54,7 +53,7 @@ export const getPublishedArticles = async (category?: string, limit = 10) => {
           id: 'mock-article-3',
           title: 'Women\'s World Cup Final Recap',
           excerpt: 'Highlights from the thrilling Women\'s World Cup final',
-          featured_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop',
+          cover_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop',
           category: 'Women\'s Cricket',
           content: 'Full content of the article goes here',
           published: true,
@@ -66,7 +65,7 @@ export const getPublishedArticles = async (category?: string, limit = 10) => {
           id: 'mock-article-4',
           title: 'England\'s Tour of India: What to Expect',
           excerpt: 'Preview of the upcoming England tour of India',
-          featured_image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop',
+          cover_image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop',
           category: 'Match Previews',
           content: 'Full content of the article goes here',
           published: true,
@@ -78,7 +77,7 @@ export const getPublishedArticles = async (category?: string, limit = 10) => {
           id: 'mock-article-5',
           title: 'IPL 2025 Auction Analysis',
           excerpt: 'Breaking down the results of the IPL 2025 auction',
-          featured_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop',
+          cover_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop',
           category: 'IPL',
           content: 'Full content of the article goes here',
           published: true,
@@ -98,7 +97,7 @@ export const getPublishedArticles = async (category?: string, limit = 10) => {
         id: 'mock-error-article-1',
         title: 'India vs Australia: 3rd Test Preview',
         excerpt: 'Preview of the upcoming test match between India and Australia',
-        featured_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop',
+        cover_image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&auto=format&fit=crop',
         category: 'Match Previews',
         content: 'Full content of the article goes here',
         published: true,
@@ -110,7 +109,7 @@ export const getPublishedArticles = async (category?: string, limit = 10) => {
         id: 'mock-error-article-2',
         title: 'Top 10 Players to Watch in IPL 2025',
         excerpt: 'The rising stars to keep an eye on in this IPL season',
-        featured_image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop',
+        cover_image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&auto=format&fit=crop',
         category: 'IPL',
         content: 'Full content of the article goes here',
         published: true,
@@ -146,8 +145,8 @@ export const getArticleById = async (id: string) => {
       ...data,
       // Format dates or other fields if needed
       published_at: data.published_at || data.created_at,
-      // Ensure featured_image is available (use cover_image as fallback)
-      featured_image: data.featured_image || data.cover_image,
+      // Use cover_image as the primary image source
+      featured_image: data.cover_image || data.featured_image,
       // Default excerpt if none is provided
       excerpt: data.excerpt || data.meta_description || 'Read this exciting cricket article...'
     };
