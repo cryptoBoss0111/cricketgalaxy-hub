@@ -3,34 +3,48 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFreeWar } from '../free-war/FreeWarProvider';
+import { HeroArticle } from './types';
 
 interface HeroContentProps {
-  title: string;
-  subtitle: string;
-  ctaLink: string;
-  ctaText: string;
+  article: HeroArticle;
+  isAnimating: boolean;
+  getCategoryUrl: (category: string) => string;
 }
 
 export const HeroContent: React.FC<HeroContentProps> = ({
-  title,
-  subtitle,
-  ctaLink,
-  ctaText,
+  article,
+  isAnimating,
+  getCategoryUrl,
 }) => {
   const { showSelectionModal } = useFreeWar();
   
   return (
-    <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16 max-w-3xl">
+    <div className={`flex flex-col justify-center p-8 md:p-12 lg:p-16 max-w-3xl transition-opacity duration-700 ${
+      isAnimating ? 'opacity-0' : 'opacity-100'
+    }`}>
+      <div className="mb-3">
+        <span className="inline-block bg-cricket-accent/90 text-white text-sm px-3 py-1 rounded-full">
+          {article.category}
+        </span>
+        {article.isFeaturedPick && (
+          <span className="inline-block bg-amber-400 text-amber-900 text-sm px-3 py-1 rounded-full ml-2">
+            Featured Pick
+          </span>
+        )}
+      </div>
+      
       <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-4 text-white">
-        {title}
+        {article.title}
       </h1>
+      
       <p className="text-lg md:text-xl text-white/80 mb-8">
-        {subtitle}
+        {article.excerpt}
       </p>
+      
       <div className="flex flex-col sm:flex-row gap-4">
         <Button asChild variant="accent" size="lg" className="group">
-          <a href={ctaLink}>
-            {ctaText}
+          <a href={`/article/${article.id}?category=${getCategoryUrl(article.category)}`}>
+            Read Full Story
             <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </a>
         </Button>
