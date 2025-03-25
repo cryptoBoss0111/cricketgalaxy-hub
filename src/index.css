@@ -210,30 +210,10 @@
   }
   
   .story-link {
-    @apply relative inline-block;
+    position: relative;
+    display: inline-block;
   }
-}
-
-/* Story link underline animation - as regular CSS to avoid parsing issues */
-.story-link::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  transform: scaleX(0);
-  height: 2px;
-  bottom: 0;
-  left: 0;
-  background-color: #00a5e3;
-  transform-origin: bottom right;
-  transition: transform 0.3s ease;
-}
-
-.story-link:hover::after {
-  transform: scaleX(1);
-  transform-origin: bottom left;
-}
-
-@layer components {
+  
   .hover-scale {
     @apply transition-transform duration-200 hover:scale-105;
   }
@@ -318,6 +298,25 @@
   .genz-glass {
     @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-neon-glow;
   }
+}
+
+/* Story link underline animation - as regular CSS to avoid parsing issues */
+.story-link::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #00a5e3;
+  transform-origin: bottom right;
+  transition: transform 0.3s ease;
+}
+
+.story-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
 }
 
 /* Animations */
