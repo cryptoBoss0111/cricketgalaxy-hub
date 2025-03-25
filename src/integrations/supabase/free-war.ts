@@ -46,52 +46,63 @@ export const submitFreeWarTeam = async (
       };
     }
     
-    // Use upsert to handle potential duplicate submissions gracefully
-    const { error, data } = await supabase
+    // First, check if a team with this email already exists
+    const { data: existingTeam } = await supabase
       .from('free_war_teams')
-      .upsert([
-        { 
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+    
+    let result;
+    
+    if (existingTeam) {
+      // Update the existing team
+      console.log('Updating existing team for email:', email);
+      result = await supabase
+        .from('free_war_teams')
+        .update({ 
+          players, 
+          team_name: teamName || null 
+        })
+        .eq('email', email);
+    } else {
+      // Insert a new team
+      console.log('Creating new team for email:', email);
+      result = await supabase
+        .from('free_war_teams')
+        .insert([{ 
           email, 
           players, 
-          team_name: teamName || null
-        }
-      ], { 
-        onConflict: 'email',  // If a row with this email already exists, update it
-        ignoreDuplicates: false
-      })
-      .select();
-
-    if (error) {
-      console.error('Supabase error during submission:', error);
-      
-      // Special handling for RLS errors
-      if (error.message?.includes('row-level security') || error.code === '42501') {
-        console.log('Attempting alternative submission approach due to RLS...');
-        
-        // Directly use a simpler insert as fallback
-        const fallbackResult = await supabase
-          .from('free_war_teams')
-          .insert([{ email, players, team_name: teamName || null }]);
-          
-        if (fallbackResult.error) {
-          console.error('Fallback submission also failed:', fallbackResult.error);
-          return { 
-            success: false, 
-            error: 'Unable to submit team. Please try again later.' 
-          };
-        }
-        
-        console.log('Fallback submission successful');
-        return { success: true };
-      }
-      
-      return { 
-        success: false, 
-        error: error.message || 'Failed to submit team. Please try again.' 
-      };
+          team_name: teamName || null 
+        }]);
     }
     
-    console.log('Submission successful, new record:', data);
+    if (result.error) {
+      console.error('Supabase error during submission:', result.error);
+      
+      // Try direct insertion as a fallback for any RLS issues
+      console.log('Attempting alternative direct insertion...');
+      const fallbackResult = await supabase
+        .from('free_war_teams')
+        .insert([{ 
+          email, 
+          players, 
+          team_name: teamName || null 
+        }]);
+        
+      if (fallbackResult.error) {
+        console.error('Fallback submission also failed:', fallbackResult.error);
+        return { 
+          success: false, 
+          error: 'Unable to submit team. Please try again later.' 
+        };
+      }
+      
+      console.log('Fallback submission successful');
+      return { success: true };
+    }
+    
+    console.log('Submission successful');
     return { success: true };
   } catch (error: any) {
     console.error('Error submitting free war team:', error);
