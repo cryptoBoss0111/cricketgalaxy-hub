@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,22 +63,40 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
   const [email, setEmail] = useState('');
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [tossCutoffTime] = useState(new Date('2025-03-25T19:30:00+05:30'));
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [showTerms, setShowTerms] = useState(false);
+  const [tossCutoffTime] = useState(new Date('2025-03-25T19:30:00+05:30')); // Match time at 7:30 PM IST
+  const [timeLeft, setTimeLeft] = useState('');
+  const [isTimeUp, setIsTimeUp] = useState(false);
   const { toast } = useToast();
-
-  const timeLeft = tossCutoffTime.getTime() - currentTime.getTime();
-  const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
-  const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
   
-  React.useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Update every minute
+  useEffect(() => {
+    // Function to calculate and format the time left
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const difference = tossCutoffTime.getTime() - now.getTime();
+      
+      if (difference <= 0) {
+        // Time is up
+        setTimeLeft('Time is up!');
+        setIsTimeUp(true);
+        return;
+      }
+      
+      // Calculate hours, minutes, and seconds
+      const hours = Math.floor(difference / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      
+      // Format the time string
+      setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+    };
     
-    return () => clearInterval(timer);
-  }, []);
+    // Calculate immediately and then set up an interval
+    calculateTimeLeft();
+    const timerId = setInterval(calculateTimeLeft, 1000);
+    
+    // Clean up the interval when component unmounts
+    return () => clearInterval(timerId);
+  }, [tossCutoffTime]);
   
   const handlePlayerToggle = (player: Player) => {
     if (selectedPlayers.some(p => p.name === player.name)) {
@@ -97,6 +115,15 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
   };
   
   const handleSubmit = async () => {
+    if (isTimeUp) {
+      toast({
+        title: "Selection time ended",
+        description: "Sorry, the team selection period has ended",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (!email) {
       toast({
         title: "Email required",
@@ -190,6 +217,7 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
                 placeholder="Your email address"
                 className="border-gray-300"
                 required
+                disabled={isTimeUp}
               />
               <p className="text-xs text-gray-500 mt-1">
                 Winners will be notified via email
@@ -197,8 +225,8 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
             </div>
             
             <div className="flex justify-center items-center">
-              <span className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 px-3 py-1.5 rounded-full font-bold text-sm">
-                Time left: {hoursLeft}h {minutesLeft}m until toss
+              <span className={`${isTimeUp ? 'bg-red-500 text-white' : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100'} px-3 py-1.5 rounded-full font-bold text-sm ${isTimeUp ? '' : 'animate-pulse-slow'}`}>
+                {isTimeUp ? "Time up! Selection closed" : `Time left: ${timeLeft} until toss`}
               </span>
             </div>
             
@@ -217,12 +245,14 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
                     {gtPlayers.map((player) => (
                       <div 
                         key={player.name}
-                        className={`flex items-center justify-between p-2 rounded-md cursor-pointer ${
+                        className={`flex items-center justify-between p-2 rounded-md ${
+                          isTimeUp ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                        } ${
                           isPlayerSelected(player) 
                             ? 'bg-orange-100 border border-orange-300' 
                             : 'hover:bg-gray-100 border border-transparent'
                         }`}
-                        onClick={() => handlePlayerToggle(player)}
+                        onClick={() => !isTimeUp && handlePlayerToggle(player)}
                       >
                         <div className="flex items-center">
                           <span className="font-medium text-sm">{player.name}</span>
@@ -246,12 +276,14 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
                     {pbksPlayers.map((player) => (
                       <div 
                         key={player.name}
-                        className={`flex items-center justify-between p-2 rounded-md cursor-pointer ${
+                        className={`flex items-center justify-between p-2 rounded-md ${
+                          isTimeUp ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                        } ${
                           isPlayerSelected(player) 
                             ? 'bg-orange-100 border border-orange-300' 
                             : 'hover:bg-gray-100 border border-transparent'
                         }`}
-                        onClick={() => handlePlayerToggle(player)}
+                        onClick={() => !isTimeUp && handlePlayerToggle(player)}
                       >
                         <div className="flex items-center">
                           <span className="font-medium text-sm">{player.name}</span>
@@ -286,10 +318,10 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
                 variant="accent" 
                 size="lg" 
                 onClick={handleSubmit}
-                disabled={isSubmitting || selectedPlayers.length !== 11}
-                className="px-6 py-2 h-auto font-bold text-base bg-gradient-to-r from-orange-500 to-orange-400 hover:brightness-110 shadow-md"
+                disabled={isSubmitting || selectedPlayers.length !== 11 || isTimeUp}
+                className="px-6 py-2 h-auto font-bold text-base bg-gradient-to-r from-orange-500 to-orange-400 hover:brightness-110 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? "Submitting..." : "Submit My Team"}
+                {isTimeUp ? "Submissions Closed" : isSubmitting ? "Submitting..." : "Submit My Team"}
               </Button>
             </div>
           </div>
