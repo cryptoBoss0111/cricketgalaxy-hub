@@ -66,7 +66,7 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
   const [tossCutoffTime] = useState(new Date('2025-03-25T19:30:00+05:30')); // Match time at 7:30 PM IST
   const [timeLeft, setTimeLeft] = useState('');
   const [isTimeUp, setIsTimeUp] = useState(false);
-  const [showTerms, setShowTerms] = useState(false); // Add the missing state for Terms & Conditions modal
+  const [showTerms, setShowTerms] = useState(false); // State for Terms & Conditions modal
   const { toast } = useToast();
   
   useEffect(() => {
@@ -330,7 +330,7 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
       </Dialog>
       
       {/* Terms and Conditions Modal */}
-      <Dialog open={showTerms} onOpenChange={setShowTerms}>
+      <Dialog open={showTerms} onOpenChange={(open) => setShowTerms(open)}>
         <DialogContent className="w-[95%] sm:w-[450px] max-w-lg border-2 border-orange-500">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Terms & Conditions</DialogTitle>
@@ -360,4 +360,3 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
 };
 
 export default PlayerSelectionModal;
-
