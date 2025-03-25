@@ -66,6 +66,7 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
   const [tossCutoffTime] = useState(new Date('2025-03-25T19:30:00+05:30')); // Match time at 7:30 PM IST
   const [timeLeft, setTimeLeft] = useState('');
   const [isTimeUp, setIsTimeUp] = useState(false);
+  const [showTerms, setShowTerms] = useState(false); // Add the missing state for Terms & Conditions modal
   const { toast } = useToast();
   
   useEffect(() => {
@@ -359,3 +360,4 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
 };
 
 export default PlayerSelectionModal;
+
