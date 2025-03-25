@@ -11,13 +11,18 @@ export interface TeamSelection {
 
 export const getFreeWarTeamSelections = async (): Promise<TeamSelection[]> => {
   try {
+    console.log('Fetching Free War team selections...');
     const { data, error } = await supabase
       .from('free_war_teams')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
+    }
     
+    console.log('Retrieved team selections:', data?.length || 0);
     return data as TeamSelection[];
   } catch (error) {
     console.error('Error fetching free war teams:', error);
@@ -31,7 +36,8 @@ export const submitFreeWarTeam = async (
   teamName?: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    const { error } = await supabase
+    console.log('Submitting Free War team:', { email, players, teamName });
+    const { error, data } = await supabase
       .from('free_war_teams')
       .insert([
         { 
@@ -39,10 +45,15 @@ export const submitFreeWarTeam = async (
           players, 
           team_name: teamName
         }
-      ]);
+      ])
+      .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase error during submission:', error);
+      throw error;
+    }
     
+    console.log('Submission successful, new record:', data);
     return { success: true };
   } catch (error: any) {
     console.error('Error submitting free war team:', error);

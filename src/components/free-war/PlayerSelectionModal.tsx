@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -70,32 +69,26 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
   const { toast } = useToast();
   
   useEffect(() => {
-    // Function to calculate and format the time left
     const calculateTimeLeft = () => {
       const now = new Date();
       const difference = tossCutoffTime.getTime() - now.getTime();
       
       if (difference <= 0) {
-        // Time is up
         setTimeLeft('Time is up!');
         setIsTimeUp(true);
         return;
       }
       
-      // Calculate hours, minutes, and seconds
       const hours = Math.floor(difference / (1000 * 60 * 60));
       const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((difference % (1000 * 60)) / 1000);
       
-      // Format the time string
       setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
     };
     
-    // Calculate immediately and then set up an interval
     calculateTimeLeft();
     const timerId = setInterval(calculateTimeLeft, 1000);
     
-    // Clean up the interval when component unmounts
     return () => clearInterval(timerId);
   }, [tossCutoffTime]);
   
@@ -116,6 +109,7 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
   };
   
   const handleSubmit = async () => {
+    console.log('Starting form submission process...');
     if (isTimeUp) {
       toast({
         title: "Selection time ended",
@@ -144,12 +138,16 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
     }
     
     setIsSubmitting(true);
+    console.log('Submitting team with email:', email);
+    console.log('Selected players:', selectedPlayers.map(p => p.name));
     
     try {
       const result = await submitFreeWarTeam(
         email,
         selectedPlayers.map(p => p.name)
       );
+      
+      console.log('Submission result:', result);
       
       if (result.success) {
         toast({
@@ -158,7 +156,6 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
           duration: 5000,
         });
         
-        // Reset form and close modal
         setEmail('');
         setSelectedPlayers([]);
         onClose();
@@ -170,12 +167,12 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
         });
       }
     } catch (error) {
+      console.error("Error submitting team:", error);
       toast({
         title: "Submission error",
         description: "An error occurred while submitting your team",
         variant: "destructive"
       });
-      console.error("Error submitting team:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -329,7 +326,6 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
         </DialogContent>
       </Dialog>
       
-      {/* Terms and Conditions Modal */}
       <Dialog open={showTerms} onOpenChange={(open) => setShowTerms(open)}>
         <DialogContent className="w-[95%] sm:w-[450px] max-w-lg border-2 border-orange-500">
           <DialogHeader>

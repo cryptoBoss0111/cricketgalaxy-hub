@@ -2,14 +2,24 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Download } from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AdminLayout from './AdminLayout';
 import { getFreeWarTeamSelections, TeamSelection } from '@/integrations/supabase/free-war';
+import { 
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 const FreeWarContestManager = () => {
   const [teamSelections, setTeamSelections] = useState<TeamSelection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -21,6 +31,20 @@ const FreeWarContestManager = () => {
       setIsLoading(true);
       const data = await getFreeWarTeamSelections();
       setTeamSelections(data);
+      setLastRefreshed(new Date());
+      
+      // Show success toast if data was fetched
+      if (data.length > 0) {
+        toast({
+          title: 'Data Loaded',
+          description: `${data.length} team selections found`,
+        });
+      } else {
+        toast({
+          title: 'No Data Found',
+          description: 'No team selections have been submitted yet',
+        });
+      }
     } catch (error) {
       console.error('Error fetching team selections:', error);
       toast({
@@ -31,6 +55,10 @@ const FreeWarContestManager = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRefresh = () => {
+    fetchTeamSelections();
   };
 
   const exportToCSV = () => {
@@ -77,16 +105,35 @@ const FreeWarContestManager = () => {
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-heading font-bold">Free War Contest Entries</h1>
-          <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Export to CSV
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              onClick={handleRefresh} 
+              variant="outline" 
+              className="flex items-center gap-2"
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh Data
+            </Button>
+            <Button 
+              onClick={exportToCSV} 
+              variant="outline" 
+              className="flex items-center gap-2"
+              disabled={teamSelections.length === 0 || isLoading}
+            >
+              <Download className="h-4 w-4" />
+              Export to CSV
+            </Button>
+          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-soft p-6 border border-gray-100">
-          <div className="mb-4">
+          <div className="mb-4 flex justify-between items-center">
             <p className="text-gray-500">
               View all user team selections for the Free War contest.
+            </p>
+            <p className="text-sm text-gray-400">
+              Last refreshed: {lastRefreshed.toLocaleTimeString()}
             </p>
           </div>
 
@@ -100,8 +147,48 @@ const FreeWarContestManager = () => {
               <p className="text-gray-400 mt-2">Users haven't submitted any teams for the contest yet.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {teamSelections.map((selection) => (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableCaption>
+                  Total submissions: {teamSelections.length}
+                </TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Team Name</TableHead>
+                    <TableHead>Submission Date</TableHead>
+                    <TableHead>Players Selected</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {teamSelections.map((selection) => (
+                    <TableRow key={selection.id}>
+                      <TableCell className="font-medium">{selection.email}</TableCell>
+                      <TableCell>{selection.team_name || 'N/A'}</TableCell>
+                      <TableCell>{new Date(selection.created_at).toLocaleString()}</TableCell>
+                      <TableCell>
+                        <div className="max-h-32 overflow-y-auto">
+                          <ul className="list-disc pl-5 space-y-1 text-sm">
+                            {selection.players.map((player, index) => (
+                              <li key={index}>{player}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+
+        {/* Display recent team selections in card view as well */}
+        {!isLoading && teamSelections.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Recent Submissions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {teamSelections.slice(0, 4).map((selection) => (
                 <Card key={selection.id} className="p-4">
                   <div className="space-y-2">
                     <div className="flex justify-between items-start">
@@ -115,7 +202,7 @@ const FreeWarContestManager = () => {
                     )}
                     <div>
                       <h4 className="text-sm font-semibold mb-1">Selected Players:</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {selection.players.map((player, index) => (
                           <div key={index} className="bg-gray-100 px-2 py-1 rounded text-sm">
                             {player}
@@ -127,8 +214,8 @@ const FreeWarContestManager = () => {
                 </Card>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
