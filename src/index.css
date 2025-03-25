@@ -210,28 +210,32 @@
   }
   
   .story-link {
-    position: relative;
-    display: inline-block;
+    @apply relative inline-block;
   }
   
-  .story-link::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    transform: scaleX(0);
-    height: 2px;
-    bottom: 0;
-    left: 0;
-    background-color: hsl(var(--accent));
-    transform-origin: bottom right;
-    transition: transform 0.3s ease;
-  }
-  
-  .story-link:hover::after {
-    transform: scaleX(1);
-    transform-origin: bottom left;
-  }
-  
+  /* We'll use standard CSS for the story-link pseudo elements to avoid parsing issues */
+}
+
+/* Story link underline animation in plain CSS outside of layers */
+.story-link::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #00a5e3; /* Use the actual color value instead of HSL variable */
+  transform-origin: bottom right;
+  transition: transform 0.3s ease;
+}
+
+.story-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+@layer components {
   .hover-scale {
     @apply transition-transform duration-200 hover:scale-105;
   }
