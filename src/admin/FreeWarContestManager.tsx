@@ -24,27 +24,28 @@ const FreeWarContestManager = () => {
 
   useEffect(() => {
     fetchTeamSelections();
+    
+    // Set up a refresh interval (every 60 seconds)
+    const intervalId = setInterval(() => {
+      fetchTeamSelections();
+    }, 60000);
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchTeamSelections = async () => {
     try {
       setIsLoading(true);
       const data = await getFreeWarTeamSelections();
+      console.log('Team selections fetched:', data);
       setTeamSelections(data);
       setLastRefreshed(new Date());
       
       // Show success toast if data was fetched
-      if (data.length > 0) {
-        toast({
-          title: 'Data Loaded',
-          description: `${data.length} team selections found`,
-        });
-      } else {
-        toast({
-          title: 'No Data Found',
-          description: 'No team selections have been submitted yet',
-        });
-      }
+      toast({
+        title: 'Data Loaded',
+        description: `${data.length} team selections found`,
+      });
     } catch (error) {
       console.error('Error fetching team selections:', error);
       toast({

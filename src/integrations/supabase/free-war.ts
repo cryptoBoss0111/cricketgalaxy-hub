@@ -37,6 +37,15 @@ export const submitFreeWarTeam = async (
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     console.log('Submitting Free War team:', { email, players, teamName });
+    
+    if (!email || !players || players.length !== 11) {
+      console.error('Invalid submission data:', { email, playerCount: players?.length });
+      return { 
+        success: false, 
+        error: 'Invalid submission data. Please check email and player selections.' 
+      };
+    }
+    
     const { error, data } = await supabase
       .from('free_war_teams')
       .insert([
@@ -50,7 +59,10 @@ export const submitFreeWarTeam = async (
 
     if (error) {
       console.error('Supabase error during submission:', error);
-      throw error;
+      return { 
+        success: false, 
+        error: error.message || 'Failed to submit team. Please try again.' 
+      };
     }
     
     console.log('Submission successful, new record:', data);
