@@ -210,15 +210,26 @@
   }
   
   .story-link {
-    @apply relative inline-block;
+    position: relative;
+    display: inline-block;
   }
   
   .story-link::after {
-    @apply content-[''] absolute w-full scale-x-0 h-0.5 bottom-0 left-0 bg-cricket-accent origin-bottom-right transition-transform duration-300;
+    content: '';
+    position: absolute;
+    width: 100%;
+    transform: scaleX(0);
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: hsl(var(--accent));
+    transform-origin: bottom right;
+    transition: transform 0.3s ease;
   }
   
   .story-link:hover::after {
-    @apply scale-x-100 origin-bottom-left;
+    transform: scaleX(1);
+    transform-origin: bottom left;
   }
   
   .hover-scale {
