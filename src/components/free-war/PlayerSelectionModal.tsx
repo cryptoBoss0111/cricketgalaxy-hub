@@ -160,7 +160,7 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="sm:max-w-md md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-2 border-orange-500">
+        <DialogContent className="w-[95%] sm:w-[90%] md:w-[80%] lg:w-[70%] xl:w-[800px] max-h-[85vh] overflow-y-auto p-0 border-2 border-orange-500">
           <div className="bg-[#1A2A44] text-white p-4">
             <DialogHeader>
               <div className="absolute right-4 top-4 z-10">
@@ -177,7 +177,7 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
             </DialogHeader>
           </div>
           
-          <div className="space-y-6 p-6 bg-white">
+          <div className="space-y-4 p-4 bg-white">
             <div>
               <label htmlFor="email" className="block text-sm font-bold mb-1">
                 Email Address
@@ -210,14 +210,14 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
                 </span>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <h4 className="font-bold text-[#1A2A44] mb-3">Gujarat Titans (GT)</h4>
-                  <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="bg-gray-50 p-3 rounded-md">
+                  <h4 className="font-bold text-[#1A2A44] mb-2">Gujarat Titans (GT)</h4>
+                  <div className="space-y-1 max-h-[200px] overflow-y-auto pr-2">
                     {gtPlayers.map((player) => (
                       <div 
                         key={player.name}
-                        className={`flex items-center justify-between p-2.5 rounded-md cursor-pointer ${
+                        className={`flex items-center justify-between p-2 rounded-md cursor-pointer ${
                           isPlayerSelected(player) 
                             ? 'bg-orange-100 border border-orange-300' 
                             : 'hover:bg-gray-100 border border-transparent'
@@ -225,7 +225,7 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
                         onClick={() => handlePlayerToggle(player)}
                       >
                         <div className="flex items-center">
-                          <span className="font-medium">{player.name}</span>
+                          <span className="font-medium text-sm">{player.name}</span>
                           {player.isImpact && (
                             <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">
                               Impact
@@ -240,13 +240,13 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
                   </div>
                 </div>
                 
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <h4 className="font-bold text-[#D50032] mb-3">Punjab Kings (PBKS)</h4>
-                  <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-2">
+                <div className="bg-gray-50 p-3 rounded-md">
+                  <h4 className="font-bold text-[#D50032] mb-2">Punjab Kings (PBKS)</h4>
+                  <div className="space-y-1 max-h-[200px] overflow-y-auto pr-2">
                     {pbksPlayers.map((player) => (
                       <div 
                         key={player.name}
-                        className={`flex items-center justify-between p-2.5 rounded-md cursor-pointer ${
+                        className={`flex items-center justify-between p-2 rounded-md cursor-pointer ${
                           isPlayerSelected(player) 
                             ? 'bg-orange-100 border border-orange-300' 
                             : 'hover:bg-gray-100 border border-transparent'
@@ -254,7 +254,7 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
                         onClick={() => handlePlayerToggle(player)}
                       >
                         <div className="flex items-center">
-                          <span className="font-medium">{player.name}</span>
+                          <span className="font-medium text-sm">{player.name}</span>
                           {player.isImpact && (
                             <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">
                               Impact
@@ -287,7 +287,7 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
                 size="lg" 
                 onClick={handleSubmit}
                 disabled={isSubmitting || selectedPlayers.length !== 11}
-                className="px-8 py-6 h-auto font-bold text-lg bg-gradient-to-r from-orange-500 to-orange-400 hover:brightness-110 shadow-md"
+                className="px-6 py-2 h-auto font-bold text-base bg-gradient-to-r from-orange-500 to-orange-400 hover:brightness-110 shadow-md"
               >
                 {isSubmitting ? "Submitting..." : "Submit My Team"}
               </Button>
@@ -298,7 +298,7 @@ const PlayerSelectionModal = ({ isOpen, onClose }: PlayerSelectionModalProps) =>
       
       {/* Terms and Conditions Modal */}
       <Dialog open={showTerms} onOpenChange={setShowTerms}>
-        <DialogContent className="sm:max-w-md border-2 border-orange-500">
+        <DialogContent className="w-[95%] sm:w-[450px] max-w-lg border-2 border-orange-500">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Terms & Conditions</DialogTitle>
           </DialogHeader>
