@@ -1,4 +1,3 @@
-
 import { supabase } from './client-core';
 
 // Upload file to storage with proper MIME type handling
@@ -14,9 +13,6 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       throw new Error("Only image files are supported");
     }
     
-    // Force JPEG MIME type as configured in Supabase
-    const forcedMimeType = "image/jpeg";
-    
     // Sanitize filename
     const fileBaseName = file.name
       .split('.')[0]
@@ -26,25 +22,23 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     const timestamp = Date.now();
     const storedFileName = `${fileBaseName}_${timestamp}.jpg`;
     
-    console.log("Uploading image with forced MIME type:", forcedMimeType);
-    console.log("Original file type:", file.type);
+    console.log("Uploading image with original MIME type:", file.type);
     console.log("File will be stored as:", storedFileName);
     
-    // Create a new Blob with forced image/jpeg MIME type
-    const fileContent = await file.arrayBuffer();
-    const properTypeFile = new Blob([fileContent], { type: forcedMimeType });
+    // Use the file directly without forcing MIME type conversion
+    // This prevents the application/json error
     
-    // Set options for upload
+    // Set options for upload - using the file's original content type
     const options = {
       cacheControl: '3600',
       upsert: false,
-      contentType: forcedMimeType
+      contentType: file.type
     };
     
-    // Upload the file with forced MIME type
+    // Upload the file with its original content type
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(storedFileName, properTypeFile, options);
+      .upload(storedFileName, file, options);
     
     if (error) {
       console.error("Storage upload error:", error);
@@ -70,7 +64,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
         stored_file_name: storedFileName,
         url: cleanUrl,
         size: file.size,
-        content_type: forcedMimeType
+        content_type: file.type
       })
       .select()
       .single();
