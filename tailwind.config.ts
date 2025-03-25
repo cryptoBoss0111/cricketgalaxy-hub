@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -181,5 +182,12 @@ export default {
 				'crisp': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
 				'soft': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02)',
 				'sharp': '0 1px 1px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.1)',
-
-
+				'neon-glow': '0 0 5px rgba(57, 255, 20, 0.7), 0 0 10px rgba(57, 255, 20, 0.5), 0 0 15px rgba(57, 255, 20, 0.3)',
+				'neon-green': '0 0 5px rgba(57, 255, 20, 0.7)',
+				'neon-purple': '0 0 5px rgba(214, 0, 255, 0.7)',
+				'neon-orange': '0 0 5px rgba(255, 94, 0, 0.7)',
+			},
+		},
+	},
+	plugins: [require("tailwindcss-animate")],
+} satisfies Config;

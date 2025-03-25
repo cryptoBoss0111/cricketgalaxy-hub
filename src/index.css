@@ -219,7 +219,7 @@
   }
   
   .glass-card {
-    @apply bg-white/70 backdrop-blur-md rounded-xl shadow-glass border border-white/20;
+    @apply bg-white/70 backdrop-blur-md rounded-xl shadow-md border border-white/20;
   }
   
   .admin-sidebar {
