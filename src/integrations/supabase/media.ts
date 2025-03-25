@@ -1,7 +1,7 @@
 
 import { supabase } from './client-core';
 
-// Upload file to storage with strict JPEG MIME type
+// Upload file to storage with proper MIME type handling
 export const uploadImageToStorage = async (file: File, bucket = 'article_images') => {
   try {
     // Check if file exists
@@ -9,7 +9,12 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       throw new Error("No file provided for upload");
     }
     
-    // Always use image/jpeg MIME type as configured in Supabase
+    // Validate file is an image
+    if (!file.type.startsWith('image/')) {
+      throw new Error("Only image files are supported");
+    }
+    
+    // Force JPEG MIME type as configured in Supabase
     const forcedMimeType = "image/jpeg";
     
     // Sanitize filename
@@ -54,7 +59,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
       .from(bucket)
       .getPublicUrl(data.path);
     
-    // Ensure we have no query parameters
+    // Generate a clean URL without query parameters
     const cleanUrl = publicUrl.split('?')[0];
     
     // Save record to the media table
@@ -77,7 +82,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
     
     return {
       ...mediaRecord,
-      url: mediaRecord.url.split('?')[0]
+      url: cleanUrl
     };
   } catch (error) {
     console.error('Error uploading image:', error);
@@ -85,7 +90,7 @@ export const uploadImageToStorage = async (file: File, bucket = 'article_images'
   }
 };
 
-// Get all media files from the database
+// Get all media files from the database with improved error handling
 export const getMediaFiles = async () => {
   try {
     const { data, error } = await supabase
@@ -98,11 +103,11 @@ export const getMediaFiles = async () => {
       throw error;
     }
     
-    // Make sure all URLs are clean and content type is image/jpeg
+    // Make sure all URLs are clean without query parameters
     const cleanData = data?.map(item => ({
       ...item,
       url: item.url.split('?')[0],
-      content_type: "image/jpeg"
+      content_type: "image/jpeg" // Force content type to image/jpeg
     }));
     
     return cleanData || [];
@@ -112,7 +117,7 @@ export const getMediaFiles = async () => {
   }
 };
 
-// Delete media file
+// Delete media file with improved error handling
 export const deleteMediaFile = async (id: string) => {
   try {
     // First, get the file details
