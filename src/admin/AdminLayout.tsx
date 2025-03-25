@@ -1,6 +1,7 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Calendar, Users, Image, Settings, LogOut, Menu, ChevronLeft, ChevronRight, Home, BarChart2, Navigation, TrendingUp, Award, Layers, PieChart } from 'lucide-react';
+import { LayoutDashboard, FileText, Calendar, Users, Image, Settings, LogOut, Menu, ChevronLeft, ChevronRight, Home, BarChart2, Navigation, TrendingUp, Award, Layers, PieChart, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -171,6 +172,11 @@ const AdminLayout = ({
     href: '/admin/fantasy-picks',
     active: location.pathname === '/admin/fantasy-picks'
   }, {
+    icon: <Trophy size={20} className="text-gray-700" />,
+    label: 'Free War Contest',
+    href: '/admin/free-war-contest',
+    active: location.pathname === '/admin/free-war-contest'
+  }, {
     icon: <Calendar size={20} className="text-gray-700" />,
     label: 'Match Schedule',
     href: '/admin/matches',
@@ -310,3 +316,4 @@ const AdminLayout = ({
 };
 
 export default AdminLayout;
+

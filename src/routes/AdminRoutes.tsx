@@ -1,4 +1,3 @@
-
 import { Navigate } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import AdminDashboard from "@/admin/Dashboard";
