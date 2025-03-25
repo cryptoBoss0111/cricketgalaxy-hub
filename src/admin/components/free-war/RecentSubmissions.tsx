@@ -7,6 +7,10 @@ interface RecentSubmissionsProps {
 }
 
 const RecentSubmissions = ({ teamSelections }: RecentSubmissionsProps) => {
+  if (!teamSelections || teamSelections.length === 0) {
+    return null;
+  }
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Recent Submissions</h2>
@@ -24,8 +28,10 @@ interface TeamSelectionCardProps {
 }
 
 const TeamSelectionCard = ({ selection }: TeamSelectionCardProps) => {
+  if (!selection) return null;
+
   return (
-    <Card className="p-4">
+    <Card className="p-4 hover:shadow-md transition-shadow">
       <div className="space-y-2">
         <div className="flex justify-between items-start">
           <h3 className="font-bold">{selection.email}</h3>
@@ -39,11 +45,15 @@ const TeamSelectionCard = ({ selection }: TeamSelectionCardProps) => {
         <div>
           <h4 className="text-sm font-semibold mb-1">Selected Players:</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {selection.players.map((player, index) => (
-              <div key={index} className="bg-gray-100 px-2 py-1 rounded text-sm">
-                {player}
-              </div>
-            ))}
+            {selection.players && Array.isArray(selection.players) ? (
+              selection.players.map((player, index) => (
+                <div key={index} className="bg-gray-100 px-2 py-1 rounded text-sm">
+                  {player}
+                </div>
+              ))
+            ) : (
+              <div className="text-red-500 text-sm">Invalid player data</div>
+            )}
           </div>
         </div>
       </div>

@@ -12,6 +12,10 @@ export interface TeamSelection {
 export const getFreeWarTeamSelections = async (): Promise<TeamSelection[]> => {
   try {
     console.log('Fetching Free War team selections...');
+    
+    // Add a short delay to ensure any recent submissions have propagated
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     const { data, error } = await supabase
       .from('free_war_teams')
       .select('*')
@@ -22,7 +26,10 @@ export const getFreeWarTeamSelections = async (): Promise<TeamSelection[]> => {
       throw error;
     }
     
+    // Log the full response for debugging
+    console.log('Free War teams data response:', data);
     console.log('Retrieved team selections:', data?.length || 0);
+    
     return data as TeamSelection[];
   } catch (error) {
     console.error('Error fetching free war teams:', error);
