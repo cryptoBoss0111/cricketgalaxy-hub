@@ -25,10 +25,10 @@ const FreeWarContestManager = () => {
   useEffect(() => {
     fetchTeamSelections();
     
-    // Set up a refresh interval (every 60 seconds)
+    // Set up a refresh interval (every 30 seconds)
     const intervalId = setInterval(() => {
       fetchTeamSelections();
-    }, 60000);
+    }, 30000);
     
     return () => clearInterval(intervalId);
   }, []);
