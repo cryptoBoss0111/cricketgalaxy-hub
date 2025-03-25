@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -84,6 +84,46 @@
     --sidebar-border: 240 4% 16%;
     --sidebar-ring: 217 91% 60%;
   }
+  
+  /* Gen Z dark theme - alternative dark mode with neon accents */
+  .genz {
+    --background: 225 24% 15%;
+    --foreground: 0 0% 100%;
+
+    --card: 225 24% 15%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 225 24% 15%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 225 24% 15%;
+
+    --secondary: 225 30% 20%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 225 30% 20%;
+    --muted-foreground: 210 10% 80%;
+
+    --accent: 135 100% 54%;
+    --accent-foreground: 225 24% 15%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 225 30% 20%;
+    --input: 225 30% 20%;
+    --ring: 135 100% 54%;
+    
+    --sidebar-background: 225 24% 15%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 293 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 225 30% 20%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 225 30% 20%;
+    --sidebar-ring: 135 100% 54%;
+  }
 }
 
 @layer base {
@@ -117,6 +157,17 @@
 
   h5 {
     @apply text-lg md:text-xl;
+  }
+  
+  /* Gen Z Typography */
+  .genz {
+    h1, h2, h3, h4, h5, h6 {
+      @apply font-poppins font-bold;
+    }
+    
+    h1 {
+      @apply text-5xl md:text-6xl;
+    }
   }
 }
 
@@ -197,6 +248,55 @@
   .admin-nav-link-inactive {
     @apply text-white/80 hover:text-white hover:bg-white/10;
   }
+
+  /* Gen Z specific components */
+  .neon-border {
+    @apply border-2 border-neon-green shadow-neon-green transition-all duration-300;
+  }
+  
+  .neon-border-purple {
+    @apply border-2 border-neon-purple shadow-neon-purple transition-all duration-300;
+  }
+  
+  .neon-border-orange {
+    @apply border-2 border-neon-orange shadow-neon-orange transition-all duration-300;
+  }
+  
+  .neon-text {
+    @apply text-neon-green animate-text-glow;
+  }
+  
+  .neon-text-purple {
+    @apply text-neon-purple animate-text-glow;
+  }
+  
+  .neon-text-orange {
+    @apply text-neon-orange animate-text-glow;
+  }
+  
+  .neon-button {
+    @apply bg-transparent border-2 border-neon-green text-neon-green hover:bg-neon-green/10 transition-all duration-300 rounded-md px-4 py-2 shadow-neon-green font-medium;
+  }
+  
+  .neon-button-purple {
+    @apply bg-transparent border-2 border-neon-purple text-neon-purple hover:bg-neon-purple/10 transition-all duration-300 rounded-md px-4 py-2 shadow-neon-purple font-medium;
+  }
+  
+  .neon-button-orange {
+    @apply bg-transparent border-2 border-neon-orange text-neon-orange hover:bg-neon-orange/10 transition-all duration-300 rounded-md px-4 py-2 shadow-neon-orange font-medium;
+  }
+  
+  .genz-card {
+    @apply bg-genz-dark/80 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-neon-glow;
+  }
+  
+  .genz-hover-scale {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+  
+  .genz-glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-neon-glow;
+  }
 }
 
 /* Animations */
@@ -240,4 +340,24 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(148, 163, 184);
+}
+
+/* Gen Z scrollbar */
+.genz ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.genz ::-webkit-scrollbar-track {
+  background: rgba(26, 30, 46, 0.8);
+  border-radius: 3px;
+}
+
+.genz ::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #39FF14, #D600FF);
+  border-radius: 3px;
+}
+
+.genz ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #D600FF, #39FF14);
 }
