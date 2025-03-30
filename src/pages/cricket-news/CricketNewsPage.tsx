@@ -23,7 +23,14 @@ const CricketNewsPage: React.FC = () => {
   };
 
   // Filter for only IPL 2025 articles for the special section
+  // Make sure we don't show duplicates by tracking shown IDs
   const iplArticles = articles.filter(article => article.category === 'IPL 2025');
+  
+  // Create a set of IDs that will be shown in the IPL section
+  const shownArticleIds = new Set(iplArticles.map(article => article.id));
+
+  // For the main articles section, filter out any that we're already showing in the IPL section
+  const mainArticles = filteredArticles.filter(article => !shownArticleIds.has(article.id));
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-cricket-dark">
@@ -67,7 +74,7 @@ const CricketNewsPage: React.FC = () => {
             </div>
           )}
           
-          {/* All Articles Section */}
+          {/* All Articles Section - Now showing filtered articles that aren't already in the IPL section */}
           <div>
             <div className="flex flex-col md:flex-row justify-between items-center mb-6">
               <div>
@@ -75,7 +82,7 @@ const CricketNewsPage: React.FC = () => {
                   {selectedCategory !== 'All Categories' ? selectedCategory : 'All Cricket News'}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {filteredArticles.length} {filteredArticles.length === 1 ? 'Article' : 'Articles'} 
+                  {mainArticles.length} {mainArticles.length === 1 ? 'Article' : 'Articles'} 
                   {selectedCategory !== 'All Categories' ? ` in ${selectedCategory}` : ''}
                 </p>
               </div>
@@ -119,7 +126,7 @@ const CricketNewsPage: React.FC = () => {
                     <div key={item} className="animate-pulse bg-gray-200 dark:bg-gray-700 h-96 rounded-xl"></div>
                   ))}
                 </div>
-              ) : filteredArticles.length === 0 ? (
+              ) : mainArticles.length === 0 ? (
                 <div className="text-center py-12">
                   <h3 className="text-xl font-medium text-gray-700 dark:text-gray-300">No articles found</h3>
                   <p className="mt-2 text-gray-500 dark:text-gray-400">Try adjusting your filters or search query</p>
@@ -136,7 +143,7 @@ const CricketNewsPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredArticles.map((article) => (
+                  {mainArticles.map((article) => (
                     <ArticleCard
                       key={article.id}
                       id={article.id}
@@ -154,7 +161,7 @@ const CricketNewsPage: React.FC = () => {
               )}
             </div>
             
-            {!isLoading && filteredArticles.length > 0 && (
+            {!isLoading && mainArticles.length > 0 && (
               <div className="flex justify-center mt-12">
                 <Button variant="outline" size="lg">
                   Load More Articles
