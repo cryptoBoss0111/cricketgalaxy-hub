@@ -1,3 +1,4 @@
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { AdminProtectedRoute } from "@/routes/AdminRoutes";
@@ -30,7 +31,7 @@ function App() {
         {/* Admin Routes */}
         <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminProtectedRoute><Dashboard /></AdminProtectedRoute>} />
+        <Route path="/admin/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
         <Route path="/admin/articles" element={<AdminProtectedRoute><ArticlesList /></AdminProtectedRoute>} />
         <Route path="/admin/articles/new" element={<AdminProtectedRoute><ArticleForm /></AdminProtectedRoute>} />
         <Route path="/admin/articles/:id" element={<AdminProtectedRoute><ArticleForm /></AdminProtectedRoute>} />

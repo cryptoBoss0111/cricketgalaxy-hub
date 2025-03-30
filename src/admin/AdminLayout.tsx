@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Menu,
@@ -56,13 +57,13 @@ const AdminNavLink: React.FC<AdminNavLinkProps> = ({ to, icon: Icon, label }) =>
 };
 
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAdmin, logout } = useAdminAuth();
+  const { isAdmin, signOut } = useAdminAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     navigate('/admin/login');
   };
 
