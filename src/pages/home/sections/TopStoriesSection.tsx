@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, ChevronRight } from 'lucide-react';
@@ -50,7 +51,8 @@ export const TopStoriesSection = () => {
         
         if (!data || data.length === 0) {
           console.log('No top stories found, using fallback data');
-          setTopStories(fallbackTopStories as TopStory[]);
+          // Only show top 4 stories
+          setTopStories(fallbackTopStories.slice(0, 4) as TopStory[]);
           return;
         }
         
@@ -75,7 +77,8 @@ export const TopStoriesSection = () => {
         setTopStories(formattedStories);
       } catch (error) {
         console.error('Error fetching top stories:', error);
-        setTopStories(fallbackTopStories as TopStory[]);
+        // Only show top 4 stories from fallback
+        setTopStories(fallbackTopStories.slice(0, 4) as TopStory[]);
       } finally {
         setIsLoading(false);
       }

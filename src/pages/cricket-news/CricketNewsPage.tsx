@@ -22,9 +22,10 @@ const CricketNewsPage: React.FC = () => {
     // Search is already handled by the useArticles hook
   };
 
-  // Filter for only IPL 2025 articles for the special section
-  // Make sure we don't show duplicates by tracking shown IDs
-  const iplArticles = articles.filter(article => article.category === 'IPL 2025');
+  // Select only the top 4 IPL 2025 articles for the special section
+  const iplArticles = articles
+    .filter(article => article.category === 'IPL 2025')
+    .slice(0, 4); // Only show top 4 IPL articles
   
   // Create a set of IDs that will be shown in the IPL section
   const shownArticleIds = new Set(iplArticles.map(article => article.id));
@@ -45,11 +46,11 @@ const CricketNewsPage: React.FC = () => {
         />
         
         <div className="container mx-auto px-4 py-12">
-          {/* IPL 2025 Section */}
+          {/* IPL 2025 Section - Limited to top 4 articles */}
           {iplArticles.length > 0 && (
             <div className="mb-12">
               <h2 className="text-2xl font-bold mb-8 border-b-2 border-cricket-accent pb-2">IPL 2025 Coverage</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {iplArticles.map((article) => (
                   <ArticleCard
                     key={article.id}
