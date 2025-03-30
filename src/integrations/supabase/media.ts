@@ -1,3 +1,4 @@
+
 import { supabase } from './client-core';
 
 // Upload file to storage with proper MIME type handling
@@ -101,7 +102,7 @@ export const getMediaFiles = async () => {
     const cleanData = data?.map(item => ({
       ...item,
       url: item.url.split('?')[0],
-      content_type: "image/jpeg" // Force content type to image/jpeg
+      content_type: item.content_type || "image/jpeg" // Use original content type but fallback to image/jpeg
     }));
     
     return cleanData || [];
