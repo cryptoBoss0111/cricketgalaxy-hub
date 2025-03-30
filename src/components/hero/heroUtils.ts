@@ -24,7 +24,7 @@ export const fetchHeroSliderArticles = async (): Promise<HeroArticle[]> => {
   try {
     // Use mock news articles as the source for hero slider
     return mockNewsArticles.map(article => ({
-      id: article.id,
+      id: String(article.id), // Convert id to string to match HeroArticle type
       title: article.title,
       excerpt: article.excerpt,
       category: article.category,
