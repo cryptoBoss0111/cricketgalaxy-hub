@@ -3,13 +3,14 @@ import React, { useState } from 'react';
 import { Filter, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ArticleCard from '@/components/article-card'; // Fixed import statement
+import ArticleCard from '@/components/article-card';
 import HeroSection from './components/HeroSection';
 import NewsletterSection from './components/NewsletterSection';
 import Navbar from '@/components/Navbar';
 import { useArticles } from './hooks/useArticles';
 import Footer from '@/components/Footer';
 import Chatbot from '@/components/Chatbot';
+import IPLBlogList from './components/IPLBlogList';
 
 const CricketNewsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
@@ -33,6 +34,9 @@ const CricketNewsPage: React.FC = () => {
           setSearchQuery={setSearchQuery}
           handleSearch={handleSearch}
         />
+        
+        {/* Display IPL Blogs section at the top */}
+        <IPLBlogList articles={articles} />
         
         <section className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center mb-6">
