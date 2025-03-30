@@ -1,11 +1,10 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, ChevronRight } from 'lucide-react';
 import ArticleCard from '@/components/ArticleCard';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { topStories as fallbackTopStories } from '../data/homeData';
+import { mockNewsArticles } from '@/pages/cricket-news/data/mockNewsArticles';
 
 interface TopStory {
   id: string;
@@ -23,71 +22,42 @@ export const TopStoriesSection = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    const fetchTopStories = async () => {
+    const getSelectedArticles = () => {
       try {
         setIsLoading(true);
-        // Get articles from top_stories table which links to the articles table
-        const { data, error } = await supabase
-          .from('top_stories')
-          .select(`
-            id,
-            article_id,
-            order_index,
-            featured,
-            articles:article_id (
-              id,
-              title,
-              excerpt,
-              cover_image,
-              featured_image,
-              category,
-              author_id,
-              published_at,
-              created_at,
-              content
-            )
-          `)
-          .order('order_index', { ascending: true });
         
-        if (error) throw error;
+        const selectedArticles = [
+          mockNewsArticles.find(article => article.id === 'gt-vs-mi'),
+          mockNewsArticles.find(article => article.id === 'csk-vs-rcb'),
+          mockNewsArticles.find(article => article.id === 'rr-vs-csk'),
+          mockNewsArticles.find(article => article.id === 'kkr-vs-rcb')
+        ].filter(Boolean);
         
-        if (!data || data.length === 0) {
-          console.log('No top stories found, using fallback data');
-          // Only show top 4 stories
-          setTopStories(fallbackTopStories.slice(0, 4) as TopStory[]);
-          return;
-        }
-        
-        const formattedStories: TopStory[] = data.map((item) => {
-          const article = item.articles as any;
+        const formattedStories: TopStory[] = selectedArticles.map((article) => {
+          if (!article) return null;
+          
           return {
             id: article.id,
             title: article.title,
             excerpt: article.excerpt || 'Read this exciting article...',
-            imageUrl: article.cover_image || article.featured_image || '',
+            imageUrl: article.imageUrl || '',
             category: article.category,
-            author: article.author_id ? `Author ${article.author_id.slice(0, 8)}` : 'CricketExpress Staff',
-            date: new Date(article.published_at || article.created_at).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric'
-            }),
-            timeToRead: `${Math.ceil((article.content?.length || 0) / 1000)} min read`
+            author: article.author || 'CricketExpress Staff',
+            date: article.date || new Date().toLocaleDateString(),
+            timeToRead: article.timeToRead || '5 min read'
           };
-        });
+        }).filter(Boolean) as TopStory[];
         
-        console.log('Top stories fetched:', formattedStories);
+        console.log('Selected articles:', formattedStories);
         setTopStories(formattedStories);
       } catch (error) {
-        console.error('Error fetching top stories:', error);
-        // Only show top 4 stories from fallback
-        setTopStories(fallbackTopStories.slice(0, 4) as TopStory[]);
+        console.error('Error preparing articles:', error);
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchTopStories();
+    getSelectedArticles();
   }, []);
   
   if (isLoading) {
