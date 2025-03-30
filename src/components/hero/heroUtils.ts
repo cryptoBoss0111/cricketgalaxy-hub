@@ -23,16 +23,17 @@ export const getCategoryUrl = (category: string): string => {
 export const fetchHeroSliderArticles = async (): Promise<HeroArticle[]> => {
   try {
     // Use mock news articles as the source for hero slider
-    // Prioritizing the new articles (GT vs MI, CSK vs RCB) in the hero slider
+    // Prioritizing the new articles (GT vs MI, CSK vs RCB, RR vs CSK) in the hero slider
     const prioritizedArticles = mockNewsArticles
-      .filter(article => article.id === "gt-vs-mi" || article.id === "csk-vs-rcb" || article.id === "dc-vs-srh" || article.id === "mi-vs-kkr")
+      .filter(article => article.id === "gt-vs-mi" || article.id === "csk-vs-rcb" || article.id === "rr-vs-csk" || article.id === "dc-vs-srh" || article.id === "mi-vs-kkr")
       .sort((a, b) => {
         // Specific ordering for the hero slider
         const orderPriority: Record<string, number> = {
-          "gt-vs-mi": 1,
-          "csk-vs-rcb": 2,
-          "dc-vs-srh": 3,
-          "mi-vs-kkr": 4
+          "rr-vs-csk": 1, // Making the new RR vs CSK article the first in the slider
+          "gt-vs-mi": 2,
+          "csk-vs-rcb": 3,
+          "dc-vs-srh": 4,
+          "mi-vs-kkr": 5
         };
         return (orderPriority[a.id] || 99) - (orderPriority[b.id] || 99);
       });
@@ -101,6 +102,15 @@ export const fetchHeroSliderArticles = async (): Promise<HeroArticle[]> => {
 // Mock data for fallback when no hero articles are found
 export const getMockHeroArticles = (): HeroArticle[] => [
   {
+    id: 'rr-vs-csk',
+    title: "Rajasthan Royals vs. Chennai Super Kings – Guwahati's Double-Header Heat!",
+    excerpt: "Yo, squad! March 30, 2025, was a double-header day, and the evening top story—Match 11—saw Rajasthan Royals (RR) vs. Chennai Super Kings (CSK) in Guwahati. Barsapara Stadium was electric, and this clash was pure vibes.",
+    category: 'IPL 2025',
+    imageUrl: "/lovable-uploads/e61767b2-868d-47bc-8eb7-911d51239eb1.png",
+    date: 'March 30, 2025',
+    isFeaturedPick: true
+  },
+  {
     id: 'gt-vs-mi',
     title: "Gujarat Titans vs. Mumbai Indians – MI's Redemption Smackdown!",
     excerpt: "Yo, cricket fam! It's March 29, 2025, and the IPL 2025 top story rewind takes us to Ahmedabad, where Gujarat Titans (GT) and Mumbai Indians (MI) threw down at Narendra Modi Stadium. This Match 9 clash was MI's shot at redemption after a rough start.",
@@ -116,15 +126,6 @@ export const getMockHeroArticles = (): HeroArticle[] => [
     category: 'IPL 2025',
     imageUrl: "/lovable-uploads/8dca24c4-f648-4d13-b9d7-5227f02fc2ff.png",
     date: 'March 28, 2025',
-    isFeaturedPick: true
-  },
-  {
-    id: "dc-vs-srh",
-    title: "Today's IPL Banger: Delhi Capitals vs. Sunrisers Hyderabad – DC Owned the Night!",
-    excerpt: "Yo, cricket fam! It's March 30, 2025, and the IPL 2025 just dropped a straight-up banger in Visakhapatnam. Delhi Capitals (DC) rolled up against Sunrisers Hyderabad (SRH) and turned the pitch into their playground.",
-    category: 'IPL 2025',
-    imageUrl: "/lovable-uploads/19133248-8247-4e8c-8615-f3c5b00d9287.png",
-    date: 'March 30, 2025',
     isFeaturedPick: true
   }
 ];

@@ -69,6 +69,39 @@ export const mockNewsArticles: Article[] = [
     `
   },
   {
+    id: "rr-vs-csk",
+    title: "Rajasthan Royals vs. Chennai Super Kings – Guwahati's Double-Header Heat!",
+    excerpt: "Yo, squad! March 30, 2025, was a double-header day, and the evening top story—Match 11—saw Rajasthan Royals (RR) vs. Chennai Super Kings (CSK) in Guwahati. Barsapara Stadium was electric, and this clash was pure vibes.",
+    imageUrl: "/lovable-uploads/e61767b2-868d-47bc-8eb7-911d51239eb1.png",
+    category: "IPL 2025",
+    author: "CricketExpress Team",
+    date: "March 30, 2025",
+    timeToRead: "5 min read",
+    content: `
+      <h2>The Setup – Guwahati Glows</h2>
+      <p>7:30 PM IST: RR's Second Home!</p>
+      <p>Barsapara was rocking—RR's Guwahati faithful vs. CSK's traveling yellow army. CSK won the toss, chose to bat—Ruturaj Gaikwad betting on a big total. X was hyped: "RR's got this at home!"—game time!</p>
+      
+      <h2>CSK's Blast – Ravindra Goes Off</h2>
+      <p>183/4 in 20 – Big Runs!</p>
+      <p>Rachin Ravindra was a monster—78 off 49, smashing boundaries like it's nothing. Gaikwad added 41, and Dube's 18* off 8 pushed CSK to 183/4. RR's Jofra Archer (2/38) fought back, but Wanindu Hasaranga got lit up for 45 in 4. X was buzzing: "Ravindra's a cheat code!" RR had a chase on their hands!</p>
+      
+      <h2>RR's Fight – Parag's Hometown Heroics</h2>
+      <p>184/6 in 19.5 – Clutch Win!</p>
+      <p>RR's reply was wild—Yashasvi Jaiswal's 33 got 'em rolling, but Riyan Parag stole it—64* off 39 in his Guwahati backyard. Jos Buttler chipped in with 27, and despite Jadeja's 2/29, Parag smashed Noor Ahmad for a six to win it—184/6 in 19.5. 4-wicket W! X lost it: "Parag's a hometown king!"</p>
+      
+      <h2>Top Dogs</h2>
+      <p>Parag & Ravindra Ball Out!</p>
+      <p>Riyan Parag's 64* was clutch—Player of the Match. Ravindra's 78 set the stage, and Archer's 2-fer kept RR in it. X vibes: "Parag's arrived!"</p>
+      
+      <h2>Catch the Replay</h2>
+      <p>Relive It!</p>
+      <p>Star Sports and JioCinema got you—highlights on IPLT20.com show Parag's sixes and Ravindra's flow. #RRvsCSK on X for the hype!</p>
+      <img src="/lovable-uploads/e61767b2-868d-47bc-8eb7-911d51239eb1.png" alt="Parag smashing the winning six, Guwahati crowd erupting under lights" />
+      <p class="caption">RR's Guwahati prince owns CSK—IPL 2025 heat! Want this? Say it!</p>
+    `
+  },
+  {
     id: "dc-vs-srh",
     title: "Today's IPL Banger: Delhi Capitals vs. Sunrisers Hyderabad – DC Owned the Night!",
     excerpt: "Yo, cricket fam! It's March 30, 2025, and the IPL 2025 just dropped a straight-up banger in Visakhapatnam. Delhi Capitals (DC) rolled up against Sunrisers Hyderabad (SRH) and turned the pitch into their playground.",
