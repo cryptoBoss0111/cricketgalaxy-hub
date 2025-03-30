@@ -120,5 +120,25 @@ export const mockNewsArticles: Article[] = [
     author: "CricketExpress Team",
     date: "March 30, 2025",
     timeToRead: "7 min read"
+  },
+  {
+    id: "kkr-vs-rcb",
+    title: "Kolkata Knight Riders vs. Royal Challengers Bengaluru – Eden's Opener Epic!",
+    excerpt: "What's poppin', crew? The IPL 2025 top story kicked off on March 22, 2025, with Kolkata Knight Riders (KKR) vs. Royal Challengers Bengaluru (RCB) at Eden Gardens—Match 1! Defending champs vs. perennial hopefuls—this was a vibe check for the season.",
+    imageUrl: "/lovable-uploads/6c575f57-57f9-4811-804e-0a850a01ef6d.png",
+    category: "IPL 2025",
+    author: "CricketExpress Team",
+    date: "March 22, 2025",
+    timeToRead: "6 min read"
+  },
+  {
+    id: "srh-vs-lsg",
+    title: "Sunrisers Hyderabad vs. Lucknow Super Giants – Hyderabad's Powerplay Party!",
+    excerpt: "Yo, squad! On March 27, 2025, IPL 2025 dropped a top story banger—Sunrisers Hyderabad (SRH) vs. Lucknow Super Giants (LSG) at Rajiv Gandhi International Stadium, Match 7. SRH's batting fireworks lit up Hyderabad, and LSG fought hard.",
+    imageUrl: "/lovable-uploads/95f7655d-a0d9-48a3-a64c-a8f362d04b31.png",
+    category: "IPL 2025",
+    author: "CricketExpress Team",
+    date: "March 27, 2025",
+    timeToRead: "5 min read"
   }
 ];

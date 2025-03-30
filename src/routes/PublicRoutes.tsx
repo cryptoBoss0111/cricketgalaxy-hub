@@ -11,6 +11,8 @@ import MIvsKKRArticle from "@/pages/ArticleDetail/MIvsKKRArticle";
 import GTvsMIArticle from "@/pages/article-detail/GTvsMIArticle";
 import CSKvsRCBArticle from "@/pages/article-detail/CSKvsRCBArticle";
 import RRvsCSKArticle from "@/pages/article-detail/RRvsCSKArticle";
+import KKRvsRCBArticle from "@/pages/article-detail/KKRvsRCBArticle";
+import SRHvsLSGArticle from "@/pages/article-detail/SRHvsLSGArticle";
 
 // PublicRoutes component that renders all public routes
 export const PublicRoutes = () => {
@@ -24,6 +26,8 @@ export const PublicRoutes = () => {
       <Route path="/article/rr-vs-csk" element={<RRvsCSKArticle />} />
       <Route path="/article/dc-vs-srh" element={<DCvsSRHArticle />} />
       <Route path="/article/mi-vs-kkr" element={<MIvsKKRArticle />} />
+      <Route path="/article/kkr-vs-rcb" element={<KKRvsRCBArticle />} />
+      <Route path="/article/srh-vs-lsg" element={<SRHvsLSGArticle />} />
       <Route path="/fantasy-tips" element={<FantasyTipsPage />} />
       <Route path="/ipl-2025" element={<IPL2025Page />} />
       <Route path="*" element={<NotFound />} />
