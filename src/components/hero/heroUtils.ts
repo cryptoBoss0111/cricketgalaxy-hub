@@ -23,7 +23,21 @@ export const getCategoryUrl = (category: string): string => {
 export const fetchHeroSliderArticles = async (): Promise<HeroArticle[]> => {
   try {
     // Use mock news articles as the source for hero slider
-    return mockNewsArticles.map(article => ({
+    // Prioritizing the new articles (GT vs MI, CSK vs RCB) in the hero slider
+    const prioritizedArticles = mockNewsArticles
+      .filter(article => article.id === "gt-vs-mi" || article.id === "csk-vs-rcb" || article.id === "dc-vs-srh" || article.id === "mi-vs-kkr")
+      .sort((a, b) => {
+        // Specific ordering for the hero slider
+        const orderPriority: Record<string, number> = {
+          "gt-vs-mi": 1,
+          "csk-vs-rcb": 2,
+          "dc-vs-srh": 3,
+          "mi-vs-kkr": 4
+        };
+        return (orderPriority[a.id] || 99) - (orderPriority[b.id] || 99);
+      });
+    
+    return prioritizedArticles.map(article => ({
       id: String(article.id), // Convert id to string to match HeroArticle type
       title: article.title,
       excerpt: article.excerpt,
@@ -87,20 +101,29 @@ export const fetchHeroSliderArticles = async (): Promise<HeroArticle[]> => {
 // Mock data for fallback when no hero articles are found
 export const getMockHeroArticles = (): HeroArticle[] => [
   {
-    id: 'dc-vs-srh',
+    id: 'gt-vs-mi',
+    title: "Gujarat Titans vs. Mumbai Indians – MI's Redemption Smackdown!",
+    excerpt: "Yo, cricket fam! It's March 29, 2025, and the IPL 2025 top story rewind takes us to Ahmedabad, where Gujarat Titans (GT) and Mumbai Indians (MI) threw down at Narendra Modi Stadium. This Match 9 clash was MI's shot at redemption after a rough start.",
+    category: 'IPL 2025',
+    imageUrl: "/lovable-uploads/ba068302-d7ba-4cdd-9735-cc9aac148031.png",
+    date: 'March 29, 2025',
+    isFeaturedPick: true
+  },
+  {
+    id: 'csk-vs-rcb',
+    title: "Chennai Super Kings vs. Royal Challengers Bengaluru – Chepauk's Classic Clash!",
+    excerpt: "What's good, fam? On March 28, 2025, IPL 2025 gave us a top story for the books—Chennai Super Kings (CSK) vs. Royal Challengers Bengaluru (RCB) at Chepauk. Match 8 was a rivalry reload, with CSK defending home turf and RCB riding a 2-0 streak.",
+    category: 'IPL 2025',
+    imageUrl: "/lovable-uploads/8dca24c4-f648-4d13-b9d7-5227f02fc2ff.png",
+    date: 'March 28, 2025',
+    isFeaturedPick: true
+  },
+  {
+    id: "dc-vs-srh",
     title: "Today's IPL Banger: Delhi Capitals vs. Sunrisers Hyderabad – DC Owned the Night!",
     excerpt: "Yo, cricket fam! It's March 30, 2025, and the IPL 2025 just dropped a straight-up banger in Visakhapatnam. Delhi Capitals (DC) rolled up against Sunrisers Hyderabad (SRH) and turned the pitch into their playground.",
     category: 'IPL 2025',
     imageUrl: "/lovable-uploads/19133248-8247-4e8c-8615-f3c5b00d9287.png",
-    date: 'March 30, 2025',
-    isFeaturedPick: true
-  },
-  {
-    id: 'mi-vs-kkr',
-    title: "Tomorrow's IPL Double-Header: Mumbai Indians vs. Kolkata Knight Riders – Full Hype Breakdown!",
-    excerpt: "Yo, cricket fam! It's March 30, 2025, 11:01 PM IST, and tomorrow—Monday, March 31, 2025—is about to hit us with an IPL 2025 banger! The schedule's locked in, and we've got Mumbai Indians (MI) vs. Kolkata Knight Riders (KKR) lighting up the Wankhede Stadium.",
-    category: 'IPL 2025',
-    imageUrl: "/lovable-uploads/412c16d3-2e56-4ea0-b086-deed0e90d189.png",
     date: 'March 30, 2025',
     isFeaturedPick: true
   }

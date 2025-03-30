@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,14 +67,40 @@ export const useArticles = (selectedCategory: string, searchQuery: string, sortB
           setArticles(transformedArticles);
         } else {
           console.log('No articles found, using mock data');
-          setArticles(mockNewsArticles);
+          // Use mock news articles with the GT vs MI and CSK vs RCB articles first
+          const sortedMockArticles = [...mockNewsArticles].sort((a, b) => {
+            // Prioritize GT vs MI and CSK vs RCB
+            if (a.id === "gt-vs-mi") return -1;
+            if (b.id === "gt-vs-mi") return 1;
+            if (a.id === "csk-vs-rcb") return -1;
+            if (b.id === "csk-vs-rcb") return 1;
+            // Then sort by date (most recent first)
+            return new Date(b.date).getTime() - new Date(a.date).getTime();
+          });
+          
+          setArticles(sortedMockArticles);
           
           const uniqueCategories = [...new Set(mockNewsArticles.map(article => article.category))];
           setCategories(['All Categories', ...uniqueCategories]);
         }
       } catch (err) {
         console.error('Error in fetching articles:', err);
-        setArticles(mockNewsArticles);
+        
+        // Use mock news articles with the GT vs MI and CSK vs RCB articles first
+        const sortedMockArticles = [...mockNewsArticles].sort((a, b) => {
+          // Prioritize GT vs MI and CSK vs RCB
+          if (a.id === "gt-vs-mi") return -1;
+          if (b.id === "gt-vs-mi") return 1;
+          if (a.id === "csk-vs-rcb") return -1;
+          if (b.id === "csk-vs-rcb") return 1;
+          // Then sort by date (most recent first)
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
+        
+        setArticles(sortedMockArticles);
+        
+        const uniqueCategories = [...new Set(mockNewsArticles.map(article => article.category))];
+        setCategories(['All Categories', ...uniqueCategories]);
       } finally {
         setIsLoading(false);
       }

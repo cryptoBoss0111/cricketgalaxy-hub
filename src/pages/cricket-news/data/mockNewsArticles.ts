@@ -3,6 +3,72 @@ import { Article } from '../types';
 
 export const mockNewsArticles: Article[] = [
   {
+    id: "gt-vs-mi",
+    title: "Gujarat Titans vs. Mumbai Indians – MI's Redemption Smackdown!",
+    excerpt: "Yo, cricket fam! It's March 29, 2025, and the IPL 2025 top story rewind takes us to Ahmedabad, where Gujarat Titans (GT) and Mumbai Indians (MI) threw down at Narendra Modi Stadium. This Match 9 clash was MI's shot at redemption after a rough start, and GT's chance to flex their home muscle.",
+    imageUrl: "/lovable-uploads/ba068302-d7ba-4cdd-9735-cc9aac148031.png",
+    category: "IPL 2025",
+    author: "CricketExpress Team",
+    date: "March 29, 2025",
+    timeToRead: "6 min read",
+    content: `
+      <h2>The Vibes – Ahmedabad Goes Wild</h2>
+      <p>7:30 PM IST: Stadium on Fire!</p>
+      <p>Narendra Modi Stadium was a sea of blue and orange—over 100,000 fans screaming their lungs out. GT won the toss and chose to bat, banking on that flat Ahmedabad deck where 200+ is the vibe. MI, 0-2 after losses to CSK and GT earlier, were starving for a W. Hardik Pandya's boys rolled in with fire in their eyes—X posts from @MIPaltan were all "Duniya Hila Denge tonight!" Game on!</p>
+      
+      <h2>GT's Batting Blast – Gill & Co. Set It Off</h2>
+      <p>189/6 in 20 – Runs Galore!</p>
+      <p>Shubman Gill walked out like a king—captain vibes on max—and smashed 67 off 41, piercing gaps like a laser. Sai Sudharsan backed him up with a silky 45, and Rashid Khan's late 22* off 10 (two sixes!) pushed GT to 189/6. MI's Jasprit Bumrah was a beast—3/28, including Gill's scalp—but Vignesh Puthur got smoked for 40 in 3 overs. X fans were hyped: "Gill's on a mission!" GT set a mountain—could MI climb it?</p>
+      
+      <h2>MI's Chase – Rohit & SKY Turn Up</h2>
+      <p>190/6 in 19.4 – Clutch City!</p>
+      <p>MI's chase was a rollercoaster—Rohit Sharma dropped 52 off 32 to shut up the "form slump" haters, and Suryakumar Yadav went full SKY-mode with 77* off 44—sixes flying into the stands. GT's Jofra Archer (2/35) got Ishan Kishan early, but MI's middle order held it down. Last over, 6 needed—Hardik smacks a four off Mohit Sharma, and SKY seals it with a boundary. 190/6 in 19.4—MI's first W! X exploded: "SKY's unreal!"</p>
+      
+      <h2>MVPs – Who Owned Ahmedabad?</h2>
+      <p>SKY & Bumrah Steal It!</p>
+      <p>Suryakumar Yadav's unbeaten 77 was pure class—Player of the Match vibes. Bumrah's 3-fer kept MI in it, while Gill's 67 was GT's heartbeat. X was all "MI's back, baby!"—this win flipped their season script.</p>
+      
+      <h2>Relive the Heat</h2>
+      <p>Catch It Again!</p>
+      <p>Missed it? Star Sports and JioCinema got the replay—highlights on IPLT20.com show SKY's sixes and Bumrah's yorkers. Search #GTvsMI on X for the wild fan takes!</p>
+      <img src="/lovable-uploads/ba068302-d7ba-4cdd-9735-cc9aac148031.png" alt="MI's comeback king SKY owns GT—IPL 2025 gold!" />
+      <p class="caption">MI's comeback king SKY owns GT—IPL 2025 gold! Say the word for this pic!</p>
+    `
+  },
+  {
+    id: "csk-vs-rcb",
+    title: "Chennai Super Kings vs. Royal Challengers Bengaluru – Chepauk's Classic Clash!",
+    excerpt: "What's good, fam? On March 28, 2025, IPL 2025 gave us a top story for the books—Chennai Super Kings (CSK) vs. Royal Challengers Bengaluru (RCB) at Chepauk. Match 8 was a rivalry reload, with CSK defending home turf and RCB riding a 2-0 streak.",
+    imageUrl: "/lovable-uploads/8dca24c4-f648-4d13-b9d7-5227f02fc2ff.png",
+    category: "IPL 2025",
+    author: "CricketExpress Team",
+    date: "March 28, 2025",
+    timeToRead: "5 min read",
+    content: `
+      <h2>The Scene – Chepauk Roars</h2>
+      <p>7:30 PM IST: Yellow Army Unleashed!</p>
+      <p>MA Chidambaram Stadium was a yellow tsunami—CSK fans chanting "Dhoni! Dhoni!" even if the GOAT's just mentoring now. RCB won the toss, chose to field—Rajat Patidar banking on dew to chase. X was popping: "Chepauk's a fortress—RCB's toast!" Let's roll!</p>
+      
+      <h2>CSK's Innings – Gaikwad Sets the Tone</h2>
+      <p>171/5 in 20 – Solid Gold!</p>
+      <p>Ruturaj Gaikwad walked out like a boss—63 off 47, all class and timing. Rachin Ravindra chipped in with 37, and Shivam Dube's 28* off 14 (two sixes!) gave CSK 171/5. RCB's Josh Hazlewood (2/30) kept it tight, but Krunal Pandya got smoked for 42 in 3. X fans were like, "Gaikwad's the real deal!"—RCB had work to do.</p>
+      
+      <h2>RCB's Reply – Kohli Falls, Salt Rises</h2>
+      <p>168/8 in 20 – So Close!</p>
+      <p>RCB's chase started hot—Phil Salt smashed 45 off 28—but Virat Kohli's 22 ended quick, Jadeja snagging him on the spin-friendly deck. Liam Livingstone (33) kept hope alive, but Matheesha Pathirana's slingy 3/26 (including Salt) flipped it. Last over, 12 needed—Noor Ahmad holds Livingstone to a single off the last ball. 168/8—CSK win by 3 runs! X went nuts: "Chepauk magic strikes again!"</p>
+      
+      <h2>Stars of the Night</h2>
+      <p>Gaikwad & Pathirana Shine!</p>
+      <p>Ruturaj's 63 was the anchor—Player of the Match. Pathirana's 3-fer was clutch, and Salt's 45 almost stole it. X vibes: "CSK's home kings!"</p>
+      
+      <h2>Rewatch the Drama</h2>
+      <p>Don't Miss Out!</p>
+      <p>Star Sports and JioCinema got the goods—highlights on IPLT20.com show Pathirana's wickets and Gaikwad's flow. #CSKvsRCB on X for the fan frenzy!</p>
+      <img src="/lovable-uploads/8dca24c4-f648-4d13-b9d7-5227f02fc2ff.png" alt="Gaikwad flicking a boundary, Chepauk's yellow sea roaring under lights" />
+      <p class="caption">CSK's fortress holds—IPL 2025 thriller! Want this pic? Holler!</p>
+    `
+  },
+  {
     id: "dc-vs-srh",
     title: "Today's IPL Banger: Delhi Capitals vs. Sunrisers Hyderabad – DC Owned the Night!",
     excerpt: "Yo, cricket fam! It's March 30, 2025, and the IPL 2025 just dropped a straight-up banger in Visakhapatnam. Delhi Capitals (DC) rolled up against Sunrisers Hyderabad (SRH) and turned the pitch into their playground.",

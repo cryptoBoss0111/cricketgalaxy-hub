@@ -32,6 +32,14 @@ const HeroImageComponent: FC<HeroImageProps> = ({
       return "/lovable-uploads/412c16d3-2e56-4ea0-b086-deed0e90d189.png";
     }
     
+    if (url.includes('ba068302-d7ba-4cdd-9735-cc9aac148031')) {
+      return "/lovable-uploads/ba068302-d7ba-4cdd-9735-cc9aac148031.png";
+    }
+    
+    if (url.includes('8dca24c4-f648-4d13-b9d7-5227f02fc2ff')) {
+      return "/lovable-uploads/8dca24c4-f648-4d13-b9d7-5227f02fc2ff.png";
+    }
+    
     return url;
   };
 
