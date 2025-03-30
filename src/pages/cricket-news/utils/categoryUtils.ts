@@ -2,6 +2,8 @@
 // Function to map path segments to category names
 export const getCategoryFromPath = (pathSegment?: string): string => {
   switch (pathSegment) {
+    case 'ipl':
+      return 'IPL 2025';
     case 'test':
       return 'Test Cricket';
     case 't20':
@@ -12,8 +14,6 @@ export const getCategoryFromPath = (pathSegment?: string): string => {
       return 'Women\'s Cricket';
     case 'domestic':
       return 'Domestic Cricket';
-    case 'ipl':
-      return 'IPL 2025';
     default:
       return 'All Categories';
   }
@@ -22,6 +22,8 @@ export const getCategoryFromPath = (pathSegment?: string): string => {
 // Function to format category for URL
 export const formatCategoryForUrl = (category: string): string => {
   switch (category) {
+    case 'IPL 2025':
+      return 'ipl';
     case 'Test Cricket':
       return 'test';
     case 'T20 Cricket':
@@ -32,8 +34,6 @@ export const formatCategoryForUrl = (category: string): string => {
       return 'womens';
     case 'Domestic Cricket':
       return 'domestic';
-    case 'IPL 2025':
-      return 'ipl';
     default:
       return '';
   }
