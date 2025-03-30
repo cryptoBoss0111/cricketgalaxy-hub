@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,6 +20,8 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import ImageUploader from '@/admin/components/ImageUploader';
 import { supabase } from '@/integrations/supabase/client';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Schema for form validation
 const blogSchema = z.object({
@@ -31,32 +33,60 @@ const blogSchema = z.object({
   addToFeatured: z.boolean().default(false),
   addToTopStories: z.boolean().default(false),
   addToHeroSlider: z.boolean().default(false),
+  tags: z.string().optional(),
 });
 
 type BlogFormValues = z.infer<typeof blogSchema>;
 
-const BlogUploader: React.FC = () => {
+interface PrefilledData {
+  title?: string;
+  excerpt?: string;
+  content?: string;
+  category?: string;
+  imageUrl?: string;
+  tags?: string;
+}
+
+const BlogUploader: React.FC<{ prefilledData?: PrefilledData }> = ({ prefilledData }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
   const form = useForm<BlogFormValues>({
     resolver: zodResolver(blogSchema),
     defaultValues: {
-      title: '',
-      excerpt: '',
-      content: '',
-      category: '',
-      imageUrl: '',
+      title: prefilledData?.title || '',
+      excerpt: prefilledData?.excerpt || '',
+      content: prefilledData?.content || '',
+      category: prefilledData?.category || '',
+      imageUrl: prefilledData?.imageUrl || '',
+      tags: prefilledData?.tags || '',
       addToFeatured: false,
       addToTopStories: false,
       addToHeroSlider: false,
     },
   });
   
+  useEffect(() => {
+    if (prefilledData) {
+      Object.entries(prefilledData).forEach(([key, value]) => {
+        if (value) {
+          form.setValue(key as keyof BlogFormValues, value);
+        }
+      });
+    }
+  }, [prefilledData, form]);
+  
   const onSubmit = async (values: BlogFormValues) => {
     setIsSubmitting(true);
+    setError(null);
     
     try {
+      // Extract tags
+      const tagsArray = values.tags 
+        ? values.tags.split(',').map(tag => tag.trim()) 
+        : [];
+      
       // First, save the article
       const { data: articleData, error: articleError } = await supabase
         .from('articles')
@@ -69,6 +99,7 @@ const BlogUploader: React.FC = () => {
           featured_image: values.imageUrl,
           published: true,
           published_at: new Date().toISOString(),
+          tags: tagsArray.length > 0 ? tagsArray : undefined,
         })
         .select()
         .single();
@@ -114,6 +145,7 @@ const BlogUploader: React.FC = () => {
       
     } catch (error: any) {
       console.error('Error saving blog post:', error);
+      setError(error.message || "Failed to save blog post");
       toast({
         title: "Error",
         description: error.message || "Failed to save blog post",
@@ -127,6 +159,13 @@ const BlogUploader: React.FC = () => {
   return (
     <Card className="p-6 bg-white shadow-md">
       <h2 className="text-2xl font-bold mb-6">Add New Blog Post</h2>
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -167,6 +206,20 @@ const BlogUploader: React.FC = () => {
                     <SelectItem value="World Cup">World Cup</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="tags"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tags (comma separated)</FormLabel>
+                <FormControl>
+                  <Input placeholder="ipl, match, team names, etc." {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
