@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, ChevronRight } from 'lucide-react';
@@ -22,27 +23,43 @@ export const TopStoriesSection = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    const fetchLatestArticles = async () => {
+    const fetchTopStories = async () => {
       try {
         setIsLoading(true);
-        // Get latest articles directly from the articles table
+        // Get articles from top_stories table which links to the articles table
         const { data, error } = await supabase
-          .from('articles')
-          .select('*')
-          .eq('published', true)
-          .order('published_at', { ascending: false })
-          .limit(4);
+          .from('top_stories')
+          .select(`
+            id,
+            article_id,
+            order_index,
+            featured,
+            articles:article_id (
+              id,
+              title,
+              excerpt,
+              cover_image,
+              featured_image,
+              category,
+              author_id,
+              published_at,
+              created_at,
+              content
+            )
+          `)
+          .order('order_index', { ascending: true });
         
         if (error) throw error;
         
         if (!data || data.length === 0) {
-          console.log('No articles found, using fallback data');
+          console.log('No top stories found, using fallback data');
           // Only show top 4 stories
           setTopStories(fallbackTopStories.slice(0, 4) as TopStory[]);
           return;
         }
         
-        const formattedStories: TopStory[] = data.map((article) => {
+        const formattedStories: TopStory[] = data.map((item) => {
+          const article = item.articles as any;
           return {
             id: article.id,
             title: article.title,
@@ -59,10 +76,10 @@ export const TopStoriesSection = () => {
           };
         });
         
-        console.log('Latest articles fetched:', formattedStories);
+        console.log('Top stories fetched:', formattedStories);
         setTopStories(formattedStories);
       } catch (error) {
-        console.error('Error fetching latest articles:', error);
+        console.error('Error fetching top stories:', error);
         // Only show top 4 stories from fallback
         setTopStories(fallbackTopStories.slice(0, 4) as TopStory[]);
       } finally {
@@ -70,7 +87,7 @@ export const TopStoriesSection = () => {
       }
     };
     
-    fetchLatestArticles();
+    fetchTopStories();
   }, []);
   
   if (isLoading) {
