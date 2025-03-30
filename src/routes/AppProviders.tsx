@@ -6,6 +6,7 @@ import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { BrowserRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,9 +28,11 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
         <ChatbotProvider>
           <BrowserRouter>
             <AdminAuthProvider>
-              <Toaster />
-              <Sonner />
-              {children}
+              <HelmetProvider>
+                <Toaster />
+                <Sonner />
+                {children}
+              </HelmetProvider>
             </AdminAuthProvider>
           </BrowserRouter>
         </ChatbotProvider>
