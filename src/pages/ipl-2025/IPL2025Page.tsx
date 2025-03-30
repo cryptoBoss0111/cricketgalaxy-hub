@@ -7,6 +7,7 @@ import ArticleCard from '@/components/article-card';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
 
 interface Article {
   id: string;
@@ -46,6 +47,9 @@ const IPL2025Page = () => {
         />
       </Helmet>
 
+      {/* Added Navbar component explicitly */}
+      <Navbar />
+
       <div className="bg-gradient-to-r from-cricket-accent to-cricket-secondary py-16 px-4 text-white">
         <div className="container mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold font-heading mb-4">IPL 2025</h1>
@@ -58,17 +62,17 @@ const IPL2025Page = () => {
       <div className="container mx-auto px-4 py-12">
         {/* Featured Match Highlight */}
         <div className="mb-12 bg-white dark:bg-cricket-dark/80 shadow-lg rounded-lg overflow-hidden">
-          <div className="aspect-w-16 aspect-h-9 relative">
+          <div className="aspect-w-16 aspect-h-9 relative h-96">
             <img 
               src="/lovable-uploads/19133248-8247-4e8c-8615-f3c5b00d9287.png" 
               alt="Delhi Capitals vs Sunrisers Hyderabad" 
-              className="w-full object-cover" 
+              className="w-full h-full object-cover" 
             />
           </div>
           <div className="p-6">
             <div className="flex items-center mb-4">
               <span className="bg-cricket-accent text-white text-xs font-bold px-3 py-1 rounded">MATCH REVIEW</span>
-              <span className="text-gray-500 dark:text-gray-400 text-sm ml-4">Today</span>
+              <span className="text-gray-500 dark:text-gray-400 text-sm ml-4">March 30, 2025</span>
             </div>
             <h2 className="text-2xl md:text-3xl font-bold font-heading mb-4">
               Today's IPL Banger – Delhi Capitals vs. Sunrisers Hyderabad
