@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Filter, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArticleCard } from '@/components/article-card';
+import ArticleCard from '@/components/article-card'; // Fixed import statement
 import HeroSection from './components/HeroSection';
 import NewsletterSection from './components/NewsletterSection';
 import Navbar from '@/components/Navbar';
