@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, ChevronRight } from 'lucide-react';
@@ -23,49 +22,35 @@ export const TopStoriesSection = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    const fetchTopStories = async () => {
+    const fetchLatestArticles = async () => {
       try {
         setIsLoading(true);
+        // Get latest articles directly from the articles table
         const { data, error } = await supabase
-          .from('top_stories')
-          .select(`
-            id,
-            article_id,
-            order_index,
-            featured,
-            articles:article_id (
-              id,
-              title,
-              excerpt,
-              cover_image,
-              category,
-              author_id,
-              published_at,
-              content
-            )
-          `)
-          .order('order_index', { ascending: true })
+          .from('articles')
+          .select('*')
+          .eq('published', true)
+          .order('published_at', { ascending: false })
           .limit(4);
         
         if (error) throw error;
         
         if (!data || data.length === 0) {
-          console.log('No top stories found, using fallback data');
+          console.log('No articles found, using fallback data');
           // Only show top 4 stories
           setTopStories(fallbackTopStories.slice(0, 4) as TopStory[]);
           return;
         }
         
-        const formattedStories: TopStory[] = data.map((item) => {
-          const article = item.articles as any;
+        const formattedStories: TopStory[] = data.map((article) => {
           return {
             id: article.id,
             title: article.title,
             excerpt: article.excerpt || 'Read this exciting article...',
-            imageUrl: article.cover_image || '',
+            imageUrl: article.cover_image || article.featured_image || '',
             category: article.category,
             author: article.author_id ? `Author ${article.author_id.slice(0, 8)}` : 'CricketExpress Staff',
-            date: new Date(article.published_at).toLocaleDateString('en-US', {
+            date: new Date(article.published_at || article.created_at).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
               year: 'numeric'
@@ -74,9 +59,10 @@ export const TopStoriesSection = () => {
           };
         });
         
+        console.log('Latest articles fetched:', formattedStories);
         setTopStories(formattedStories);
       } catch (error) {
-        console.error('Error fetching top stories:', error);
+        console.error('Error fetching latest articles:', error);
         // Only show top 4 stories from fallback
         setTopStories(fallbackTopStories.slice(0, 4) as TopStory[]);
       } finally {
@@ -84,7 +70,7 @@ export const TopStoriesSection = () => {
       }
     };
     
-    fetchTopStories();
+    fetchLatestArticles();
   }, []);
   
   if (isLoading) {
