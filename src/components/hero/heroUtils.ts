@@ -1,6 +1,7 @@
 
 import { HeroArticle } from './types';
 import { supabase } from '@/integrations/supabase/client';
+import { mockNewsArticles } from '@/pages/cricket-news/data/mockNewsArticles';
 
 // Convert category to URL-friendly format
 export const getCategoryUrl = (category: string): string => {
@@ -21,6 +22,19 @@ export const getCategoryUrl = (category: string): string => {
 // Fetch hero slider items from Supabase
 export const fetchHeroSliderArticles = async (): Promise<HeroArticle[]> => {
   try {
+    // Use mock news articles as the source for hero slider
+    return mockNewsArticles.map(article => ({
+      id: article.id,
+      title: article.title,
+      excerpt: article.excerpt,
+      category: article.category,
+      imageUrl: article.imageUrl,
+      date: article.date,
+      isFeaturedPick: true
+    }));
+    
+    // Original Supabase code kept for reference but not used
+    /*
     const { data, error } = await supabase
       .from('hero_slider')
       .select(`
@@ -63,6 +77,7 @@ export const fetchHeroSliderArticles = async (): Promise<HeroArticle[]> => {
         isFeaturedPick: false
       };
     });
+    */
   } catch (error) {
     console.error('Error fetching hero slider articles:', error);
     return getMockHeroArticles();
@@ -72,29 +87,21 @@ export const fetchHeroSliderArticles = async (): Promise<HeroArticle[]> => {
 // Mock data for fallback when no hero articles are found
 export const getMockHeroArticles = (): HeroArticle[] => [
   {
-    id: '1',
-    title: 'India Dominates in Historic Cricket Series Win Against Australia',
-    excerpt: 'Team India secures a remarkable series victory on Australian soil with stellar performances from both senior and emerging players.',
-    category: 'Series',
-    imageUrl: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop',
-    date: 'Mar 15, 2025',
+    id: 'dc-vs-srh',
+    title: "Today's IPL Banger: Delhi Capitals vs. Sunrisers Hyderabad – DC Owned the Night!",
+    excerpt: "Yo, cricket fam! It's March 30, 2025, and the IPL 2025 just dropped a straight-up banger in Visakhapatnam. Delhi Capitals (DC) rolled up against Sunrisers Hyderabad (SRH) and turned the pitch into their playground.",
+    category: 'IPL 2025',
+    imageUrl: "/lovable-uploads/19133248-8247-4e8c-8615-f3c5b00d9287.png",
+    date: 'March 30, 2025',
     isFeaturedPick: true
   },
   {
-    id: '2',
-    title: 'IPL 2025: Complete Guide to Teams, Players, and Key Matches',
-    excerpt: 'Everything you need to know about the upcoming Indian Premier League season with analysis of all ten franchises.',
+    id: 'mi-vs-kkr',
+    title: "Tomorrow's IPL Double-Header: Mumbai Indians vs. Kolkata Knight Riders – Full Hype Breakdown!",
+    excerpt: "Yo, cricket fam! It's March 30, 2025, 11:01 PM IST, and tomorrow—Monday, March 31, 2025—is about to hit us with an IPL 2025 banger! The schedule's locked in, and we've got Mumbai Indians (MI) vs. Kolkata Knight Riders (KKR) lighting up the Wankhede Stadium.",
     category: 'IPL 2025',
-    imageUrl: 'https://images.unsplash.com/photo-1624555130581-1d9cca783bc0?q=80&w=1200&auto=format&fit=crop',
-    date: 'Mar 14, 2025'
-  },
-  {
-    id: '3',
-    title: 'Rising Stars: The Next Generation of Cricket Superstars',
-    excerpt: 'Meet the talented young cricketers who are making waves internationally and are poised to become the next cricket legends.',
-    category: 'Player Profiles',
-    imageUrl: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1200&auto=format&fit=crop',
-    date: 'Mar 13, 2025',
+    imageUrl: "/lovable-uploads/412c16d3-2e56-4ea0-b086-deed0e90d189.png",
+    date: 'March 30, 2025',
     isFeaturedPick: true
   }
 ];

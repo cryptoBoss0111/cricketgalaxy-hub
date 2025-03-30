@@ -14,7 +14,7 @@ export const HeroSection = () => {
   const [heroArticles, setHeroArticles] = useState<HeroArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch hero slider articles from Supabase
+  // Fetch hero slider articles
   useEffect(() => {
     const fetchHeroArticles = async () => {
       try {
@@ -48,7 +48,7 @@ export const HeroSection = () => {
           setIsAnimating(false);
         }, 150); // Slightly longer delay before removing animation state
       }, 700); // Keep transition timing consistent
-    }, 10000); // Interval between slides
+    }, 7000); // Interval between slides - changed to 7 seconds for better viewing
     
     return () => clearInterval(interval);
   }, [heroArticles.length]);
