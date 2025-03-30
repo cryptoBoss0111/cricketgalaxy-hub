@@ -1,6 +1,7 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import ArticleCard from '@/components/article-card';
 import { Card } from '@/components/ui/card';
@@ -18,30 +19,21 @@ interface Article {
 }
 
 const IPL2025Page = () => {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: articles = [], isLoading, error } = useQuery({
+    queryKey: ['ipl2025Articles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('category', 'IPL 2025')
+        .order('published_at', { ascending: false })
+        .limit(12); // Limit to 12 articles initially for better performance
 
-  useEffect(() => {
-    const fetchArticles = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('articles')
-          .select('*')
-          .eq('category', 'IPL 2025')
-          .order('published_at', { ascending: false });
-
-        if (error) throw error;
-        setArticles(data || []);
-      } catch (error) {
-        console.error('Error fetching IPL 2025 articles:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchArticles();
-  }, []);
+      if (error) throw error;
+      return data as Article[] || [];
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
   return (
     <>
@@ -79,6 +71,11 @@ const IPL2025Page = () => {
               </Card>
             ))}
           </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <h3 className="text-xl text-red-500">Error loading articles</h3>
+            <p className="mt-2 text-gray-600">Please try again later</p>
+          </div>
         ) : articles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map((article) => (
@@ -88,7 +85,11 @@ const IPL2025Page = () => {
                 title={article.title}
                 excerpt={article.excerpt}
                 imageUrl={article.cover_image || article.featured_image}
-                date={article.published_at}
+                date={new Date(article.published_at).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                })}
                 category="IPL 2025"
                 author={article.author || 'CricketExpress Team'}
               />
