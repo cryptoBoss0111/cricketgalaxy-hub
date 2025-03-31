@@ -31,39 +31,15 @@ interface UpcomingMatchCardProps {
 const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) => {
   const [team1ImageLoaded, setTeam1ImageLoaded] = useState(false);
   const [team2ImageLoaded, setTeam2ImageLoaded] = useState(false);
-  const [team1ImageError, setTeam1ImageError] = useState(false);
-  const [team2ImageError, setTeam2ImageError] = useState(false);
   
-  // Create pure image URLs without query parameters for initial loading
-  const team1FlagUrl = match.team1.flagUrl;
-  const team2FlagUrl = match.team2.flagUrl;
-  
-  // Preload images for better performance
-  useEffect(() => {
-    const img1 = new Image();
-    const img2 = new Image();
+  // Force URLs to be static strings without any processing
+  const team1ImageUrl = match.team1.shortName === 'MI' 
+    ? '/lovable-uploads/ecc2d92f-2f5b-47a3-ae69-17dc0df384cd.png'
+    : match.team1.flagUrl;
     
-    img1.src = team1FlagUrl;
-    img1.onload = () => setTeam1ImageLoaded(true);
-    img1.onerror = () => {
-      console.error(`Failed to load team1 image: ${team1FlagUrl}`);
-      setTeam1ImageError(true);
-    };
-    
-    img2.src = team2FlagUrl;
-    img2.onload = () => setTeam2ImageLoaded(true);
-    img2.onerror = () => {
-      console.error(`Failed to load team2 image: ${team2FlagUrl}`);
-      setTeam2ImageError(true);
-    };
-    
-    return () => {
-      img1.onload = null;
-      img1.onerror = null;
-      img2.onload = null;
-      img2.onerror = null;
-    };
-  }, [team1FlagUrl, team2FlagUrl]);
+  const team2ImageUrl = match.team2.shortName === 'KKR'
+    ? '/lovable-uploads/ce55e622-ee4f-4402-a770-0dc4c874de64.png'
+    : match.team2.flagUrl;
   
   return (
     <Card className={cn(
@@ -82,27 +58,17 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
         
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            {!team1ImageLoaded && !team1ImageError && (
+            {!team1ImageLoaded && (
               <Skeleton className="w-8 h-8 rounded-full" />
             )}
             <img 
-              src={team1FlagUrl} 
+              src={team1ImageUrl} 
               alt={`${match.team1.name} logo`}
               className={cn(
                 "w-8 h-8 rounded-full object-cover",
-                team1ImageLoaded ? "opacity-100" : "opacity-0",
-                team1ImageError ? "hidden" : "block"
+                team1ImageLoaded ? "opacity-100" : "opacity-0"
               )}
-              onLoad={() => {
-                console.log(`✅ Team1 image loaded: ${team1FlagUrl}`);
-                setTeam1ImageLoaded(true);
-              }}
-              onError={(e) => {
-                console.error(`❌ Failed to load team1 image: ${team1FlagUrl}`);
-                setTeam1ImageError(true);
-              }}
-              loading="eager"
-              decoding="async"
+              onLoad={() => setTeam1ImageLoaded(true)}
               width={32}
               height={32}
             />
@@ -113,27 +79,17 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
           
           <div className="flex items-center space-x-2">
             <span className="font-semibold">{match.team2.shortName}</span>
-            {!team2ImageLoaded && !team2ImageError && (
+            {!team2ImageLoaded && (
               <Skeleton className="w-8 h-8 rounded-full" />
             )}
             <img 
-              src={team2FlagUrl} 
+              src={team2ImageUrl} 
               alt={`${match.team2.name} logo`}
               className={cn(
                 "w-8 h-8 rounded-full object-cover",
-                team2ImageLoaded ? "opacity-100" : "opacity-0",
-                team2ImageError ? "hidden" : "block"
+                team2ImageLoaded ? "opacity-100" : "opacity-0"
               )}
-              onLoad={() => {
-                console.log(`✅ Team2 image loaded: ${team2FlagUrl}`);
-                setTeam2ImageLoaded(true);
-              }}
-              onError={() => {
-                console.error(`❌ Failed to load team2 image: ${team2FlagUrl}`);
-                setTeam2ImageError(true);
-              }}
-              loading="eager"
-              decoding="async"
+              onLoad={() => setTeam2ImageLoaded(true)}
               width={32}
               height={32}
             />

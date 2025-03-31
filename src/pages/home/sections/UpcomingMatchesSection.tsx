@@ -32,12 +32,12 @@ export const UpcomingMatchesSection: React.FC = () => {
       team1: {
         name: 'Mumbai Indians',
         shortName: 'MI',
-        flagUrl: getOptimizedImageUrl('/lovable-uploads/ecc2d92f-2f5b-47a3-ae69-17dc0df384cd.png', 'MI')
+        flagUrl: '/lovable-uploads/ecc2d92f-2f5b-47a3-ae69-17dc0df384cd.png'
       },
       team2: {
         name: 'Kolkata Knight Riders',
         shortName: 'KKR',
-        flagUrl: getOptimizedImageUrl('/lovable-uploads/ce55e622-ee4f-4402-a770-0dc4c874de64.png', 'KKR')
+        flagUrl: '/lovable-uploads/ce55e622-ee4f-4402-a770-0dc4c874de64.png'
       },
       matchType: 'IPL 2025',
       venue: 'Wankhede Stadium, Mumbai',
