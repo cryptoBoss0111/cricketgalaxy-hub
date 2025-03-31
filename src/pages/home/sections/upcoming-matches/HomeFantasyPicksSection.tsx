@@ -60,8 +60,8 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
       player: "Suryakumar Yadav",
       team: "Mumbai Indians",
       role: "Batsman",
-      form: "Good",
-      imageUrl: "/lovable-uploads/611356be-0c40-46ec-9995-1e3b95eab3e4.png",
+      form: "Excellent",
+      imageUrl: "/lovable-uploads/4c55a560-556b-4890-b1d3-7375ad7a8f23.png", // Updated with the new image
       stats: "65(31), 43(29), 72(37)"
     });
   }
