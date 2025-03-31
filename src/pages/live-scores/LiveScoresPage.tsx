@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import CricbuzzScorecard from '@/components/CricbuzzScorecard';
 
 interface Match {
   id: string;
@@ -31,6 +32,10 @@ const LiveScoresPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [filterIPL, setFilterIPL] = useState<boolean>(true);
+  const [showCricbuzz, setShowCricbuzz] = useState<boolean>(true);
+  
+  // Cricbuzz Match ID for IPL 2025 MI vs KKR
+  const cricbuzzMatchId = "81030";
 
   // Function to fetch live matches data from ESPNCricinfo
   const fetchLiveScores = async () => {
@@ -190,17 +195,43 @@ const LiveScoresPage = () => {
           </div>
         </div>
         
+        {/* Cricbuzz Scorecard */}
+        {showCricbuzz && (
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">Live Scorecard - MI vs KKR</h2>
+              <Button
+                variant="outline"
+                onClick={() => setShowCricbuzz(!showCricbuzz)}
+              >
+                {showCricbuzz ? 'Hide Scorecard' : 'Show Scorecard'}
+              </Button>
+            </div>
+            <CricbuzzScorecard matchId={cricbuzzMatchId} />
+          </div>
+        )}
+        
         <div className="bg-white p-4 rounded-lg shadow-md mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">
               {filterIPL ? 'IPL 2025 Matches' : 'All Cricket Matches'}
             </h2>
-            <Button
-              variant={filterIPL ? "accent" : "outline"}
-              onClick={() => setFilterIPL(!filterIPL)}
-            >
-              {filterIPL ? 'Show All Matches' : 'Show IPL Only'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant={filterIPL ? "accent" : "outline"}
+                onClick={() => setFilterIPL(!filterIPL)}
+              >
+                {filterIPL ? 'Show All Matches' : 'Show IPL Only'}
+              </Button>
+              {!showCricbuzz && (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCricbuzz(true)}
+                >
+                  Show Scorecard
+                </Button>
+              )}
+            </div>
           </div>
           
           {isLoading ? (
@@ -240,7 +271,7 @@ const LiveScoresPage = () => {
           </p>
           <p>
             Live scores are powered by ESPNCricinfo and update automatically every few minutes. 
-            If you don't see the latest scores, try clicking the Refresh button above.
+            You can also view detailed scorecards directly from Cricbuzz for the most important matches.
           </p>
         </div>
       </div>

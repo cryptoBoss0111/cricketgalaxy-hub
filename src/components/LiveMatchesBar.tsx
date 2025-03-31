@@ -148,14 +148,24 @@ const LiveMatchesBar = () => {
             )}
           </div>
         </div>
-        <Link to="/live-scores" className="flex items-center gap-1 text-white hover:text-blue-100 whitespace-nowrap ml-2">
-          <span className="text-xs md:text-sm font-medium">Full Scores</span>
-          <ExternalLink size={14} />
-        </Link>
+        <div className="flex items-center gap-2 whitespace-nowrap ml-2">
+          <Link to="/live-scores" className="flex items-center gap-1 text-white hover:text-blue-100">
+            <span className="text-xs md:text-sm font-medium">Full Scores</span>
+            <ExternalLink size={14} />
+          </Link>
+          <a 
+            href="https://www.cricbuzz.com/live-cricket-scorecard/81030/mi-vs-kkr-12th-match-indian-premier-league-2025" 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded hover:bg-yellow-400 ml-2"
+          >
+            <span>MI vs KKR</span>
+            <ExternalLink size={12} />
+          </a>
+        </div>
       </div>
 
-      <style>
-        {`
+      <style>{`
         .marquee {
           width: 100%;
           overflow: hidden;
@@ -171,8 +181,7 @@ const LiveMatchesBar = () => {
           from { transform: translateX(100%); }
           to { transform: translateX(-100%); }
         }
-        `}
-      </style>
+      `}</style>
     </div>
   );
 };
