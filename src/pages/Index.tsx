@@ -80,13 +80,13 @@ const Index = () => {
               <UpcomingMatchesSection />
               <HomeFantasyPicksSection picks={[
                 {
-                  id: "rs-sharma-home",
-                  player: "Rohit Sharma",
-                  team: "Mumbai Indians",
+                  id: "sg-gill-home",
+                  player: "Shubman Gill",
+                  team: "Gujarat Titans",
                   role: "Batsman",
-                  form: "Average",
-                  imageUrl: "/lovable-uploads/7dbad874-c8be-4912-a6b8-876c69ddd3f2.png",
-                  stats: "34(28), 21(19), 45(30)"
+                  form: "Excellent",
+                  imageUrl: "/lovable-uploads/2b9b3d5f-ead2-46a4-b348-f15346af1401.png",
+                  stats: "92(58), 57(42), 104(63)"
                 },
                 {
                   id: "sk-yadav-home",
@@ -98,22 +98,22 @@ const Index = () => {
                   stats: "65(31), 43(29), 72(37)"
                 },
                 {
-                  id: "hp-pandya-home",
-                  player: "Hardik Pandya",
-                  team: "Mumbai Indians",
-                  role: "All-Rounder",
-                  form: "Average",
-                  imageUrl: "/lovable-uploads/cdd2468f-c245-4e98-b13a-bb4fecb899e6.png",
-                  stats: "23(15), 1/32, 31(22), 0/29"
-                },
-                {
-                  id: "sn-narine-home",
-                  player: "Sunil Narine",
+                  id: "ar-russell-home",
+                  player: "Andre Russell",
                   team: "Kolkata Knight Riders",
                   role: "All-Rounder",
+                  form: "Excellent",
+                  imageUrl: "/lovable-uploads/5f09742b-2608-4ef2-b57b-7cabaab57f6a.png",
+                  stats: "42(19), 2/26, 38(16), 3/31"
+                },
+                {
+                  id: "t-boult-home",
+                  player: "Trent Boult",
+                  team: "Mumbai Indians",
+                  role: "Bowler",
                   form: "Good",
-                  imageUrl: "/lovable-uploads/1e95e00e-b311-4ab0-89d3-cb051ab0e846.png",
-                  stats: "28(14), 2/24, 19(11), 1/32"
+                  imageUrl: "/lovable-uploads/df73abd6-8fc7-4ccd-8357-07d5db3d6520.png",
+                  stats: "3/27, 2/31, 1/26"
                 }
               ]} />
             </div>

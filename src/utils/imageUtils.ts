@@ -1,3 +1,4 @@
+
 // Define a utility to optimize and improve image loading across the site
 
 // List of known local images for quicker reference
@@ -48,7 +49,9 @@ const imageIdMap: Record<string, string> = {
   '143884fc-6b7b-4af4-b860-2122a3ebcd67': "/lovable-uploads/143884fc-6b7b-4af4-b860-2122a3ebcd67.png", // Tilak Varma image
   'fe2f72a9-f686-42da-bdbe-553aac70e888': "/lovable-uploads/fe2f72a9-f686-42da-bdbe-553aac70e888.png", // Venkatesh Iyer image
   '4c55a560-556b-4890-b1d3-7375ad7a8f23': "/lovable-uploads/87f31ffe-3086-45ed-ae49-ccdcdaaf0347.png", // Updated Jasprit Bumrah image
-  '87f31ffe-3086-45ed-ae49-ccdcdaaf0347': "/lovable-uploads/87f31ffe-3086-45ed-ae49-ccdcdaaf0347.png"  // New Jasprit Bumrah image
+  '87f31ffe-3086-45ed-ae49-ccdcdaaf0347': "/lovable-uploads/87f31ffe-3086-45ed-ae49-ccdcdaaf0347.png",  // New Jasprit Bumrah image
+  '2b9b3d5f-ead2-46a4-b348-f15346af1401': "/lovable-uploads/2b9b3d5f-ead2-46a4-b348-f15346af1401.png",  // Shubman Gill image
+  '4e9330c7-46db-4c36-ab1e-cba38e23d97c': "/lovable-uploads/4e9330c7-46db-4c36-ab1e-cba38e23d97c.png"   // Additional player image
 };
 
 /**

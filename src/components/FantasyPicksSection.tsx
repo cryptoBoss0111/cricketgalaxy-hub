@@ -3,4 +3,3 @@
 import HomeFantasyPicksSection from '@/pages/home/sections/upcoming-matches/HomeFantasyPicksSection';
 
 export { HomeFantasyPicksSection as default };
-
