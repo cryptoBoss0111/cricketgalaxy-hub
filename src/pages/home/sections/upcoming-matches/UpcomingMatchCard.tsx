@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getOptimizedImageUrl } from '@/utils/imageUtils';
+import { getImageProps } from '@/utils/imageUtils';
 
 interface TeamInfo {
   name: string;
@@ -33,9 +33,9 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   const [team1ImageError, setTeam1ImageError] = useState(false);
   const [team2ImageError, setTeam2ImageError] = useState(false);
   
-  // Get optimized image URLs for teams
-  const team1FlagUrl = getOptimizedImageUrl(match.team1.flagUrl, match.team1.shortName);
-  const team2FlagUrl = getOptimizedImageUrl(match.team2.flagUrl, match.team2.shortName);
+  // Use team flag URLs directly
+  const team1FlagUrl = match.team1.flagUrl;
+  const team2FlagUrl = match.team2.flagUrl;
   
   // Preload images for better performance
   useEffect(() => {
@@ -80,7 +80,7 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
             )}
             <img 
               src={team1FlagUrl} 
-              alt={match.team1.name}
+              alt={`${match.team1.name} logo`}
               className={cn(
                 "w-8 h-8 rounded-full object-cover",
                 team1ImageLoaded ? "opacity-100" : "opacity-0",
@@ -105,7 +105,7 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
             )}
             <img 
               src={team2FlagUrl} 
-              alt={match.team2.name}
+              alt={`${match.team2.name} logo`}
               className={cn(
                 "w-8 h-8 rounded-full object-cover",
                 team2ImageLoaded ? "opacity-100" : "opacity-0",

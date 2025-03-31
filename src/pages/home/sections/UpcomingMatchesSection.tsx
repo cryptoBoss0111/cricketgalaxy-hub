@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import UpcomingMatchesGrid from './upcoming-matches/UpcomingMatchesGrid';
 import HomeFantasyPicksSection from './upcoming-matches/HomeFantasyPicksSection';
 import { fantasyPicks } from '../data/homeData';
-import { getOptimizedImageUrl } from '@/utils/imageUtils';
+import { getOptimizedImageUrl, preloadImage } from '@/utils/imageUtils';
 
 // Define the upcoming matches data structure
 interface TeamInfo {
@@ -32,12 +32,12 @@ export const UpcomingMatchesSection: React.FC = () => {
       team1: {
         name: 'Mumbai Indians',
         shortName: 'MI',
-        flagUrl: getOptimizedImageUrl('', 'MI') // Use the updated MI logo
+        flagUrl: getOptimizedImageUrl('/lovable-uploads/1d4a5e68-72f5-4f46-9b46-071be8fdd0fa.png', 'MI')
       },
       team2: {
         name: 'Kolkata Knight Riders',
         shortName: 'KKR',
-        flagUrl: '/lovable-uploads/6c575f57-57f9-4811-804e-0a850a01ef6d.png'
+        flagUrl: getOptimizedImageUrl('/lovable-uploads/6c575f57-57f9-4811-804e-0a850a01ef6d.png', 'KKR')
       },
       matchType: 'IPL 2025',
       venue: 'Wankhede Stadium, Mumbai',
@@ -50,12 +50,12 @@ export const UpcomingMatchesSection: React.FC = () => {
       team1: {
         name: 'Lucknow Super Giants',
         shortName: 'LSG',
-        flagUrl: '/lovable-uploads/95f7655d-a0d9-48a3-a64c-a8f362d04b31.png'
+        flagUrl: getOptimizedImageUrl('/lovable-uploads/95f7655d-a0d9-48a3-a64c-a8f362d04b31.png', 'LSG')
       },
       team2: {
         name: 'Punjab Kings',
         shortName: 'PBKS',
-        flagUrl: '/lovable-uploads/8dca24c4-f648-4d13-b9d7-5227f02fc2ff.png'
+        flagUrl: getOptimizedImageUrl('/lovable-uploads/8dca24c4-f648-4d13-b9d7-5227f02fc2ff.png', 'PBKS')
       },
       matchType: 'IPL 2025',
       venue: 'BRSABV Ekana Cricket Stadium, Lucknow',
@@ -68,12 +68,12 @@ export const UpcomingMatchesSection: React.FC = () => {
       team1: {
         name: 'Royal Challengers Bengaluru',
         shortName: 'RCB',
-        flagUrl: '/lovable-uploads/412c16d3-2e56-4ea0-b086-deed0e90d189.png'
+        flagUrl: getOptimizedImageUrl('/lovable-uploads/412c16d3-2e56-4ea0-b086-deed0e90d189.png', 'RCB')
       },
       team2: {
         name: 'Gujarat Titans',
         shortName: 'GT',
-        flagUrl: '/lovable-uploads/ba068302-d7ba-4cdd-9735-cc9aac148031.png'
+        flagUrl: getOptimizedImageUrl('/lovable-uploads/ba068302-d7ba-4cdd-9735-cc9aac148031.png', 'GT')
       },
       matchType: 'IPL 2025',
       venue: 'M. Chinnaswamy Stadium, Bengaluru',
@@ -82,6 +82,20 @@ export const UpcomingMatchesSection: React.FC = () => {
       details: 'RCB, playing at their home ground, will face GT'
     }
   ];
+  
+  // Preload team logos for faster rendering
+  useEffect(() => {
+    const preloadLogos = async () => {
+      const logoPromises = upcomingMatches.flatMap(match => [
+        preloadImage(match.team1.flagUrl),
+        preloadImage(match.team2.flagUrl)
+      ]);
+      
+      await Promise.all(logoPromises);
+    };
+    
+    preloadLogos();
+  }, []);
 
   return (
     <>
