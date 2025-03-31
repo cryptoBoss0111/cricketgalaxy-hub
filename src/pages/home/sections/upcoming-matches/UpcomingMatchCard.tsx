@@ -56,6 +56,12 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
     }
   };
   
+  // Function to handle image loading error
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error(`Failed to load team logo image`);
+    (e.target as HTMLImageElement).src = '/placeholder.svg';
+  };
+  
   return (
     <Card className="hover:shadow-md transition-all duration-300 border">
       <CardContent className="p-0">
@@ -80,6 +86,7 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
                 alt={`${match.team1.name} logo`}
                 className="w-16 h-16 object-contain"
                 loading="eager"
+                onError={handleImageError}
               />
             </div>
             <span className="font-bold text-lg text-center">{match.team1.shortName}</span>
@@ -103,6 +110,7 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
                 alt={`${match.team2.name} logo`}
                 className="w-16 h-16 object-contain"
                 loading="eager"
+                onError={handleImageError}
               />
             </div>
             <span className="font-bold text-lg text-center">{match.team2.shortName}</span>
