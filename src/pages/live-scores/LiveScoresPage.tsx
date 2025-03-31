@@ -30,59 +30,46 @@ const LiveScoresPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
-  const [remainingHits, setRemainingHits] = useState<number | null>(null);
   const [filterIPL, setFilterIPL] = useState<boolean>(true);
 
-  // Function to fetch live matches data from Free Cricbuzz API
+  // Function to fetch live matches data from ESPNCricinfo
   const fetchLiveScores = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const response = await fetch('https://free-cricbuzz-cricket-api.p.rapidapi.com/cricket-livescores', {
-        method: 'GET',
-        headers: {
-          'X-RapidAPI-Key': '43b772b4d8msh6d5dd68873fbb6cp173b08jsn80bc23c85703',
-          'X-RapidAPI-Host': 'free-cricbuzz-cricket-api.p.rapidapi.com'
-        }
-      });
+      // Using a cors proxy to access ESPN data
+      const response = await fetch('https://corsproxy.io/?https://www.espncricinfo.com/matches/engine/match/live.json');
       
       if (!response.ok) {
         throw new Error(`API responded with status: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log('LiveScoresPage API response:', data);
-      
-      // Extract rate limit information from headers if available
-      if (response.headers) {
-        const rateLimit = response.headers.get('X-RateLimit-Remaining');
-        if (rateLimit) {
-          setRemainingHits(parseInt(rateLimit, 10));
-        }
-      }
+      console.log('LiveScoresPage ESPNCricinfo API response:', data);
       
       // Process matches from the API response
       const formattedMatches: Match[] = [];
       
-      if (Array.isArray(data.matches)) {
+      // Parse ESPN data format
+      if (data && data.matches && Array.isArray(data.matches)) {
         data.matches.forEach((match: any) => {
           formattedMatches.push({
-            id: match.matchId || `match-${Math.random().toString(36).substr(2, 9)}`,
-            name: match.title || 'Unknown Match',
-            status: match.status || 'No status available',
-            venue: match.venue || 'Venue not specified',
-            date: match.date || 'Date not available',
-            matchType: match.format || 'Unknown format',
-            league: match.series || '',
+            id: match.objectId || `match-${Math.random().toString(36).substr(2, 9)}`,
+            name: match.description || 'Unknown Match',
+            status: match.status_text || 'No status available',
+            venue: match.ground_name || 'Venue not specified',
+            date: match.start_date_raw ? new Date(match.start_date_raw).toLocaleDateString() : 'Date not available',
+            matchType: match.match_format || 'Unknown format',
+            league: match.series_name || '',
             teams: {
               home: {
-                name: match.teamA?.name || match.teamA || 'Home Team',
-                score: match.teamA?.score || ''
+                name: match.team1_name || 'Home Team',
+                score: match.team1_score || ''
               },
               away: {
-                name: match.teamB?.name || match.teamB || 'Away Team',
-                score: match.teamB?.score || ''
+                name: match.team2_name || 'Away Team',
+                score: match.team2_score || ''
               }
             }
           });
@@ -119,7 +106,7 @@ const LiveScoresPage = () => {
 
   // Filter matches based on IPL preference
   const filteredMatches = filterIPL
-    ? matches.filter(match => match.league && match.league.toLowerCase().includes('ipl'))
+    ? matches.filter(match => match.league && match.league.toLowerCase().includes('ipl 2025'))
     : matches;
   
   const renderMatchCards = () => {
@@ -153,7 +140,7 @@ const LiveScoresPage = () => {
           <span>{match.name}</span>
           {match.league && (
             <span className="bg-yellow-500 text-black text-xs px-2 py-0.5 rounded">
-              {match.league.includes('IPL') ? 'IPL 2025' : match.league}
+              {match.league.includes('IPL 2025') ? 'IPL 2025' : match.league}
             </span>
           )}
         </div>
@@ -191,12 +178,6 @@ const LiveScoresPage = () => {
             {filterIPL ? 'IPL 2025 Live Scores' : 'Live Cricket Scores'}
           </h1>
           <div className="flex items-center gap-2">
-            {remainingHits !== null && (
-              <div className="text-white text-sm bg-blue-600 px-3 py-1 rounded-full flex items-center">
-                <Info size={14} className="mr-1" />
-                API Calls: {remainingHits} remaining
-              </div>
-            )}
             <Button 
               variant="accent" 
               onClick={fetchLiveScores}
@@ -258,7 +239,7 @@ const LiveScoresPage = () => {
             with special focus on IPL 2025 matches.
           </p>
           <p>
-            Live scores are powered by the Cricbuzz API and update automatically every few minutes. 
+            Live scores are powered by ESPNCricinfo and update automatically every few minutes. 
             If you don't see the latest scores, try clicking the Refresh button above.
           </p>
         </div>
