@@ -61,19 +61,14 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   };
   
   return (
-    <Card className={cn(
-      "hover:shadow-md transition-all duration-300 animate-fade-in border",
-      index === 0 ? "animate-delay-100" : "",
-      index === 1 ? "animate-delay-200" : "",
-      index === 2 ? "animate-delay-300" : ""
-    )}>
+    <Card className="hover:shadow-md transition-all duration-300 animate-fade-in border">
       <CardContent className="p-0">
         {/* Header with match type and date */}
         <div className="flex items-center justify-between p-4 border-b">
           <Badge variant="outline" className="bg-gray-100 text-gray-700 hover:bg-gray-200">
             {match.matchType}
           </Badge>
-          <span className="text-xs text-gray-500 font-medium">{match.date}</span>
+          <span className="text-sm text-gray-500 font-medium">{match.date}</span>
         </div>
         
         {/* Teams Section */}
@@ -82,58 +77,67 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
           <div className="flex flex-col items-center">
             {!team1ImageLoaded && (
               <Skeleton className={cn(
-                "w-16 h-16 rounded-full mb-2",
+                "w-20 h-20 rounded-full mb-2",
                 getTeamBgColor(match.team1.shortName)
               )} />
             )}
             <div className={cn(
-              "w-16 h-16 rounded-full flex items-center justify-center overflow-hidden mb-2",
+              "w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mb-2",
               getTeamBgColor(match.team1.shortName),
               team1ImageLoaded ? "opacity-100" : "opacity-0"
             )}>
               <img 
                 src={match.team1.flagUrl} 
                 alt={`${match.team1.name} logo`}
-                className="w-12 h-12 object-contain"
+                className="w-16 h-16 object-contain"
                 onLoad={() => setTeam1ImageLoaded(true)}
-                width={48}
-                height={48}
+                width={64}
+                height={64}
               />
             </div>
-            <span className="font-bold text-sm text-center">{match.team1.shortName}</span>
+            <span className="font-bold text-lg text-center">{match.team1.shortName}</span>
+            <span className="text-xs text-gray-500">{match.team1.name}</span>
           </div>
           
           {/* VS */}
-          <div className="flex flex-col items-center px-4">
-            <span className="text-sm text-gray-600 font-medium mb-2">VS</span>
-            <div className="w-6 h-0.5 bg-gray-200"></div>
+          <div className="flex flex-col items-center px-4 py-2">
+            <span className="text-lg font-semibold text-gray-700 mb-2">VS</span>
+            <div className="w-8 h-0.5 bg-gray-300"></div>
           </div>
           
           {/* Team 2 */}
           <div className="flex flex-col items-center">
             {!team2ImageLoaded && (
               <Skeleton className={cn(
-                "w-16 h-16 rounded-full mb-2",
+                "w-20 h-20 rounded-full mb-2",
                 getTeamBgColor(match.team2.shortName)
               )} />
             )}
             <div className={cn(
-              "w-16 h-16 rounded-full flex items-center justify-center overflow-hidden mb-2",
+              "w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mb-2",
               getTeamBgColor(match.team2.shortName),
               team2ImageLoaded ? "opacity-100" : "opacity-0"
             )}>
               <img 
                 src={match.team2.flagUrl} 
                 alt={`${match.team2.name} logo`}
-                className="w-12 h-12 object-contain"
+                className="w-16 h-16 object-contain"
                 onLoad={() => setTeam2ImageLoaded(true)}
-                width={48}
-                height={48}
+                width={64}
+                height={64}
               />
             </div>
-            <span className="font-bold text-sm text-center">{match.team2.shortName}</span>
+            <span className="font-bold text-lg text-center">{match.team2.shortName}</span>
+            <span className="text-xs text-gray-500">{match.team2.name}</span>
           </div>
         </div>
+        
+        {/* Match Details */}
+        {match.details && (
+          <div className="px-6 py-3 text-center text-gray-600 border-t">
+            <p>{match.details}</p>
+          </div>
+        )}
         
         {/* Footer with venue and time */}
         <div className="bg-gray-50 p-4 text-sm text-gray-600 rounded-b-lg border-t">
