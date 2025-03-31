@@ -34,9 +34,9 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   const [team1ImageError, setTeam1ImageError] = useState(false);
   const [team2ImageError, setTeam2ImageError] = useState(false);
   
-  // Force reload images to fix caching issues
-  const team1FlagUrl = `${match.team1.flagUrl}?v=${Date.now()}`;
-  const team2FlagUrl = `${match.team2.flagUrl}?v=${Date.now()}`;
+  // Create pure image URLs without query parameters for initial loading
+  const team1FlagUrl = match.team1.flagUrl;
+  const team2FlagUrl = match.team2.flagUrl;
   
   // Preload images for better performance
   useEffect(() => {
@@ -64,12 +64,6 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
       img2.onerror = null;
     };
   }, [team1FlagUrl, team2FlagUrl]);
-  
-  // Log the actual URLs being used for debugging
-  useEffect(() => {
-    console.log(`Loading team1 image (${match.team1.shortName}): ${team1FlagUrl}`);
-    console.log(`Loading team2 image (${match.team2.shortName}): ${team2FlagUrl}`);
-  }, [match.team1.shortName, match.team2.shortName, team1FlagUrl, team2FlagUrl]);
   
   return (
     <Card className={cn(
