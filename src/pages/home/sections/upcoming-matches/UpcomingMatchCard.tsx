@@ -29,8 +29,7 @@ interface UpcomingMatchCardProps {
 }
 
 const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) => {
-  const [team1ImageLoaded, setTeam1ImageLoaded] = useState(false);
-  const [team2ImageLoaded, setTeam2ImageLoaded] = useState(false);
+  // No more useState loading logic - this causes the animation issue
   
   // Get team background colors based on team shortname
   const getTeamBgColor = (shortName: string) => {
@@ -61,7 +60,7 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   };
   
   return (
-    <Card className="hover:shadow-md transition-all duration-300 animate-fade-in border">
+    <Card className="hover:shadow-md transition-all duration-300 border">
       <CardContent className="p-0">
         {/* Header with match type and date */}
         <div className="flex items-center justify-between p-4 border-b">
@@ -75,22 +74,14 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
         <div className="flex justify-between items-center p-6">
           {/* Team 1 */}
           <div className="flex flex-col items-center">
-            {!team1ImageLoaded && (
-              <Skeleton className={cn(
-                "w-20 h-20 rounded-full mb-2",
-                getTeamBgColor(match.team1.shortName)
-              )} />
-            )}
             <div className={cn(
               "w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mb-2",
-              getTeamBgColor(match.team1.shortName),
-              team1ImageLoaded ? "opacity-100" : "opacity-0"
+              getTeamBgColor(match.team1.shortName)
             )}>
               <img 
                 src={match.team1.flagUrl} 
                 alt={`${match.team1.name} logo`}
                 className="w-16 h-16 object-contain"
-                onLoad={() => setTeam1ImageLoaded(true)}
                 width={64}
                 height={64}
               />
@@ -107,22 +98,14 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
           
           {/* Team 2 */}
           <div className="flex flex-col items-center">
-            {!team2ImageLoaded && (
-              <Skeleton className={cn(
-                "w-20 h-20 rounded-full mb-2",
-                getTeamBgColor(match.team2.shortName)
-              )} />
-            )}
             <div className={cn(
               "w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mb-2",
-              getTeamBgColor(match.team2.shortName),
-              team2ImageLoaded ? "opacity-100" : "opacity-0"
+              getTeamBgColor(match.team2.shortName)
             )}>
               <img 
                 src={match.team2.flagUrl} 
                 alt={`${match.team2.name} logo`}
                 className="w-16 h-16 object-contain"
-                onLoad={() => setTeam2ImageLoaded(true)}
                 width={64}
                 height={64}
               />
