@@ -2,7 +2,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { MapPin } from 'lucide-react';
 
 interface TeamInfo {
@@ -57,65 +56,63 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   };
   
   return (
-    <Card className="h-full overflow-hidden hover:shadow-md transition-all duration-300 border">
-      <CardContent className="p-0 flex flex-col h-full">
-        {/* Header with match type and date */}
-        <div className="flex items-center justify-between p-3 bg-gray-50 border-b">
-          <div className="text-xs font-medium text-gray-700">{match.matchType}</div>
-          <div className="text-xs text-gray-500 font-medium">{match.date}</div>
-        </div>
-        
-        {/* Teams Section */}
-        <div className="flex justify-between items-center p-5">
+    <Card className="overflow-hidden shadow-sm border hover:shadow-md transition-all duration-300">
+      {/* Header with match type and date */}
+      <div className="flex items-center justify-between p-3 bg-gray-50 border-b">
+        <div className="text-sm font-medium text-gray-700">{match.matchType}</div>
+        <div className="text-sm text-gray-600">{match.date}</div>
+      </div>
+      
+      {/* Teams Section */}
+      <CardContent className="p-4">
+        <div className="flex justify-between items-center">
           {/* Team 1 */}
           <div className="flex flex-col items-center">
             <div className={cn(
-              "w-16 h-16 rounded-full flex items-center justify-center mb-2",
+              "w-14 h-14 rounded-full flex items-center justify-center mb-2",
               getTeamBgColor(match.team1.shortName)
             )}>
-              <span className="text-white font-bold text-2xl">{match.team1.shortName}</span>
+              <span className="text-white font-bold text-xl">{match.team1.shortName}</span>
             </div>
-            <span className="text-xs text-gray-600 max-w-[90px] text-center truncate">{match.team1.name}</span>
+            <span className="text-xs text-gray-600 max-w-[100px] text-center truncate">{match.team1.name}</span>
           </div>
           
           {/* VS */}
           <div className="flex flex-col items-center px-2">
-            <span className="text-lg font-semibold text-gray-700 mb-2">VS</span>
-            <div className="w-8 h-0.5 bg-gray-300"></div>
+            <span className="text-lg font-semibold text-gray-700">VS</span>
+            <div className="w-6 h-0.5 bg-gray-200 mt-1"></div>
           </div>
           
           {/* Team 2 */}
           <div className="flex flex-col items-center">
             <div className={cn(
-              "w-16 h-16 rounded-full flex items-center justify-center mb-2",
+              "w-14 h-14 rounded-full flex items-center justify-center mb-2",
               getTeamBgColor(match.team2.shortName)
             )}>
-              <span className="text-white font-bold text-2xl">{match.team2.shortName}</span>
+              <span className="text-white font-bold text-xl">{match.team2.shortName}</span>
             </div>
-            <span className="text-xs text-gray-600 max-w-[90px] text-center truncate">{match.team2.name}</span>
+            <span className="text-xs text-gray-600 max-w-[100px] text-center truncate">{match.team2.name}</span>
           </div>
         </div>
         
         {/* Time */}
-        <div className="px-4 py-3 text-center border-t border-gray-100">
+        <div className="text-center my-4">
           <span className="text-sm font-medium">{match.time}</span>
         </div>
         
         {/* Match Details */}
         {match.details && (
-          <div className="px-4 py-3 text-center text-gray-600 flex-grow border-t border-gray-100">
-            <p className="text-xs line-clamp-2">{match.details}</p>
+          <div className="text-center mb-4">
+            <p className="text-xs text-gray-600 line-clamp-2">{match.details}</p>
           </div>
         )}
-        
-        {/* Footer with venue */}
-        <div className="bg-white p-3 text-xs text-gray-600 border-t mt-auto">
-          <div className="flex items-center">
-            <MapPin className="h-4 w-4 mr-1 flex-shrink-0 text-gray-500" />
-            <span className="line-clamp-1">{match.venue}</span>
-          </div>
-        </div>
       </CardContent>
+      
+      {/* Footer with venue */}
+      <div className="bg-white p-3 text-xs text-gray-600 border-t flex items-center">
+        <MapPin className="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-gray-500" />
+        <span className="line-clamp-1">{match.venue}</span>
+      </div>
     </Card>
   );
 };
