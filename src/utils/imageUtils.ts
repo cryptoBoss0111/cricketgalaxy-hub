@@ -47,7 +47,8 @@ const imageIdMap: Record<string, string> = {
   '5bb2ea7d-70ca-49f6-9f96-1002a5b7b550': "/lovable-uploads/5bb2ea7d-70ca-49f6-9f96-1002a5b7b550.png", // Varun Chakravarthy image
   '143884fc-6b7b-4af4-b860-2122a3ebcd67': "/lovable-uploads/143884fc-6b7b-4af4-b860-2122a3ebcd67.png", // Tilak Varma image
   'fe2f72a9-f686-42da-bdbe-553aac70e888': "/lovable-uploads/fe2f72a9-f686-42da-bdbe-553aac70e888.png", // Venkatesh Iyer image
-  '4c55a560-556b-4890-b1d3-7375ad7a8f23': "/lovable-uploads/4c55a560-556b-4890-b1d3-7375ad7a8f23.png" // Jasprit Bumrah image
+  '4c55a560-556b-4890-b1d3-7375ad7a8f23': "/lovable-uploads/87f31ffe-3086-45ed-ae49-ccdcdaaf0347.png", // Updated Jasprit Bumrah image
+  '87f31ffe-3086-45ed-ae49-ccdcdaaf0347': "/lovable-uploads/87f31ffe-3086-45ed-ae49-ccdcdaaf0347.png"  // New Jasprit Bumrah image
 };
 
 /**
