@@ -57,64 +57,64 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   };
   
   return (
-    <Card className="hover:shadow-md transition-all duration-300 border">
-      <CardContent className="p-0">
+    <Card className="h-full overflow-hidden hover:shadow-md transition-all duration-300 border">
+      <CardContent className="p-0 flex flex-col h-full">
         {/* Header with match type and date */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <Badge variant="outline" className="bg-gray-100 text-gray-700 hover:bg-gray-200">
+        <div className="flex items-center justify-between p-3 border-b">
+          <Badge variant="outline" className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200">
             {match.matchType}
           </Badge>
-          <span className="text-sm text-gray-500 font-medium">{match.date}</span>
+          <span className="text-xs text-gray-500 font-medium">{match.date}</span>
         </div>
         
         {/* Teams Section */}
-        <div className="flex justify-between items-center p-6">
+        <div className="flex justify-between items-center p-4">
           {/* Team 1 */}
           <div className="flex flex-col items-center">
             <div className={cn(
-              "w-16 h-16 rounded-full flex items-center justify-center mb-2",
+              "w-14 h-14 rounded-full flex items-center justify-center mb-2",
               getTeamBgColor(match.team1.shortName)
             )}>
               <span className="text-white font-bold text-xl">{match.team1.shortName}</span>
             </div>
-            <span className="text-xs text-gray-500">{match.team1.name}</span>
+            <span className="text-xs text-gray-500 max-w-[80px] text-center truncate">{match.team1.name}</span>
           </div>
           
           {/* VS */}
-          <div className="flex flex-col items-center px-4 py-2">
-            <span className="text-lg font-semibold text-gray-700 mb-2">VS</span>
+          <div className="flex flex-col items-center px-2">
+            <span className="text-lg font-semibold text-gray-700 mb-1">VS</span>
             <div className="w-8 h-0.5 bg-gray-300"></div>
           </div>
           
           {/* Team 2 */}
           <div className="flex flex-col items-center">
             <div className={cn(
-              "w-16 h-16 rounded-full flex items-center justify-center mb-2",
+              "w-14 h-14 rounded-full flex items-center justify-center mb-2",
               getTeamBgColor(match.team2.shortName)
             )}>
               <span className="text-white font-bold text-xl">{match.team2.shortName}</span>
             </div>
-            <span className="text-xs text-gray-500">{match.team2.name}</span>
+            <span className="text-xs text-gray-500 max-w-[80px] text-center truncate">{match.team2.name}</span>
           </div>
         </div>
         
         {/* Time */}
-        <div className="px-6 py-2 text-center">
+        <div className="px-4 py-2 text-center">
           <span className="text-sm font-medium">{match.time}</span>
         </div>
         
         {/* Match Details */}
         {match.details && (
-          <div className="px-6 py-2 text-center text-gray-600 border-t">
-            <p className="text-xs">{match.details}</p>
+          <div className="px-4 py-2 text-center text-gray-600 flex-grow">
+            <p className="text-xs line-clamp-2">{match.details}</p>
           </div>
         )}
         
         {/* Footer with venue */}
-        <div className="bg-gray-50 p-3 text-sm text-gray-600 rounded-b-lg border-t">
+        <div className="bg-gray-50 p-3 text-sm text-gray-600 rounded-b-lg border-t mt-auto">
           <div className="flex items-start">
-            <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-gray-500" />
-            <span className="line-clamp-2 text-xs">{match.venue}</span>
+            <MapPin className="h-4 w-4 mr-1 flex-shrink-0 text-gray-500 mt-0.5" />
+            <span className="line-clamp-1 text-xs">{match.venue}</span>
           </div>
         </div>
       </CardContent>
