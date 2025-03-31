@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -237,7 +238,7 @@ const FantasyTipsPage = () => {
   }, [matchFilter]);
 
   const handleMatchSelect = (matchId: string) => {
-    setSelectedMatch(matchId === "" ? null : matchId);
+    setSelectedMatch(matchId === "all" ? null : matchId);
     setActiveTab('match');
   };
 
@@ -278,7 +279,7 @@ const FantasyTipsPage = () => {
       
       <Navbar />
       
-      <main className="min-h-screen bg-gradient-to-b from-cricket-accent/5 to-white">
+      <main className="min-h-screen bg-gradient-to-b from-cricket-accent/5 to-white pt-20">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
             <div>
@@ -291,7 +292,7 @@ const FantasyTipsPage = () => {
             </div>
             
             <div className="mt-4 md:mt-0">
-              <Select value={selectedMatch || ''} onValueChange={handleMatchSelect}>
+              <Select value={selectedMatch || 'all'} onValueChange={handleMatchSelect}>
                 <SelectTrigger className="w-[240px]">
                   <SelectValue placeholder="Filter by match" />
                 </SelectTrigger>
