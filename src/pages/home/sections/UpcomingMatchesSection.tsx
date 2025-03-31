@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useEffect, useState } from 'react';
 import UpcomingMatchesGrid from './upcoming-matches/UpcomingMatchesGrid';
@@ -32,7 +31,7 @@ export const UpcomingMatchesSection: React.FC = () => {
       team1: {
         name: 'Mumbai Indians',
         shortName: 'MI',
-        flagUrl: getOptimizedImageUrl('/lovable-uploads/1d4a5e68-72f5-4f46-9b46-071be8fdd0fa.png', 'MI')
+        flagUrl: getOptimizedImageUrl('/lovable-uploads/2a4ce6cf-adb0-4f0a-9c8a-3353432db175.png', 'MI')
       },
       team2: {
         name: 'Kolkata Knight Riders',
