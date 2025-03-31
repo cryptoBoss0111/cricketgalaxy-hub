@@ -25,8 +25,10 @@ const LiveMatchesBar = () => {
   }, []);
 
   return (
-    <div className="live-match-ticker sticky top-0 z-50 w-full bg-blue-500 text-white shadow-md">
-      <div ref={containerRef} className="w-full overflow-hidden"></div>
+    <div className="live-match-ticker sticky top-0 z-50 w-full bg-blue-500 text-white py-1 shadow-md">
+      <div className="container mx-auto">
+        <div ref={containerRef} className="w-full overflow-hidden flex justify-center"></div>
+      </div>
     </div>
   );
 };
