@@ -8,7 +8,7 @@ import { MapPin } from 'lucide-react';
 interface TeamInfo {
   name: string;
   shortName: string;
-  flagUrl: string;
+  flagUrl?: string;
 }
 
 export interface UpcomingMatch {
@@ -56,12 +56,6 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
     }
   };
   
-  // Function to handle image loading error
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error(`Failed to load team logo image`);
-    (e.target as HTMLImageElement).src = '/placeholder.svg';
-  };
-  
   return (
     <Card className="hover:shadow-md transition-all duration-300 border">
       <CardContent className="p-0">
@@ -78,18 +72,11 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
           {/* Team 1 */}
           <div className="flex flex-col items-center">
             <div className={cn(
-              "w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mb-2",
+              "w-16 h-16 rounded-full flex items-center justify-center mb-2",
               getTeamBgColor(match.team1.shortName)
             )}>
-              <img 
-                src={match.team1.flagUrl} 
-                alt={`${match.team1.name} logo`}
-                className="w-16 h-16 object-contain"
-                loading="eager"
-                onError={handleImageError}
-              />
+              <span className="text-white font-bold text-xl">{match.team1.shortName}</span>
             </div>
-            <span className="font-bold text-lg text-center">{match.team1.shortName}</span>
             <span className="text-xs text-gray-500">{match.team1.name}</span>
           </div>
           
@@ -102,34 +89,32 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
           {/* Team 2 */}
           <div className="flex flex-col items-center">
             <div className={cn(
-              "w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mb-2",
+              "w-16 h-16 rounded-full flex items-center justify-center mb-2",
               getTeamBgColor(match.team2.shortName)
             )}>
-              <img 
-                src={match.team2.flagUrl} 
-                alt={`${match.team2.name} logo`}
-                className="w-16 h-16 object-contain"
-                loading="eager"
-                onError={handleImageError}
-              />
+              <span className="text-white font-bold text-xl">{match.team2.shortName}</span>
             </div>
-            <span className="font-bold text-lg text-center">{match.team2.shortName}</span>
             <span className="text-xs text-gray-500">{match.team2.name}</span>
           </div>
         </div>
         
+        {/* Time */}
+        <div className="px-6 py-2 text-center">
+          <span className="text-sm font-medium">{match.time}</span>
+        </div>
+        
         {/* Match Details */}
         {match.details && (
-          <div className="px-6 py-3 text-center text-gray-600 border-t">
-            <p>{match.details}</p>
+          <div className="px-6 py-2 text-center text-gray-600 border-t">
+            <p className="text-xs">{match.details}</p>
           </div>
         )}
         
         {/* Footer with venue */}
-        <div className="bg-gray-50 p-4 text-sm text-gray-600 rounded-b-lg border-t">
+        <div className="bg-gray-50 p-3 text-sm text-gray-600 rounded-b-lg border-t">
           <div className="flex items-start">
             <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-gray-500" />
-            <span className="line-clamp-2">{match.venue}</span>
+            <span className="line-clamp-2 text-xs">{match.venue}</span>
           </div>
         </div>
       </CardContent>

@@ -1,15 +1,14 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import UpcomingMatchesGrid from './upcoming-matches/UpcomingMatchesGrid';
 import HomeFantasyPicksSection from './upcoming-matches/HomeFantasyPicksSection';
 import { fantasyPicks } from '../data/homeData';
-import { preloadImage } from '@/utils/imageUtils';
 
 // Define the upcoming matches data structure
 interface TeamInfo {
   name: string;
   shortName: string;
-  flagUrl: string;
+  flagUrl?: string;
 }
 
 interface UpcomingMatch {
@@ -24,41 +23,55 @@ interface UpcomingMatch {
 }
 
 export const UpcomingMatchesSection: React.FC = () => {
-  // Define only the first match - MI vs KKR on March 31
+  // Define multiple upcoming matches
   const upcomingMatches: UpcomingMatch[] = [
     {
       id: 'match-12',
       team1: {
         name: 'Mumbai Indians',
-        shortName: 'MI',
-        flagUrl: '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png' // Using the newly uploaded logo
+        shortName: 'MI'
       },
       team2: {
         name: 'Kolkata Knight Riders',
-        shortName: 'KKR',
-        flagUrl: '/lovable-uploads/46dae9e8-7caf-4b10-b557-c735f3a51161.png'
+        shortName: 'KKR'
       },
       matchType: 'IPL 2025',
       venue: 'Wankhede Stadium, Mumbai',
       date: 'March 31, 2025',
       time: '7:30 PM IST',
       details: 'This will be an exciting clash between two IPL heavyweights'
+    },
+    {
+      id: 'match-13',
+      team1: {
+        name: 'Chennai Super Kings',
+        shortName: 'CSK'
+      },
+      team2: {
+        name: 'Royal Challengers Bangalore',
+        shortName: 'RCB'
+      },
+      matchType: 'IPL 2025',
+      venue: 'M.A. Chidambaram Stadium, Chennai',
+      date: 'April 2, 2025',
+      time: '7:30 PM IST'
+    },
+    {
+      id: 'match-14',
+      team1: {
+        name: 'Delhi Capitals',
+        shortName: 'DC'
+      },
+      team2: {
+        name: 'Sunrisers Hyderabad',
+        shortName: 'SRH'
+      },
+      matchType: 'IPL 2025',
+      venue: 'Arun Jaitley Stadium, Delhi',
+      date: 'April 4, 2025',
+      time: '7:30 PM IST'
     }
   ];
-  
-  // Preload team logos for faster rendering
-  useEffect(() => {
-    const preloadLogos = async () => {
-      const logoPromises = upcomingMatches.flatMap(match => [
-        preloadImage(match.team1.flagUrl),
-        preloadImage(match.team2.flagUrl)
-      ]);
-      
-      await Promise.all(logoPromises);
-    };
-    
-    preloadLogos();
-  }, []);
 
   return (
     <>
