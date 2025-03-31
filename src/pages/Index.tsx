@@ -10,8 +10,8 @@ import { TopStoriesSection } from '@/pages/home/sections/TopStoriesSection';
 import { TrendingPlayersSection } from '@/pages/home/sections/TrendingPlayersSection';
 import { UpcomingMatchesSection } from '@/pages/home/sections/UpcomingMatchesSection';
 import { QuickStatsSection } from '@/pages/home/sections/QuickStatsSection';
-import FantasyPicksSection from '@/components/fantasy-picks/FantasyPicksSection';
 import { FanPollSection } from '@/pages/home/sections/FanPollSection';
+import HomeFantasyPicksSection from '@/pages/home/sections/upcoming-matches/HomeFantasyPicksSection';
 import Chatbot from '@/components/Chatbot';
 import Footer from '@/components/Footer';
 import { useTheme } from '@/components/ThemeProvider';
@@ -78,7 +78,44 @@ const Index = () => {
             <div className="md:col-span-2 space-y-12">
               <TopStoriesSection />
               <UpcomingMatchesSection />
-              <FantasyPicksSection />
+              <HomeFantasyPicksSection picks={[
+                {
+                  id: "rs-sharma-home",
+                  player: "Rohit Sharma",
+                  team: "Mumbai Indians",
+                  role: "Batsman",
+                  form: "Average",
+                  imageUrl: "/lovable-uploads/7dbad874-c8be-4912-a6b8-876c69ddd3f2.png",
+                  stats: "34(28), 21(19), 45(30)"
+                },
+                {
+                  id: "sk-yadav-home",
+                  player: "Suryakumar Yadav",
+                  team: "Mumbai Indians",
+                  role: "Batsman",
+                  form: "Excellent",
+                  imageUrl: "/lovable-uploads/611356be-0c40-46ec-9995-1e3b95eab3e4.png",
+                  stats: "65(31), 43(29), 72(37)"
+                },
+                {
+                  id: "hp-pandya-home",
+                  player: "Hardik Pandya",
+                  team: "Mumbai Indians",
+                  role: "All-Rounder",
+                  form: "Average",
+                  imageUrl: "/lovable-uploads/cdd2468f-c245-4e98-b13a-bb4fecb899e6.png",
+                  stats: "23(15), 1/32, 31(22), 0/29"
+                },
+                {
+                  id: "sn-narine-home",
+                  player: "Sunil Narine",
+                  team: "Kolkata Knight Riders",
+                  role: "All-Rounder",
+                  form: "Good",
+                  imageUrl: "/lovable-uploads/1e95e00e-b311-4ab0-89d3-cb051ab0e846.png",
+                  stats: "28(14), 2/24, 19(11), 1/32"
+                }
+              ]} />
             </div>
             
             {/* Sidebar - 1/3 width */}
