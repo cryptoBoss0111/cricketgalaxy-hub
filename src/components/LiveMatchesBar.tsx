@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, RefreshCw, Clock } from 'lucide-react';
@@ -7,9 +6,14 @@ import { toast } from '@/hooks/use-toast';
 import IPLLiveScoreWidget from './IPLLiveScoreWidget';
 import ESPNScoreEmbed from './ESPNScoreEmbed';
 
-interface TeamInfo {
-  name: string;
-  score?: string;
+interface LiveScoreData {
+  status: string;
+  match: string;
+  teamone: string;
+  teamonescore: string;
+  teamtwo: string;
+  teamtwoscore: string;
+  update: string;
 }
 
 interface LiveMatch {
@@ -17,8 +21,14 @@ interface LiveMatch {
   name: string;
   status: string;
   teams: {
-    home: TeamInfo;
-    away: TeamInfo;
+    home: {
+      name: string;
+      score?: string;
+    };
+    away: {
+      name: string;
+      score?: string;
+    };
   };
   league?: string;
   matchTime?: string;
@@ -30,48 +40,51 @@ const LiveMatchesBar = () => {
   const [error, setError] = useState<string | null>(null);
   const [showWidget, setShowWidget] = useState(false);
   const [showESPNWidget, setShowESPNWidget] = useState(false);
-  const espnMatchId = "1411396";
+  
+  const apiUrl = "https://espncricinfo-live-api.herokuapp.com/live";
 
   const fetchLiveMatches = async () => {
     setIsLoading(true);
     
     try {
-      // Using a try-catch block to handle potential network errors
       try {
-        const response = await fetch('https://corsproxy.io/?https://www.espncricinfo.com/matches/engine/match/live.json');
+        const response = await fetch(apiUrl);
         
         if (!response.ok) {
           throw new Error(`API responded with status: ${response.status}`);
         }
         
-        const data = await response.json();
+        const data: LiveScoreData[] = await response.json();
         console.log('ESPNCricinfo API response:', data);
         
         const liveMatches: LiveMatch[] = [];
         
-        if (data && data.matches && Array.isArray(data.matches)) {
-          data.matches.forEach((match: any) => {
-            const isIPLMatch = match.series_name && match.series_name.toLowerCase().includes('ipl');
+        if (Array.isArray(data) && data.length > 0) {
+          data.forEach((match, index) => {
+            const isIPLMatch = match.match.toLowerCase().includes('ipl') || 
+                            match.teamone.includes('MI') ||
+                            match.teamone.includes('CSK') ||
+                            match.teamone.includes('RCB') ||
+                            match.teamone.includes('SRH') ||
+                            match.teamone.includes('KKR');
             
-            if (match.live_state === 'live' || isIPLMatch) {
-              liveMatches.push({
-                id: match.objectId || `match-${Math.random().toString(36).substr(2, 9)}`,
-                name: match.description || 'Unknown Match',
-                status: match.status_text || 'No status available',
-                league: match.series_name || '',
-                matchTime: match.start_date || '',
-                teams: {
-                  home: {
-                    name: match.team1_name || 'Home Team',
-                    score: match.team1_score || ''
-                  },
-                  away: {
-                    name: match.team2_name || 'Away Team',
-                    score: match.team2_score || ''
-                  }
+            liveMatches.push({
+              id: `match-${index}-${Date.now()}`,
+              name: `${match.teamone} vs ${match.teamtwo}`,
+              status: match.status,
+              league: isIPLMatch ? 'IPL 2025' : 'International Cricket',
+              matchTime: '',
+              teams: {
+                home: {
+                  name: match.teamone,
+                  score: match.teamonescore
+                },
+                away: {
+                  name: match.teamtwo,
+                  score: match.teamtwoscore
                 }
-              });
-            }
+              }
+            });
           });
         }
         
@@ -97,7 +110,6 @@ const LiveMatchesBar = () => {
         
         setMatches(filteredMatches);
       } catch (err) {
-        // Fallback to hardcoded data if API fails
         console.log('Falling back to hardcoded match data');
         const fallbackMatch = {
           id: 'upcoming-ipl-match',
@@ -218,7 +230,7 @@ const LiveMatchesBar = () => {
                 &times;
               </button>
             </div>
-            <ESPNScoreEmbed matchId={espnMatchId} height="320px" showFallbackImage={true} />
+            <ESPNScoreEmbed height="320px" showFallbackImage={true} />
           </div>
         </div>
       )}
