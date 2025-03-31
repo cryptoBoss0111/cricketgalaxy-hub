@@ -110,7 +110,7 @@ const LiveMatchesBar = () => {
   }
 
   return (
-    <div className="live-match-ticker sticky top-0 z-50 w-full bg-blue-500 text-white py-2 shadow-md">
+    <div className="live-match-ticker fixed top-0 left-0 right-0 z-50 w-full bg-blue-500 text-white py-2 shadow-md">
       <div className="container mx-auto px-4 flex justify-between items-center">
         <div className="flex items-center gap-2 w-full overflow-hidden">
           <Button 

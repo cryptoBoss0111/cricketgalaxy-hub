@@ -83,7 +83,7 @@ const Index = () => {
       <LiveMatchesBar />
       <Navbar />
       
-      <main className="flex-grow">
+      <main className="flex-grow pt-0">
         {/* Hero Section */}
         <HeroSection />
         

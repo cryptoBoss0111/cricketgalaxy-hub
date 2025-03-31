@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import CricbuzzScorecard from '@/components/CricbuzzScorecard';
+import LiveMatchesBar from '@/components/LiveMatchesBar';
+import Navbar from '@/components/Navbar';
 
 interface Match {
   id: string;
@@ -177,7 +179,10 @@ const LiveScoresPage = () => {
         <title>Live Scores | CricketExpress</title>
       </Helmet>
       
-      <div className="container mx-auto py-6 px-4">
+      <LiveMatchesBar />
+      <Navbar />
+      
+      <div className="container mx-auto py-6 px-4 mt-12">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-white">
             {filterIPL ? 'IPL 2025 Live Scores' : 'Live Cricket Scores'}
