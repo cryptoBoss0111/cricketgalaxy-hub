@@ -18,6 +18,16 @@ import { useTheme } from '@/components/ThemeProvider';
 const Index = () => {
   const { theme } = useTheme(); // We'll keep this for consistency but won't use it for toggling
   const [isGenzMode, setIsGenzMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Effect for loading state
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   // Effect to log articles data for debugging image issues
   useEffect(() => {
@@ -34,6 +44,26 @@ const Index = () => {
       document.documentElement.classList.remove('genz');
     }
   };
+  
+  // Loading screen with dark theme
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-cricket-dark flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-cricket-accent text-sm font-medium mb-1 animate-bounce-subtle">
+            Namaste 🙏🏻
+          </div>
+          <h1 className="text-3xl font-heading font-bold bg-gradient-to-r from-cricket-accent to-cricket-secondary bg-clip-text text-transparent mb-6 animate-pulse">
+            CricketExpress
+          </h1>
+          <div className="space-y-2">
+            <div className="h-2 w-48 bg-gray-700 rounded animate-pulse mx-auto"></div>
+            <div className="h-2 w-60 bg-gray-700 rounded animate-pulse mx-auto"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col dark bg-cricket-dark">

@@ -1,11 +1,21 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import ArticleCard from '@/components/article-card';
 import { getRandomIplImage } from '@/utils/imageUtils';
 
 const IPL2025Page = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
   // Updated articles with reliable image sources
   const articles = [
     {
@@ -27,6 +37,25 @@ const IPL2025Page = () => {
       date: "March 30, 2025"
     }
   ];
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-cricket-dark flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-cricket-accent text-sm font-medium mb-1 animate-bounce-subtle">
+            IPL 2025
+          </div>
+          <h1 className="text-3xl font-heading font-bold bg-gradient-to-r from-cricket-accent to-cricket-secondary bg-clip-text text-transparent mb-6 animate-pulse">
+            CricketExpress
+          </h1>
+          <div className="space-y-2">
+            <div className="h-2 w-48 bg-gray-700 rounded animate-pulse mx-auto"></div>
+            <div className="h-2 w-60 bg-gray-700 rounded animate-pulse mx-auto"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
