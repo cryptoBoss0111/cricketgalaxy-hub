@@ -1,5 +1,7 @@
 
 import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { ExternalLink } from 'lucide-react';
 
 const LiveMatchesBar = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -32,8 +34,12 @@ const LiveMatchesBar = () => {
 
   return (
     <div className="live-match-ticker sticky top-0 z-50 w-full bg-blue-500 text-white py-2 shadow-md">
-      <div className="container mx-auto">
+      <div className="container mx-auto px-4 flex justify-between items-center">
         <div ref={containerRef} className="w-full overflow-hidden flex justify-center items-center min-h-[30px]"></div>
+        <Link to="/live-scores" className="flex items-center gap-1 text-white hover:text-blue-100 whitespace-nowrap ml-2">
+          <span className="text-xs md:text-sm font-medium">Full Scores</span>
+          <ExternalLink size={14} />
+        </Link>
       </div>
     </div>
   );

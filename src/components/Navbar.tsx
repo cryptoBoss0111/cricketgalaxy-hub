@@ -20,6 +20,7 @@ const navLinks: NavLinkItem[] = [
   { label: 'Match Previews', path: '/match-previews' },
   { label: 'Match Reviews', path: '/match-reviews' },
   { label: 'Fantasy Tips', path: '/fantasy-tips' },
+  { label: 'Live Scores', path: '/live-scores' },
   { label: 'IPL 2025', path: '/ipl-2025' },
   { label: 'IPL Teams', path: '/ipl-teams' }
 ];
