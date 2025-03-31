@@ -1,9 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Clock } from 'lucide-react';
 
 interface TeamInfo {
@@ -29,8 +28,6 @@ interface UpcomingMatchCardProps {
 }
 
 const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) => {
-  // No more useState loading logic - this causes the animation issue
-  
   // Get team background colors based on team shortname
   const getTeamBgColor = (shortName: string) => {
     switch(shortName) {
@@ -78,13 +75,19 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
               "w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mb-2",
               getTeamBgColor(match.team1.shortName)
             )}>
-              <img 
-                src={match.team1.flagUrl} 
-                alt={`${match.team1.name} logo`}
-                className="w-16 h-16 object-contain"
-                width={64}
-                height={64}
-              />
+              <div className="w-full h-full flex items-center justify-center">
+                <img 
+                  src={match.team1.flagUrl} 
+                  alt={`${match.team1.name} logo`}
+                  className="w-16 h-16 object-contain"
+                  loading="eager"
+                  onError={(e) => {
+                    console.error(`Failed to load image: ${match.team1.name} logo`);
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = match.team1.shortName;
+                  }}
+                />
+              </div>
             </div>
             <span className="font-bold text-lg text-center">{match.team1.shortName}</span>
             <span className="text-xs text-gray-500">{match.team1.name}</span>
@@ -102,13 +105,19 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
               "w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mb-2",
               getTeamBgColor(match.team2.shortName)
             )}>
-              <img 
-                src={match.team2.flagUrl} 
-                alt={`${match.team2.name} logo`}
-                className="w-16 h-16 object-contain"
-                width={64}
-                height={64}
-              />
+              <div className="w-full h-full flex items-center justify-center">
+                <img 
+                  src={match.team2.flagUrl} 
+                  alt={`${match.team2.name} logo`}
+                  className="w-16 h-16 object-contain"
+                  loading="eager"
+                  onError={(e) => {
+                    console.error(`Failed to load image: ${match.team2.name} logo`);
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = match.team2.shortName;
+                  }}
+                />
+              </div>
             </div>
             <span className="font-bold text-lg text-center">{match.team2.shortName}</span>
             <span className="text-xs text-gray-500">{match.team2.name}</span>
