@@ -71,6 +71,15 @@ const HomePage = () => {
         
         <HomeFantasyPicksSection picks={[
           {
+            id: "rs-sharma-home",
+            player: "Rohit Sharma",
+            team: "Mumbai Indians",
+            role: "Batsman",
+            form: "Average",
+            imageUrl: "/lovable-uploads/7dbad874-c8be-4912-a6b8-876c69ddd3f2.png",
+            stats: "34(28), 21(19), 45(30)"
+          },
+          {
             id: "sk-yadav-home",
             player: "Suryakumar Yadav",
             team: "Mumbai Indians",
@@ -96,15 +105,6 @@ const HomePage = () => {
             form: "Excellent",
             imageUrl: "/lovable-uploads/50e4858d-9918-404c-b823-b3552013fd2b.png",
             stats: "97*, 45(32), 63(41)"
-          },
-          {
-            id: "t-boult-home",
-            player: "Trent Boult",
-            team: "Mumbai Indians",
-            role: "Bowler",
-            form: "Good",
-            imageUrl: "/lovable-uploads/df73abd6-8fc7-4ccd-8357-07d5db3d6520.png",
-            stats: "3/27, 2/31, 1/26"
           }
         ]} />
         
