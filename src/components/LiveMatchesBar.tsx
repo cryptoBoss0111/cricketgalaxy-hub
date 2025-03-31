@@ -18,6 +18,7 @@ interface LiveMatch {
     home: TeamInfo;
     away: TeamInfo;
   };
+  league?: string;
 }
 
 const LiveMatchesBar = () => {
@@ -25,16 +26,16 @@ const LiveMatchesBar = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Function to fetch live matches using RapidAPI Cricket API
+  // Function to fetch live matches using Free Cricbuzz API
   const fetchLiveMatches = async () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('https://cricket-api-free-data.p.rapidapi.com/cricket-livescores', {
+      const response = await fetch('https://free-cricbuzz-cricket-api.p.rapidapi.com/cricket-livescores', {
         method: 'GET',
         headers: {
           'X-RapidAPI-Key': '43b772b4d8msh6d5dd68873fbb6cp173b08jsn80bc23c85703',
-          'X-RapidAPI-Host': 'cricket-api-free-data.p.rapidapi.com'
+          'X-RapidAPI-Host': 'free-cricbuzz-cricket-api.p.rapidapi.com'
         }
       });
       
@@ -45,45 +46,53 @@ const LiveMatchesBar = () => {
       const data = await response.json();
       console.log('LiveMatchesBar API response:', data);
       
-      // Check for the correct data structure based on the actual API response
-      if (!data || !data.response || !Array.isArray(data.response)) {
-        throw new Error('Invalid response format from API');
-      }
-      
-      // Parse matches from the response structure
+      // Process the matches from the API response
       const liveMatches: LiveMatch[] = [];
       
-      // Process each series in the response
-      data.response.forEach((series: any) => {
-        if (series.matchList && Array.isArray(series.matchList)) {
-          series.matchList.forEach((match: any) => {
-            if (match.currentStatus === 'live') {
-              liveMatches.push({
-                id: match.matchId || `match-${Math.random().toString(36).substr(2, 9)}`,
-                name: match.matchTitle || 'Unknown Match',
-                status: match.matchStatus || 'No status available',
-                teams: {
-                  home: {
-                    name: match.teamOne?.name || 'Home Team',
-                    score: match.teamOne?.score || ''
-                  },
-                  away: {
-                    name: match.teamTwo?.name || 'Away Team',
-                    score: match.teamTwo?.score || ''
-                  }
+      if (Array.isArray(data.matches)) {
+        data.matches.forEach((match: any) => {
+          // Check if it's an IPL match
+          const isIPLMatch = match.series && match.series.toLowerCase().includes('ipl');
+          
+          if (match.status === 'Live' || isIPLMatch) {
+            liveMatches.push({
+              id: match.matchId || `match-${Math.random().toString(36).substr(2, 9)}`,
+              name: match.title || 'Unknown Match',
+              status: match.status || 'No status available',
+              league: match.series || '',
+              teams: {
+                home: {
+                  name: match.teamA?.name || match.teamA || 'Home Team',
+                  score: match.teamA?.score || ''
+                },
+                away: {
+                  name: match.teamB?.name || match.teamB || 'Away Team',
+                  score: match.teamB?.score || ''
                 }
-              });
-            }
-          });
-        }
-      });
+              }
+            });
+          }
+        });
+      }
       
-      setMatches(liveMatches);
+      // Filter to prioritize IPL matches if available
+      const iplMatches = liveMatches.filter(match => 
+        match.league && match.league.toLowerCase().includes('ipl')
+      );
+      
+      // Use IPL matches if available, otherwise use all matches
+      setMatches(iplMatches.length > 0 ? iplMatches : liveMatches);
       setIsLoading(false);
+      setError(null);
     } catch (err) {
       console.error('Error fetching live matches:', err);
       setError(`Failed to fetch live matches: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setIsLoading(false);
+      toast({
+        title: "Error loading live matches",
+        description: "We couldn't fetch the latest match data",
+        variant: "destructive"
+      });
     }
   };
 
@@ -126,6 +135,11 @@ const LiveMatchesBar = () => {
                 <div className="marquee-content flex gap-4">
                   {matches.map((match) => (
                     <div key={match.id} className="flex items-center gap-2">
+                      {match.league && (
+                        <span className="bg-yellow-500 text-black text-xs px-1 rounded">
+                          {match.league.includes('IPL') ? 'IPL 2025' : match.league}
+                        </span>
+                      )}
                       <span className="font-medium">{match.name}:</span>
                       <span>
                         {match.teams.home.name} {match.teams.home.score || ''} vs {match.teams.away.name} {match.teams.away.score || ''}
@@ -144,8 +158,7 @@ const LiveMatchesBar = () => {
         </Link>
       </div>
 
-      <style>
-        {`
+      <style jsx>{`
         .marquee {
           width: 100%;
           overflow: hidden;
@@ -161,8 +174,7 @@ const LiveMatchesBar = () => {
           from { transform: translateX(100%); }
           to { transform: translateX(-100%); }
         }
-        `}
-      </style>
+      `}</style>
     </div>
   );
 };
