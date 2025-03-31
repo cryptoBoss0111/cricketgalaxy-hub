@@ -20,6 +20,7 @@ interface UpcomingMatch {
   venue: string;
   date: string;
   time: string;
+  details?: string;
 }
 
 export const UpcomingMatchesSection: React.FC = () => {
@@ -39,8 +40,9 @@ export const UpcomingMatchesSection: React.FC = () => {
       },
       matchType: 'IPL 2025',
       venue: 'Wankhede Stadium, Mumbai',
-      date: 'April 1, 2025',
-      time: '7:30 PM IST'
+      date: 'March 31, 2025',
+      time: '7:30 PM IST',
+      details: 'This will be an exciting clash between two IPL heavyweights'
     },
     {
       id: 'match-13',
@@ -57,7 +59,8 @@ export const UpcomingMatchesSection: React.FC = () => {
       matchType: 'IPL 2025',
       venue: 'BRSABV Ekana Cricket Stadium, Lucknow',
       date: 'April 1, 2025',
-      time: '7:30 PM IST'
+      time: '7:30 PM IST',
+      details: 'LSG will host PBKS in what promises to be a competitive encounter'
     },
     {
       id: 'match-14',
@@ -74,7 +77,8 @@ export const UpcomingMatchesSection: React.FC = () => {
       matchType: 'IPL 2025',
       venue: 'M. Chinnaswamy Stadium, Bengaluru',
       date: 'April 2, 2025',
-      time: '7:30 PM IST'
+      time: '7:30 PM IST',
+      details: 'RCB, playing at their home ground, will face GT'
     }
   ];
 
