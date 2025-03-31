@@ -34,7 +34,6 @@ const FantasyTipsPage = () => {
   const [selectedMatch, setSelectedMatch] = useState<string | null>(matchFilter);
   const navigate = useNavigate();
 
-  // Hardcoded fantasy picks data for MI vs KKR match
   const miVsKkrPicks: FantasyPick[] = [
     {
       id: "pick-1",
@@ -68,7 +67,7 @@ const FantasyTipsPage = () => {
       team: "Mumbai Indians",
       role: "Bowler",
       form: "Good",
-      image_url: "",
+      image_url: "/lovable-uploads/df73abd6-8fc7-4ccd-8357-07d5db3d6520.png",
       stats: "3/27, 2/31, 1/26",
       points_prediction: 85,
       match_details: "MI vs KKR",
@@ -181,7 +180,6 @@ const FantasyTipsPage = () => {
     }
   ];
 
-  // Matches data
   const matches = [
     {
       id: "match-12",
@@ -212,14 +210,12 @@ const FantasyTipsPage = () => {
     }
   ];
 
-  // Filter picks based on selected match
   const picks = selectedMatch 
     ? miVsKkrPicks.filter(pick => 
         selectedMatch === "match-12" ? pick.match_details === "MI vs KKR" :
         selectedMatch === "match-14" ? pick.match_details === "GT vs RCB" : true)
     : miVsKkrPicks;
 
-  // Update the URL when match selection changes
   useEffect(() => {
     if (selectedMatch) {
       navigate(`/fantasy-tips?match=${selectedMatch}`, { replace: true });
@@ -228,7 +224,6 @@ const FantasyTipsPage = () => {
     }
   }, [selectedMatch, navigate]);
 
-  // Set the initial tab based on the match filter
   useEffect(() => {
     if (matchFilter) {
       setActiveTab('match');
@@ -248,7 +243,6 @@ const FantasyTipsPage = () => {
     }
   };
 
-  // Group picks by role for the 'byRole' tab
   const picksGroupedByRole = picks.reduce<Record<string, FantasyPick[]>>((acc, pick) => {
     if (!acc[pick.role]) {
       acc[pick.role] = [];
@@ -257,7 +251,6 @@ const FantasyTipsPage = () => {
     return acc;
   }, {});
 
-  // Group by match for 'byMatch' tab
   const picksGroupedByMatch = picks.reduce<Record<string, FantasyPick[]>>((acc, pick) => {
     if (!acc[pick.match_details]) {
       acc[pick.match_details] = [];

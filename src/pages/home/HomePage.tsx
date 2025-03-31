@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
@@ -87,6 +86,15 @@ const HomePage = () => {
             form: "Excellent",
             imageUrl: "/lovable-uploads/5f09742b-2608-4ef2-b57b-7cabaab57f6a.png",
             stats: "42(19), 2/26, 38(16), 3/31"
+          },
+          {
+            id: "t-boult-home",
+            player: "Trent Boult",
+            team: "Mumbai Indians",
+            role: "Bowler",
+            form: "Good",
+            imageUrl: "/lovable-uploads/df73abd6-8fc7-4ccd-8357-07d5db3d6520.png",
+            stats: "3/27, 2/31, 1/26"
           }
         ]} />
         

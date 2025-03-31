@@ -55,11 +55,13 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
     }
   };
 
-  // Add Suryakumar Yadav and Andre Russell as picks if not already in the list
+  // Add Suryakumar Yadav, Andre Russell, and Trent Boult as picks if not already in the list
   const ensurePlayersExist = () => {
     const allPicks = [...picks];
+    
     const hasSuryakumar = picks.some(p => p.player === "Suryakumar Yadav");
     const hasRussell = picks.some(p => p.player === "Andre Russell");
+    const hasBoult = picks.some(p => p.player === "Trent Boult");
     
     if (!hasSuryakumar) {
       allPicks.push({
@@ -85,6 +87,18 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
       });
     }
     
+    if (!hasBoult) {
+      allPicks.push({
+        id: "t-boult-home",
+        player: "Trent Boult",
+        team: "Mumbai Indians",
+        role: "Bowler",
+        form: "Good",
+        imageUrl: "/lovable-uploads/df73abd6-8fc7-4ccd-8357-07d5db3d6520.png",
+        stats: "3/27, 2/31, 1/26"
+      });
+    }
+    
     return allPicks;
   };
   
@@ -106,7 +120,7 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {picksToShow.map((player, index) => {
             console.log(`Rendering player ${index}:`, player); // Log each player
             const imageUrl = processImageUrl(player.imageUrl);
@@ -141,7 +155,10 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
                   
                   <div className="flex justify-between">
                     <span className="text-gray-500 dark:text-gray-400">Form:</span>
-                    <span className={cn("font-medium", getFormColorClass(player.form))}>
+                    <span className={cn(
+                      "font-medium",
+                      getFormColorClass(player.form)
+                    )}>
                       {player.form}
                     </span>
                   </div>
