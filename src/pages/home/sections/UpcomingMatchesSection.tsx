@@ -37,7 +37,7 @@ export const UpcomingMatchesSection: React.FC = () => {
       team2: {
         name: 'Kolkata Knight Riders',
         shortName: 'KKR',
-        flagUrl: getOptimizedImageUrl('/lovable-uploads/6c575f57-57f9-4811-804e-0a850a01ef6d.png', 'KKR')
+        flagUrl: getOptimizedImageUrl('/lovable-uploads/ce55e622-ee4f-4402-a770-0dc4c874de64.png', 'KKR')
       },
       matchType: 'IPL 2025',
       venue: 'Wankhede Stadium, Mumbai',

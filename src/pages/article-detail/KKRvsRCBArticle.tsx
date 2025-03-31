@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { mockNewsArticles } from '../cricket-news/data/mockNewsArticles';
+import { getOptimizedImageUrl } from '@/utils/imageUtils';
 
 const KKRvsRCBArticle = () => {
   // For this article we'll create a custom object since it's not in the mockNewsArticles yet
@@ -14,7 +15,7 @@ const KKRvsRCBArticle = () => {
     id: 'kkr-vs-rcb',
     title: "Kolkata Knight Riders vs. Royal Challengers Bengaluru – Eden's Opener Epic!",
     excerpt: "What's poppin', crew? The IPL 2025 top story kicked off on March 22, 2025, with Kolkata Knight Riders (KKR) vs. Royal Challengers Bengaluru (RCB) at Eden Gardens—Match 1! Defending champs vs. perennial hopefuls—this was a vibe check for the season.",
-    imageUrl: "/lovable-uploads/6c575f57-57f9-4811-804e-0a850a01ef6d.png",
+    imageUrl: getOptimizedImageUrl('/lovable-uploads/ce55e622-ee4f-4402-a770-0dc4c874de64.png', 'KKR'),
     category: "IPL 2025",
     author: "CricketExpress Team",
     date: "March 22, 2025",
