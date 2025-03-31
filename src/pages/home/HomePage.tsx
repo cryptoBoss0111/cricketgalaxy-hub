@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
@@ -86,6 +87,15 @@ const HomePage = () => {
             form: "Excellent",
             imageUrl: "/lovable-uploads/5f09742b-2608-4ef2-b57b-7cabaab57f6a.png",
             stats: "42(19), 2/26, 38(16), 3/31"
+          },
+          {
+            id: "qdk-home",
+            player: "Quinton de Kock",
+            team: "Kolkata Knight Riders",
+            role: "Wicketkeeper",
+            form: "Excellent",
+            imageUrl: "/lovable-uploads/50e4858d-9918-404c-b823-b3552013fd2b.png",
+            stats: "97*, 45(32), 63(41)"
           },
           {
             id: "t-boult-home",

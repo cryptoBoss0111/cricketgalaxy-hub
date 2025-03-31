@@ -80,7 +80,7 @@ const FantasyTipsPage = () => {
       team: "Kolkata Knight Riders",
       role: "Wicketkeeper",
       form: "Excellent",
-      image_url: "",
+      image_url: "/lovable-uploads/50e4858d-9918-404c-b823-b3552013fd2b.png",
       stats: "97*, 45(32), 63(41)",
       points_prediction: 88,
       match_details: "MI vs KKR",
