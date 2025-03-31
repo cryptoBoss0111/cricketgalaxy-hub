@@ -5,6 +5,7 @@ import ArticleCard from '@/components/ArticleCard';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { mockNewsArticles } from '@/pages/cricket-news/data/mockNewsArticles';
+import { getRandomIplImage } from '@/utils/imageUtils';
 
 interface TopStory {
   id: string;
@@ -40,7 +41,9 @@ export const TopStoriesSection = () => {
             id: article.id,
             title: article.title,
             excerpt: article.excerpt || 'Read this exciting article...',
-            imageUrl: article.imageUrl || '',
+            imageUrl: article.id === 'gt-vs-mi' 
+              ? '/lovable-uploads/7bfe4d81-c107-492c-aa9b-1a87d574aa20.png' 
+              : (article.imageUrl || getRandomIplImage()),
             category: article.category,
             author: article.author || 'CricketExpress Staff',
             date: article.date || new Date().toLocaleDateString(),

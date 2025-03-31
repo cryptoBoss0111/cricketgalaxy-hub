@@ -2,7 +2,7 @@
 import { FC, memo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getOptimizedImageUrl, getImageProps } from '@/utils/imageUtils';
+import { getOptimizedImageUrl, getRandomIplImage } from '@/utils/imageUtils';
 
 interface HeroImageProps {
   imageUrl: string;
@@ -18,7 +18,7 @@ const HeroImageComponent: FC<HeroImageProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   
-  // Get optimized image URL
+  // Get optimized image URL with our improved utility
   const optimizedImageUrl = getOptimizedImageUrl(imageUrl);
 
   return (
@@ -29,27 +29,24 @@ const HeroImageComponent: FC<HeroImageProps> = ({
         : "opacity-100 translate-y-0 scale-100"
     )}>
       {isLoading && (
-        <Skeleton className="w-full h-80 md:h-96" />
+        <Skeleton className="w-full h-80 md:h-96 bg-gray-800" />
       )}
       <img 
-        src={optimizedImageUrl}
+        src={hasError ? getRandomIplImage() : optimizedImageUrl}
         alt={title}
         className={cn(
           "w-full h-80 md:h-96 object-cover transition-transform duration-700 ease-in-out hover:scale-105",
           isLoading ? "opacity-0" : "opacity-100"
         )}
-        loading="eager" // Load hero images immediately
-        fetchPriority="high" // Higher priority for hero images
-        decoding="async" // Async decoding for better performance
+        loading="eager"
         onLoad={() => setIsLoading(false)}
         onError={(e) => {
           console.error("Failed to load hero image:", imageUrl);
           setHasError(true);
           setIsLoading(false);
-          (e.target as HTMLImageElement).src = '/placeholder.svg';
+          // Use a random IPL image as fallback
+          (e.target as HTMLImageElement).src = getRandomIplImage();
         }}
-        width={800}
-        height={380}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
     </div>

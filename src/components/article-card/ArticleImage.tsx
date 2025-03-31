@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getOptimizedImageUrl, getImageProps } from '@/utils/imageUtils';
+import { getOptimizedImageUrl, getRandomIplImage } from '@/utils/imageUtils';
 
 interface ArticleImageProps {
   id: string | number;
@@ -21,7 +21,7 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
   
-  // Get optimized image URL using our utility
+  // Get optimized image URL using our improved utility
   const optimizedImageUrl = getOptimizedImageUrl(imageUrl || '');
 
   // Handle image load success
@@ -30,23 +30,23 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
     setError(false);
   };
   
-  // Handle image load error
+  // Handle image load error with better fallback mechanism
   const handleImageError = () => {
-    setIsLoading(false);
-    setError(true);
     console.error(`Failed to load image for: ${title}`);
+    setError(true);
+    setIsLoading(false);
   };
 
   return (
-    <Link to={`/article/${id}`} className="block relative overflow-hidden aspect-video bg-gray-100">
+    <Link to={`/article/${id}`} className="block relative overflow-hidden aspect-video bg-gray-900">
       {/* Show skeleton while loading */}
       {isLoading && (
-        <Skeleton className="w-full h-48 object-cover" />
+        <Skeleton className="w-full h-48 object-cover bg-gray-800 animate-pulse" />
       )}
       
       {/* Display the image with error handling */}
       <img 
-        src={error ? "/placeholder.svg" : optimizedImageUrl}
+        src={error ? getRandomIplImage() : optimizedImageUrl}
         alt={title}
         className={cn(
           "w-full h-48 object-cover transition-transform duration-300 hover:scale-105",
@@ -54,11 +54,9 @@ export const ArticleImage: React.FC<ArticleImageProps> = ({
         )}
         onLoad={handleImageLoad}
         onError={handleImageError}
-        loading="eager" // Load images immediately for better user experience
-        fetchPriority="high" // Higher priority for article images
+        loading="eager"
         width={640}
         height={360}
-        decoding="async"
       />
       
       <div className="absolute top-3 left-3">

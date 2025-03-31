@@ -3,14 +3,16 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import ArticleCard from '@/components/article-card';
+import { getRandomIplImage } from '@/utils/imageUtils';
 
 const IPL2025Page = () => {
+  // Updated articles with reliable image sources
   const articles = [
     {
       id: "dc-vs-srh",
       title: "Today's IPL Banger: Delhi Capitals vs. Sunrisers Hyderabad – DC Owned the Night!",
       excerpt: "Yo, cricket fam! It's March 30, 2025, and the IPL 2025 just dropped a straight-up banger in Visakhapatnam. Delhi Capitals (DC) rolled up against Sunrisers Hyderabad (SRH) and turned the pitch into their playground.",
-      imageUrl: "/lovable-uploads/19133248-8247-4e8c-8615-f3c5b00d9287.png",
+      imageUrl: "/lovable-uploads/7bfe4d81-c107-492c-aa9b-1a87d574aa20.png",
       category: "IPL 2025",
       author: "CricketExpress Team",
       date: "March 30, 2025"
@@ -19,7 +21,7 @@ const IPL2025Page = () => {
       id: "mi-vs-kkr",
       title: "Tomorrow's IPL Double-Header: Mumbai Indians vs. Kolkata Knight Riders – Full Hype Breakdown!",
       excerpt: "Yo, cricket fam! It's March 30, 2025, 11:01 PM IST, and tomorrow—Monday, March 31, 2025—is about to hit us with an IPL 2025 banger! The schedule's locked in, and we've got Mumbai Indians (MI) vs. Kolkata Knight Riders (KKR) lighting up the Wankhede Stadium.",
-      imageUrl: "/lovable-uploads/412c16d3-2e56-4ea0-b086-deed0e90d189.png",
+      imageUrl: "/lovable-uploads/46dae9e8-7caf-4b10-b557-c735f3a51161.png",
       category: "IPL 2025",
       author: "CricketExpress Team",
       date: "March 30, 2025"
