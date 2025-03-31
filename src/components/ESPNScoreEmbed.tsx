@@ -18,6 +18,7 @@ interface ESPNScoreEmbedProps {
   height?: string;
   className?: string;
   showFallbackImage?: boolean;
+  matchId?: string; // Added matchId as an optional prop
 }
 
 const ESPNScoreEmbed = ({
@@ -25,6 +26,7 @@ const ESPNScoreEmbed = ({
   height = "480px",
   className = "",
   showFallbackImage = true,
+  matchId, // Include matchId in props
 }: ESPNScoreEmbedProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -32,7 +34,9 @@ const ESPNScoreEmbed = ({
   const [selectedMatch, setSelectedMatch] = useState<LiveScoreData | null>(null);
   
   // Direct ESPNCricinfo URL - if API doesn't work, we'll redirect here
-  const directUrl = `https://www.espncricinfo.com/live-cricket-score`;
+  const directUrl = matchId 
+    ? `https://www.espncricinfo.com/match/${matchId}`
+    : `https://www.espncricinfo.com/live-cricket-score`;
   
   // API URL for live cricket scores
   const apiUrl = "https://espncricinfo-live-api.herokuapp.com/live";
@@ -52,9 +56,27 @@ const ESPNScoreEmbed = ({
       
       if (Array.isArray(data) && data.length > 0) {
         setLiveScores(data);
-        // Set the first live match as selected
-        const liveMatch = data.find(match => match.status.toLowerCase() === 'live');
-        setSelectedMatch(liveMatch || data[0]);
+        
+        // If matchId is provided, try to find that specific match
+        if (matchId && data.length > 1) {
+          // This is just a simplified example - in real implementation, 
+          // you'd need to map the matchId to the actual match in the API response
+          const specificMatch = data.find(match => 
+            match.match.toLowerCase().includes(matchId.toLowerCase())
+          );
+          
+          if (specificMatch) {
+            setSelectedMatch(specificMatch);
+          } else {
+            // If specific match not found, default to the first live match or first match
+            const liveMatch = data.find(match => match.status.toLowerCase() === 'live');
+            setSelectedMatch(liveMatch || data[0]);
+          }
+        } else {
+          // Default behavior - set the first live match as selected
+          const liveMatch = data.find(match => match.status.toLowerCase() === 'live');
+          setSelectedMatch(liveMatch || data[0]);
+        }
       } else {
         throw new Error('No live matches available');
       }
@@ -76,7 +98,7 @@ const ESPNScoreEmbed = ({
     const intervalId = setInterval(fetchLiveScores, 60000);
     
     return () => clearInterval(intervalId);
-  }, []);
+  }, [matchId]); // Added matchId as dependency to refetch if it changes
 
   return (
     <div className={`relative rounded-lg overflow-hidden border border-gray-200 ${className}`}>
