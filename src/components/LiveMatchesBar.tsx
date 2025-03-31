@@ -1,127 +1,76 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 
-// Types for the Cricket API response
-interface MatchData {
-  id: string;
-  status: string;
-  ms: 'live' | 'fixture' | 'result';
-  t1: string;
-  t2: string;
-  t1s?: string;
-  t2s?: string;
-  series: string;
-}
-
-interface ApiResponse {
-  data: MatchData[];
-  status: 'success' | 'failure';
-  info: {
-    hitsToday: number;
-  };
-  message?: string;
-}
-
-const API_KEY = "f948889f-9691-4345-8d1e-ad455e012bb5";
-const API_ENDPOINT = "https://api.cricapi.com/v1/cricScore";
-
 const LiveMatchesBar = () => {
-  const [liveMatches, setLiveMatches] = useState<MatchData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [hasMatches, setHasMatches] = useState(false);
+  const matchesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Function to fetch live IPL matches
-  const fetchLiveMatches = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      console.log("LiveMatchesBar: Fetching from API:", `${API_ENDPOINT}?apikey=${API_KEY}`);
+  // Function to load mini ticker widget
+  const loadMiniTicker = async () => {
+    if (matchesContainerRef.current) {
+      // Clear any existing content
+      matchesContainerRef.current.innerHTML = '';
+      setIsLoading(true);
       
-      const response = await fetch(`${API_ENDPOINT}?apikey=${API_KEY}`);
-      const data: ApiResponse = await response.json();
-      
-      console.log("LiveMatchesBar API Response:", data);
-      
-      if (data.status === 'success') {
-        if (!data.data || !Array.isArray(data.data)) {
-          console.error("Invalid API response format:", data);
-          setError('Invalid API response format');
-          setLiveMatches([]);
-        } else {
-          // Filter for IPL matches that are live
-          const liveIplMatches = data.data.filter(match => 
-            match.series && match.series.includes("Indian Premier League") && 
-            match.ms === 'live'
-          );
+      try {
+        // Create and append the mini ticker scripts
+        const configScript = document.createElement('script');
+        configScript.text = 'app="www.cricwaves.com"; mo="mo_2"; nt="n"; wi ="w_1"; co ="2"; ad="1";';
+        
+        const widgetScript = document.createElement('script');
+        widgetScript.src = '//www.cricwaves.com/cricket/widgets/script/livescore.js';
+        widgetScript.type = 'text/javascript';
+        
+        // Add load event listener
+        widgetScript.onload = () => {
+          console.log("CricWaves mini ticker loaded");
+          setIsLoading(false);
           
-          console.log("LiveMatchesBar filtered IPL matches:", liveIplMatches);
-          setLiveMatches(liveIplMatches);
-        }
-      } else {
-        console.error("API returned failure status:", data);
-        setError(data.message || 'API returned failure status');
-        setLiveMatches([]);
+          // Check if we have actual matches after a short delay
+          setTimeout(() => {
+            const tickerContent = matchesContainerRef.current?.querySelector('.crkt_scr_wrp');
+            setHasMatches(!!tickerContent && tickerContent.children.length > 0);
+          }, 1000);
+        };
+        
+        widgetScript.onerror = (error) => {
+          console.error("Error loading CricWaves mini ticker:", error);
+          setIsLoading(false);
+          toast({
+            title: "Error loading live scores",
+            description: "Could not load the live scores ticker",
+            variant: "destructive"
+          });
+        };
+        
+        // Append scripts
+        matchesContainerRef.current.appendChild(configScript);
+        matchesContainerRef.current.appendChild(widgetScript);
+      } catch (error) {
+        console.error("Error setting up mini ticker:", error);
+        setIsLoading(false);
+        setHasMatches(false);
       }
-    } catch (error) {
-      console.error("Error fetching live matches:", error);
-      setError('Failed to fetch live matches');
-      setLiveMatches([]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Initial fetch
+  // Load initially
   useEffect(() => {
-    fetchLiveMatches();
+    loadMiniTicker();
     
-    // Refresh every 5 minutes (less frequent than the main page)
-    const interval = setInterval(fetchLiveMatches, 300000);
+    // Refresh every 5 minutes
+    const interval = setInterval(loadMiniTicker, 300000);
     
     return () => clearInterval(interval);
   }, []);
 
-  // Rotate through matches every 10 seconds
-  useEffect(() => {
-    if (liveMatches.length <= 1) return;
-    
-    const rotateInterval = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % liveMatches.length);
-    }, 10000);
-    
-    return () => clearInterval(rotateInterval);
-  }, [liveMatches.length]);
-
-  // Format team names to remove brackets
-  const formatTeamName = (team: string) => {
-    return team.split('[')[0].trim();
-  };
-
-  // Format score for ticker display
-  const formatTickerScore = (match: MatchData) => {
-    const team1 = formatTeamName(match.t1);
-    const team2 = formatTeamName(match.t2);
-    
-    let scoreText = `${team1} vs ${team2}`;
-    
-    if (match.t1s || match.t2s) {
-      scoreText += ' | ';
-      if (match.t1s) scoreText += `${team1} ${match.t1s}`;
-      if (match.t1s && match.t2s) scoreText += ' | ';
-      if (match.t2s) scoreText += `${team2} ${match.t2s}`;
-    }
-    
-    return scoreText;
-  };
-
-  // If error or no live matches, don't show the bar
-  if ((!isLoading && liveMatches.length === 0) || error) {
+  // If nothing to show, don't render the bar
+  if (!isLoading && !hasMatches) {
     return null;
   }
 
@@ -133,23 +82,14 @@ const LiveMatchesBar = () => {
             variant="ghost" 
             size="icon" 
             className="h-6 w-6 text-white hover:text-blue-200"
-            onClick={fetchLiveMatches}
+            onClick={loadMiniTicker}
           >
             <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
           </Button>
           
-          {isLoading ? (
-            <div className="text-sm">Loading live scores...</div>
-          ) : liveMatches.length > 0 ? (
-            <div className="whitespace-nowrap text-sm md:text-base font-medium overflow-hidden">
-              <span className="inline-flex items-center bg-red-500 text-white px-2 rounded-sm mr-2 text-xs">
-                LIVE
-              </span>
-              {formatTickerScore(liveMatches[currentIndex])}
-            </div>
-          ) : (
-            <div className="text-sm">No live IPL matches currently</div>
-          )}
+          <div ref={matchesContainerRef} className="mini-ticker overflow-hidden w-full">
+            {isLoading && <div className="text-sm">Loading live scores...</div>}
+          </div>
         </div>
         <Link to="/live-scores" className="flex items-center gap-1 text-white hover:text-blue-100 whitespace-nowrap ml-2">
           <span className="text-xs md:text-sm font-medium">Full Scores</span>
