@@ -52,45 +52,50 @@ const LiveScoresPage = () => {
       const data = await response.json();
       console.log('API Response:', data);
       
-      // Check if we have valid data structure
-      if (!data || !Array.isArray(data)) {
+      // Check if we have valid data structure based on the actual API response
+      if (!data || !data.response || !Array.isArray(data.response)) {
         throw new Error('Invalid response format from API');
       }
       
-      // Filter and transform the matches data
-      // Note: We'll need to adjust this parsing based on actual API response structure
-      const formattedMatches: Match[] = data.map((match: any) => ({
-        id: match.id || `match-${Math.random().toString(36).substr(2, 9)}`,
-        name: match.name || 'Unknown Match',
-        status: match.status || 'No status available',
-        venue: match.venue || 'Venue not specified',
-        date: match.startTime || 'Date not available',
-        matchType: match.format || 'Unknown format',
-        teams: {
-          home: {
-            name: match.teams?.home?.name || 'Home Team',
-            score: match.teams?.home?.score || ''
-          },
-          away: {
-            name: match.teams?.away?.name || 'Away Team',
-            score: match.teams?.away?.score || ''
-          }
-        }
-      }));
+      const formattedMatches: Match[] = [];
       
-      // Filter for IPL matches if needed
-      // const iplMatches = formattedMatches.filter(match => 
-      //   match.name.toLowerCase().includes('ipl') || 
-      //   match.name.toLowerCase().includes('indian premier league')
-      // );
+      // Process each series in the response
+      data.response.forEach((series: any) => {
+        if (series.matchList && Array.isArray(series.matchList)) {
+          series.matchList.forEach((match: any) => {
+            formattedMatches.push({
+              id: match.matchId || `match-${Math.random().toString(36).substr(2, 9)}`,
+              name: match.matchTitle || 'Unknown Match',
+              status: match.matchStatus || 'No status available',
+              venue: match.matchVenue || 'Venue not specified',
+              date: match.matchDate || 'Date not available',
+              matchType: match.matchFormat || 'Unknown format',
+              teams: {
+                home: {
+                  name: match.teamOne?.name || 'Home Team',
+                  score: match.teamOne?.score || ''
+                },
+                away: {
+                  name: match.teamTwo?.name || 'Away Team',
+                  score: match.teamTwo?.score || ''
+                }
+              }
+            });
+          });
+        }
+      });
       
       setMatches(formattedMatches);
       setLastUpdated(new Date().toLocaleTimeString());
       
-      // Set remaining API hits if available in the response
-      if (data.remainingRequests) {
-        setRemainingHits(data.remainingRequests);
-      }
+      // If the API includes rate limit information, store it
+      // This is currently commented out as the API doesn't seem to provide this info
+      // if (data.status === "success" && data.headers) {
+      //   const rateLimit = data.headers.get('X-RateLimit-Remaining');
+      //   if (rateLimit) {
+      //     setRemainingHits(parseInt(rateLimit, 10));
+      //   }
+      // }
       
       setIsLoading(false);
     } catch (err) {

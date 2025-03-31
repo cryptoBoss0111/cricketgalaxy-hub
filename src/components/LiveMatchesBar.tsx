@@ -45,33 +45,38 @@ const LiveMatchesBar = () => {
       const data = await response.json();
       console.log('LiveMatchesBar API response:', data);
       
-      // Check if we have valid data structure
-      if (!data || !Array.isArray(data)) {
+      // Check for the correct data structure based on the actual API response
+      if (!data || !data.response || !Array.isArray(data.response)) {
         throw new Error('Invalid response format from API');
       }
       
-      // Format the matches for display
-      const formattedMatches: LiveMatch[] = data.map((match: any) => ({
-        id: match.id || `match-${Math.random().toString(36).substr(2, 9)}`,
-        name: match.name || 'Unknown Match',
-        status: match.status || 'No status available',
-        teams: {
-          home: {
-            name: match.teams?.home?.name || 'Home Team',
-            score: match.teams?.home?.score || ''
-          },
-          away: {
-            name: match.teams?.away?.name || 'Away Team',
-            score: match.teams?.away?.score || ''
-          }
-        }
-      }));
+      // Parse matches from the response structure
+      const liveMatches: LiveMatch[] = [];
       
-      // Filter for live matches (adjust based on actual API response structure)
-      const liveMatches = formattedMatches.filter(match => 
-        match.status.toLowerCase().includes('progress') || 
-        match.status.toLowerCase().includes('live')
-      );
+      // Process each series in the response
+      data.response.forEach((series: any) => {
+        if (series.matchList && Array.isArray(series.matchList)) {
+          series.matchList.forEach((match: any) => {
+            if (match.currentStatus === 'live') {
+              liveMatches.push({
+                id: match.matchId || `match-${Math.random().toString(36).substr(2, 9)}`,
+                name: match.matchTitle || 'Unknown Match',
+                status: match.matchStatus || 'No status available',
+                teams: {
+                  home: {
+                    name: match.teamOne?.name || 'Home Team',
+                    score: match.teamOne?.score || ''
+                  },
+                  away: {
+                    name: match.teamTwo?.name || 'Away Team',
+                    score: match.teamTwo?.score || ''
+                  }
+                }
+              });
+            }
+          });
+        }
+      });
       
       setMatches(liveMatches);
       setIsLoading(false);
@@ -139,7 +144,8 @@ const LiveMatchesBar = () => {
         </Link>
       </div>
 
-      <style jsx>{`
+      <style>
+        {`
         .marquee {
           width: 100%;
           overflow: hidden;
@@ -155,7 +161,8 @@ const LiveMatchesBar = () => {
           from { transform: translateX(100%); }
           to { transform: translateX(-100%); }
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
