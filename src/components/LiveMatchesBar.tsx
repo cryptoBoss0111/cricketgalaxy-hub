@@ -5,22 +5,15 @@ const LiveMatchesBar = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Only add scripts if they don't already exist
     if (containerRef.current) {
-      // Clear any existing content
+      // Clear any existing content first
       containerRef.current.innerHTML = '';
       
-      // Create and append the script tags as specified
-      const scriptConfig = document.createElement('script');
-      scriptConfig.innerHTML = 'app="www.cricwaves.com"; mo="1"; nt="n"; wi ="0"; co ="2"; ad="1";';
-      
-      const scriptWidget = document.createElement('script');
-      scriptWidget.type = 'text/javascript';
-      scriptWidget.src = '//www.cricwaves.com/cricket/widgets/script/scoreWidgets.js?v=0.111';
-      
-      // Append both scripts to the container
-      containerRef.current.appendChild(scriptConfig);
-      containerRef.current.appendChild(scriptWidget);
+      // Add the script exactly as provided by the user
+      containerRef.current.innerHTML = `
+        <script> app="www.cricwaves.com"; mo="1"; nt="n"; wi ="0"; co ="2"; ad="1"; </script>
+        <script type="text/javascript" src="//www.cricwaves.com/cricket/widgets/script/scoreWidgets.js?v=0.111"></script>
+      `;
     }
     
     return () => {
