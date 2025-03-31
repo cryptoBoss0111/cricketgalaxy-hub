@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, RefreshCw } from 'lucide-react';
+import { ExternalLink, RefreshCw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import IPLLiveScoreWidget from './IPLLiveScoreWidget';
@@ -20,6 +20,7 @@ interface LiveMatch {
     away: TeamInfo;
   };
   league?: string;
+  matchTime?: string;
 }
 
 const LiveMatchesBar = () => {
@@ -58,6 +59,7 @@ const LiveMatchesBar = () => {
               name: match.description || 'Unknown Match',
               status: match.status_text || 'No status available',
               league: match.series_name || '',
+              matchTime: match.start_date || '',
               teams: {
                 home: {
                   name: match.team1_name || 'Home Team',
@@ -79,7 +81,24 @@ const LiveMatchesBar = () => {
       );
       
       // Use IPL matches if available, otherwise use all matches
-      setMatches(iplMatches.length > 0 ? iplMatches : liveMatches);
+      const filteredMatches = iplMatches.length > 0 ? iplMatches : liveMatches;
+      
+      // If no matches are available, add a placeholder upcoming match
+      if (filteredMatches.length === 0) {
+        filteredMatches.push({
+          id: 'upcoming-ipl-match',
+          name: 'MI vs KKR - Match 12',
+          status: 'Upcoming',
+          matchTime: 'Today, 7:30 PM IST',
+          league: 'IPL 2025',
+          teams: {
+            home: { name: 'Mumbai Indians' },
+            away: { name: 'Kolkata Knight Riders' }
+          }
+        });
+      }
+      
+      setMatches(filteredMatches);
       setIsLoading(false);
       setError(null);
     } catch (err) {
@@ -139,9 +158,16 @@ const LiveMatchesBar = () => {
                         </span>
                       )}
                       <span className="font-medium">{match.name}:</span>
-                      <span>
-                        {match.teams.home.name} {match.teams.home.score || ''} vs {match.teams.away.name} {match.teams.away.score || ''}
-                      </span>
+                      {match.status.toLowerCase() === 'upcoming' ? (
+                        <span className="flex items-center gap-1">
+                          <Clock size={12} />
+                          {match.matchTime || 'Upcoming'}
+                        </span>
+                      ) : (
+                        <span>
+                          {match.teams.home.name} {match.teams.home.score || ''} vs {match.teams.away.name} {match.teams.away.score || ''}
+                        </span>
+                      )}
                       <span className="text-blue-200">|</span>
                     </div>
                   ))}

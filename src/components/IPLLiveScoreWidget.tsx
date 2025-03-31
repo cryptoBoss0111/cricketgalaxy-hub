@@ -1,21 +1,22 @@
 
 import { useEffect, useState } from 'react';
-import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface IPLMatchData {
   match: string;
-  score: string;
-  overs: string;
-  status: string;
+  score?: string;
+  overs?: string;
+  status: "Not Started" | "In Progress" | "Completed" | string;
   lastUpdated: string;
+  startTime?: string;
 }
 
+// Initial data now shows the match hasn't started yet
 const INITIAL_DATA: IPLMatchData = {
   match: "MI vs KKR - Match 12",
-  score: "142/4",
-  overs: "16.3",
-  status: "In Progress",
+  status: "Not Started",
+  startTime: "Today, 7:30 PM IST",
   lastUpdated: new Date().toLocaleTimeString()
 };
 
@@ -39,14 +40,30 @@ const IPLLiveScoreWidget = () => {
       // Simulate network request
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Use a mix of static data and dynamic elements for demonstration
-      const mockData: IPLMatchData = {
-        match: "MI vs KKR - Match 12",
-        score: `${Math.floor(Math.random() * 30) + 140}/${Math.floor(Math.random() * 2) + 4}`,
-        overs: `${Math.floor(Math.random() * 3) + 16}.${Math.floor(Math.random() * 6)}`,
-        status: Math.random() > 0.2 ? "In Progress" : "Completed",
-        lastUpdated: new Date().toLocaleTimeString()
-      };
+      // For demonstration, randomly determine if the match has started
+      // In reality, this would come from the API response
+      const hasMatchStarted = Math.random() > 0.7;
+      
+      let mockData: IPLMatchData;
+      
+      if (hasMatchStarted) {
+        // Match has started - show live score
+        mockData = {
+          match: "MI vs KKR - Match 12",
+          score: `${Math.floor(Math.random() * 30) + 140}/${Math.floor(Math.random() * 2) + 4}`,
+          overs: `${Math.floor(Math.random() * 3) + 16}.${Math.floor(Math.random() * 6)}`,
+          status: Math.random() > 0.2 ? "In Progress" : "Completed",
+          lastUpdated: new Date().toLocaleTimeString()
+        };
+      } else {
+        // Match hasn't started yet - show upcoming info
+        mockData = {
+          match: "MI vs KKR - Match 12",
+          status: "Not Started",
+          startTime: "Today, 7:30 PM IST",
+          lastUpdated: new Date().toLocaleTimeString()
+        };
+      }
 
       setMatchData(mockData);
       setLastFetchTime(new Date().toLocaleTimeString());
@@ -101,12 +118,22 @@ const IPLLiveScoreWidget = () => {
               </div>
             </div>
             
-            <div className="flex justify-center my-3">
-              <div className="text-center px-6 py-2 bg-white/20 rounded-lg">
-                <div className="text-2xl font-bold">{matchData.score}</div>
-                <div className="text-sm opacity-80">{matchData.overs} overs</div>
+            {matchData.status === "Not Started" ? (
+              <div className="flex flex-col items-center justify-center my-3 py-2">
+                <Clock size={32} className="text-yellow-200 mb-2" />
+                <p className="text-lg font-medium">Match Upcoming</p>
+                {matchData.startTime && (
+                  <p className="text-sm opacity-80">{matchData.startTime}</p>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="flex justify-center my-3">
+                <div className="text-center px-6 py-2 bg-white/20 rounded-lg">
+                  <div className="text-2xl font-bold">{matchData.score}</div>
+                  <div className="text-sm opacity-80">{matchData.overs} overs</div>
+                </div>
+              </div>
+            )}
             
             <div className="text-center text-xs opacity-75 mt-3">
               Last updated: {matchData.lastUpdated}
