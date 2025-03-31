@@ -61,7 +61,7 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
       team: "Mumbai Indians",
       role: "Batsman",
       form: "Excellent",
-      imageUrl: "/lovable-uploads/4c55a560-556b-4890-b1d3-7375ad7a8f23.png", // Updated with the new image
+      imageUrl: "/lovable-uploads/8fddb4c1-d745-4902-ae9c-7a7e51dea885.png", // Updated with the latest image
       stats: "65(31), 43(29), 72(37)"
     });
   }
@@ -91,6 +91,7 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
                 alt={player.player}
                 className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-gray-200 dark:border-gray-700"
                 onError={(e) => {
+                  console.log("Image failed to load:", player.imageUrl);
                   (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop';
                 }}
                 crossOrigin="anonymous"
