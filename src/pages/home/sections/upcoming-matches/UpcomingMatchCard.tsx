@@ -32,14 +32,9 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   const [team1ImageLoaded, setTeam1ImageLoaded] = useState(false);
   const [team2ImageLoaded, setTeam2ImageLoaded] = useState(false);
   
-  // Force URLs to be static strings without any processing
-  const team1ImageUrl = match.team1.shortName === 'MI' 
-    ? '/lovable-uploads/ecc2d92f-2f5b-47a3-ae69-17dc0df384cd.png'
-    : match.team1.flagUrl;
-    
-  const team2ImageUrl = match.team2.shortName === 'KKR'
-    ? '/lovable-uploads/ce55e622-ee4f-4402-a770-0dc4c874de64.png'
-    : match.team2.flagUrl;
+  // Use the provided image URLs directly
+  const team1ImageUrl = match.team1.flagUrl;
+  const team2ImageUrl = match.team2.flagUrl;
   
   return (
     <Card className={cn(
