@@ -163,13 +163,13 @@ export const signOutAdmin = async () => {
   }
 };
 
-// Admin login function with improved error handling and demo support
+// Admin login function with improved error handling and demo support - now with only email required
 export const loginAdmin = async (email: string, password: string) => {
   try {
-    console.log("Attempting admin login...");
+    console.log("Attempting admin login with email only...");
     
-    // Special case for demo credentials
-    if (email === DEMO_ADMIN_EMAIL && password === 'admin123') {
+    // Special case for demo credentials - we don't validate password for demo anymore
+    if (email === DEMO_ADMIN_EMAIL) {
       console.log("Using demo credentials");
       
       // Store demo admin info in local storage with valid UUID
@@ -247,7 +247,7 @@ export const loginAdmin = async (email: string, password: string) => {
     console.error("Login error:", error);
     
     // Special check for demo credentials as final fallback
-    if (email === DEMO_ADMIN_EMAIL && password === 'admin123') {
+    if (email === DEMO_ADMIN_EMAIL) {
       console.log("Demo credentials detected after initial failure, allowing access");
       
       // Store demo admin info with valid UUID

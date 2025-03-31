@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { useChatbot } from '@/contexts/ChatbotContext';
-import AdminLoginButton from "./AdminLoginButton";
 
 interface NavLinkItem {
   label: string;
@@ -108,7 +107,6 @@ export const Navbar = () => {
             </form>
 
             <div className="flex items-center gap-2">
-              <AdminLoginButton />
               <Button 
                 variant="ghost" 
                 size="icon" 

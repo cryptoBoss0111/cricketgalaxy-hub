@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Eye, EyeOff, Lock, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,14 +13,11 @@ import { useAdminAuth } from "@/contexts/AdminAuthContext";
 
 // Demo credentials for local fallback authentication
 const DEMO_CREDENTIALS = {
-  email: 'admin@cricketexpress.com',
-  password: 'admin123'
+  email: 'admin@cricketexpress.com'
 };
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -42,8 +39,8 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      // Try using the loginAdmin function (using Supabase auth)
-      const result = await loginAdmin(email, password);
+      // Try using the loginAdmin function with only email
+      const result = await loginAdmin(email, 'admin123'); // Using a default password
       
       if (result.success) {
         toast({
@@ -73,7 +70,7 @@ const AdminLogin = () => {
         } else if (err.message.includes("Invalid login credentials") || 
             err.message.includes("Invalid email or password") ||
             err.message.includes("Invalid username or password")) {
-          errorMessage = "Invalid email or password";
+          errorMessage = "Invalid email";
         } else {
           errorMessage = err.message;
         }
@@ -116,11 +113,10 @@ const AdminLogin = () => {
       <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8 border border-gray-100 animate-fade-in">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-heading font-bold">Admin Login</h2>
-          <p className="text-gray-500 mt-1">Enter your credentials to access the admin panel</p>
+          <p className="text-gray-500 mt-1">Enter your email to access the admin panel</p>
           <div className="mt-2 p-2 bg-blue-50 text-blue-700 rounded-md text-sm">
             <p><strong>Demo Credentials:</strong></p>
             <p>Email: {DEMO_CREDENTIALS.email}</p>
-            <p>Password: {DEMO_CREDENTIALS.password}</p>
           </div>
         </div>
         
@@ -139,30 +135,6 @@ const AdminLogin = () => {
                 disabled={isLoading}
                 required
               />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                className="pl-10 pr-10"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-                required
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
             </div>
           </div>
           
