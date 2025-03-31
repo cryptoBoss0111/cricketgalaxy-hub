@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { RefreshCw, AlertTriangle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from '@/hooks/use-toast';
 
 interface IPLMatchData {
   match: string;
@@ -12,13 +13,16 @@ interface IPLMatchData {
   startTime?: string;
 }
 
-// Initial data now shows the match hasn't started yet
+// Initial data shows the match hasn't started yet
 const INITIAL_DATA: IPLMatchData = {
   match: "MI vs KKR - Match 12",
   status: "Not Started",
   startTime: "Today, 7:30 PM IST",
   lastUpdated: new Date().toLocaleTimeString()
 };
+
+// API endpoint for real-time scores
+const SCORE_API_URL = "http://localhost:3000/score";
 
 const IPLLiveScoreWidget = () => {
   const [matchData, setMatchData] = useState<IPLMatchData>(INITIAL_DATA);
@@ -31,48 +35,96 @@ const IPLLiveScoreWidget = () => {
     setError(null);
 
     try {
-      // In a real implementation, this would fetch from your API endpoint
-      // For now, we'll simulate a fetch with the ESPNCricinfo data
+      // Attempt to fetch real data from your API endpoint
+      const response = await fetch(SCORE_API_URL);
       
-      // Normally this would be: const response = await fetch('http://localhost:3000/score');
-      // Since we're simulating, we'll generate mock data
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
       
-      // Simulate network request
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const data = await response.json();
+      console.log("Live score data received:", data);
       
-      // For demonstration, randomly determine if the match has started
-      // In reality, this would come from the API response
-      const hasMatchStarted = Math.random() > 0.7;
+      // Format received data to match our interface
+      const liveData: IPLMatchData = {
+        match: data.match || "MI vs KKR - Match 12",
+        score: data.score,
+        overs: data.overs,
+        status: determineStatus(data.status),
+        lastUpdated: data.lastUpdated || new Date().toLocaleTimeString()
+      };
       
-      let mockData: IPLMatchData;
-      
-      if (hasMatchStarted) {
-        // Match has started - show live score
-        mockData = {
-          match: "MI vs KKR - Match 12",
-          score: `${Math.floor(Math.random() * 30) + 140}/${Math.floor(Math.random() * 2) + 4}`,
-          overs: `${Math.floor(Math.random() * 3) + 16}.${Math.floor(Math.random() * 6)}`,
-          status: Math.random() > 0.2 ? "In Progress" : "Completed",
-          lastUpdated: new Date().toLocaleTimeString()
-        };
-      } else {
-        // Match hasn't started yet - show upcoming info
-        mockData = {
-          match: "MI vs KKR - Match 12",
-          status: "Not Started",
-          startTime: "Today, 7:30 PM IST",
-          lastUpdated: new Date().toLocaleTimeString()
-        };
+      // If match hasn't started, add startTime
+      if (liveData.status === "Not Started") {
+        liveData.startTime = data.startTime || "Today, 7:30 PM IST";
       }
 
-      setMatchData(mockData);
+      setMatchData(liveData);
       setLastFetchTime(new Date().toLocaleTimeString());
     } catch (err) {
       console.error("Error fetching live score data:", err);
       setError("Failed to update the score. Please try again.");
+      
+      // Show toast notification for error
+      toast({
+        title: "Error updating scores",
+        description: "Could not fetch the latest match data",
+        variant: "destructive"
+      });
+      
+      // Fall back to mock data if real API fails
+      fallbackToMockData();
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper function to determine status
+  const determineStatus = (status: string | undefined): "Not Started" | "In Progress" | "Completed" | string => {
+    if (!status) return "Not Started";
+    
+    // Handle different status formats from the API
+    status = status.toLowerCase();
+    
+    if (status.includes("progress") || status.includes("live")) {
+      return "In Progress";
+    } else if (status.includes("complete") || status.includes("end") || status.includes("finish")) {
+      return "Completed";
+    } else if (status.includes("not") && status.includes("start")) {
+      return "Not Started";
+    }
+    
+    return status; // Return original if no match
+  };
+
+  // Fallback to simulated data if API fails
+  const fallbackToMockData = () => {
+    console.log("Falling back to mock data");
+    // For demonstration, randomly determine if the match has started
+    const hasMatchStarted = Math.random() > 0.7;
+    
+    let mockData: IPLMatchData;
+    
+    if (hasMatchStarted) {
+      // Match has started - show live score
+      mockData = {
+        match: "MI vs KKR - Match 12",
+        score: `${Math.floor(Math.random() * 30) + 140}/${Math.floor(Math.random() * 2) + 4}`,
+        overs: `${Math.floor(Math.random() * 3) + 16}.${Math.floor(Math.random() * 6)}`,
+        status: Math.random() > 0.2 ? "In Progress" : "Completed",
+        lastUpdated: new Date().toLocaleTimeString()
+      };
+    } else {
+      // Match hasn't started yet - show upcoming info
+      mockData = {
+        match: "MI vs KKR - Match 12",
+        status: "Not Started",
+        startTime: "Today, 7:30 PM IST",
+        lastUpdated: new Date().toLocaleTimeString()
+      };
+    }
+
+    setMatchData(mockData);
   };
 
   // Initial fetch
