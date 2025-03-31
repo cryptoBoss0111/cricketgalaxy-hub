@@ -1,14 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Menu, X, Search, Moon, Sun, MessageSquare } from 'lucide-react';
+import { Menu, X, Search, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
 import { useChatbot } from '@/contexts/ChatbotContext';
-import { useTheme } from '@/components/ThemeProvider';
 import AdminLoginButton from "./AdminLoginButton";
 
 interface NavLinkItem {
@@ -33,7 +32,6 @@ export const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
   const { toggleChatbot } = useChatbot();
-  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,17 +41,6 @@ export const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    
-    toast({
-      title: theme === "dark" ? "Light mode activated" : "Dark mode activated",
-      description: "Your theme preference has been updated.",
-      duration: 2000,
-    });
-  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,13 +54,10 @@ export const Navbar = () => {
     }
   };
 
-  const isDarkMode = theme === "dark";
-
   return (
     <header className={cn(
-      "sticky top-12 left-0 right-0 z-40 bg-white transition-all duration-300",
-      isScrolled ? "shadow-md" : "shadow-sm",
-      isDarkMode ? "dark bg-cricket-dark text-white" : ""
+      "sticky top-12 left-0 right-0 z-40 bg-cricket-dark text-white transition-all duration-300",
+      isScrolled ? "shadow-md" : "shadow-sm"
     )}>
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
@@ -123,15 +107,6 @@ export const Navbar = () => {
                 <Search size={18} />
               </Button>
             </form>
-
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleTheme}
-              className="hidden md:flex"
-            >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </Button>
 
             <div className="flex items-center gap-2">
               <AdminLoginButton />
@@ -206,27 +181,6 @@ export const Navbar = () => {
                       </NavLink>
                     ))}
                   </nav>
-                  
-                  <div className="mt-auto flex items-center">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={toggleTheme}
-                      className="w-full justify-start"
-                    >
-                      {isDarkMode ? (
-                        <>
-                          <Sun size={16} className="mr-2" />
-                          Light Mode
-                        </>
-                      ) : (
-                        <>
-                          <Moon size={16} className="mr-2" />
-                          Dark Mode
-                        </>
-                      )}
-                    </Button>
-                  </div>
                 </div>
               </SheetContent>
             </Sheet>

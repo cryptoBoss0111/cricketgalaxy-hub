@@ -16,7 +16,7 @@ import Footer from '@/components/Footer';
 import { useTheme } from '@/components/ThemeProvider';
 
 const Index = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme(); // We'll keep this for consistency but won't use it for toggling
   const [isGenzMode, setIsGenzMode] = useState(false);
   
   // Effect to log articles data for debugging image issues
@@ -27,17 +27,16 @@ const Index = () => {
   // Toggle Gen Z mode
   const toggleGenzMode = () => {
     setIsGenzMode(!isGenzMode);
-    // Automatically set to dark mode when Gen Z is enabled
+    // Always in dark mode when Gen Z is enabled
     if (!isGenzMode) {
       document.documentElement.classList.add('genz');
-      setTheme('dark');
     } else {
       document.documentElement.classList.remove('genz');
     }
   };
   
   return (
-    <div className={`min-h-screen flex flex-col ${theme === "dark" ? "dark bg-cricket-dark" : "bg-gray-50"}`}>
+    <div className="min-h-screen flex flex-col dark bg-cricket-dark">
       {/* Gen Z Mode Toggle */}
       <div className="fixed bottom-4 right-4 z-50">
         <button 

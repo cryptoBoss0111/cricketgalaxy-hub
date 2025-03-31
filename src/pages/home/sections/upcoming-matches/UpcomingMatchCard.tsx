@@ -56,11 +56,11 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   };
   
   return (
-    <Card className="overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+    <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 bg-cricket-dark border-gray-700">
       {/* Header with match type and date */}
-      <div className="flex items-center justify-between p-3 bg-gray-50 border-b">
-        <div className="text-sm font-medium text-gray-700">{match.matchType}</div>
-        <div className="text-sm text-gray-600">{match.date}</div>
+      <div className="flex items-center justify-between p-3 bg-gray-800 border-b border-gray-700">
+        <div className="text-sm font-medium text-gray-200">{match.matchType}</div>
+        <div className="text-sm text-gray-300">{match.date}</div>
       </div>
       
       {/* Teams Section */}
@@ -74,13 +74,13 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
             )}>
               <span className="text-white font-bold text-xl">{match.team1.shortName}</span>
             </div>
-            <span className="text-xs text-gray-600 max-w-[70px] text-center truncate">{match.team1.name}</span>
+            <span className="text-xs text-gray-300 max-w-[70px] text-center truncate">{match.team1.name}</span>
           </div>
           
           {/* VS */}
           <div className="flex flex-col items-center px-2">
-            <span className="text-lg font-semibold text-gray-700">VS</span>
-            <div className="w-6 h-0.5 bg-gray-200 mt-1"></div>
+            <span className="text-lg font-semibold text-gray-300">VS</span>
+            <div className="w-6 h-0.5 bg-gray-600 mt-1"></div>
           </div>
           
           {/* Team 2 */}
@@ -91,19 +91,19 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
             )}>
               <span className="text-white font-bold text-xl">{match.team2.shortName}</span>
             </div>
-            <span className="text-xs text-gray-600 max-w-[70px] text-center truncate">{match.team2.name}</span>
+            <span className="text-xs text-gray-300 max-w-[70px] text-center truncate">{match.team2.name}</span>
           </div>
         </div>
         
         {/* Time */}
         <div className="text-center my-3">
-          <span className="text-sm font-medium">{match.time}</span>
+          <span className="text-sm font-medium text-gray-200">{match.time}</span>
         </div>
       </CardContent>
       
       {/* Footer with venue */}
-      <div className="bg-white p-3 text-xs text-gray-600 border-t flex items-center">
-        <MapPin className="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-gray-500" />
+      <div className="bg-gray-800 p-3 text-xs text-gray-300 border-t border-gray-700 flex items-center">
+        <MapPin className="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-gray-400" />
         <span className="line-clamp-1">{match.venue}</span>
       </div>
     </Card>
