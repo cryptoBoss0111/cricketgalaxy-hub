@@ -56,7 +56,7 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   };
   
   return (
-    <Card className="overflow-hidden shadow-sm border hover:shadow-md transition-all duration-300">
+    <Card className="overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
       {/* Header with match type and date */}
       <div className="flex items-center justify-between p-3 bg-gray-50 border-b">
         <div className="text-sm font-medium text-gray-700">{match.matchType}</div>
@@ -74,7 +74,7 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
             )}>
               <span className="text-white font-bold text-xl">{match.team1.shortName}</span>
             </div>
-            <span className="text-xs text-gray-600 max-w-[100px] text-center truncate">{match.team1.name}</span>
+            <span className="text-xs text-gray-600 max-w-[70px] text-center truncate">{match.team1.name}</span>
           </div>
           
           {/* VS */}
@@ -91,21 +91,14 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
             )}>
               <span className="text-white font-bold text-xl">{match.team2.shortName}</span>
             </div>
-            <span className="text-xs text-gray-600 max-w-[100px] text-center truncate">{match.team2.name}</span>
+            <span className="text-xs text-gray-600 max-w-[70px] text-center truncate">{match.team2.name}</span>
           </div>
         </div>
         
         {/* Time */}
-        <div className="text-center my-4">
+        <div className="text-center my-3">
           <span className="text-sm font-medium">{match.time}</span>
         </div>
-        
-        {/* Match Details */}
-        {match.details && (
-          <div className="text-center mb-4">
-            <p className="text-xs text-gray-600 line-clamp-2">{match.details}</p>
-          </div>
-        )}
       </CardContent>
       
       {/* Footer with venue */}

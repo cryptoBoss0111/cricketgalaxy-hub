@@ -32,12 +32,16 @@ const processImageUrl = (url: string): string => {
     return 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop';
   }
   
+  // Fix URL path if needed
+  if (url.startsWith('/lovable-uploads/')) {
+    return url;
+  }
+  
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
   
-  // Process Supabase storage URL
-  return `https://swiftskcxeoyomwwmkms.supabase.co/storage/v1/object/public/${url}`;
+  return url;
 };
 
 // Get badge styles and text based on index
@@ -81,20 +85,10 @@ const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
   return (
     <Card 
       className={cn(
-        "overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border-t-4 relative animate-fade-in dark:bg-cricket-dark/80 dark:border-gray-800 dark:border-t-4",
-        borderColor,
+        "overflow-hidden shadow-sm hover:shadow-md border transition-all duration-300 dark:bg-cricket-dark/80 dark:border-gray-800",
         animationDelay
       )}
     >
-      <Badge 
-        className={cn(
-          "absolute top-2 right-2 font-medium",
-          color
-        )}
-      >
-        {text}
-      </Badge>
-      
       <CardContent className="p-6">
         <div className="flex items-center mb-4">
           <img 
@@ -107,11 +101,16 @@ const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
           />
           <div>
             <h3 className="font-semibold text-lg dark:text-white">{pick.player_name}</h3>
-            <p className="text-gray-500 text-sm dark:text-gray-400">{pick.team} • {pick.role}</p>
+            <p className="text-gray-500 text-sm dark:text-gray-400">{pick.team}</p>
           </div>
         </div>
         
         <div className="mb-4">
+          <div className="flex justify-between mb-2">
+            <span className="text-gray-500 text-sm dark:text-gray-400">Role:</span>
+            <span className="text-sm font-medium dark:text-white">{pick.role}</span>
+          </div>
+          
           <div className="flex justify-between mb-2">
             <span className="text-gray-500 text-sm dark:text-gray-400">Form:</span>
             <span className={cn(
@@ -121,20 +120,11 @@ const FantasyPickCard: React.FC<FantasyPickCardProps> = ({ pick, index }) => {
               {pick.form}
             </span>
           </div>
-          
-          <div className="flex justify-between mb-2">
-            <span className="text-gray-500 text-sm dark:text-gray-400">Predicted Points:</span>
-            <span className="text-sm font-bold text-cricket-accent">{pick.points_prediction} pts</span>
-          </div>
-          
-          <div className="flex justify-between mb-2">
-            <span className="text-gray-500 text-sm dark:text-gray-400">Recent Stats:</span>
-            <span className="text-sm dark:text-gray-300">{pick.stats}</span>
-          </div>
         </div>
         
-        <div className="text-xs text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-md">
-          <strong>Why Pick:</strong> {pick.selection_reason}
+        <div className="text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-md">
+          <div className="font-medium mb-1">Recent Performance:</div>
+          <div>{pick.stats}</div>
         </div>
       </CardContent>
     </Card>
