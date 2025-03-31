@@ -1,10 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getImageProps } from '@/utils/imageUtils';
 
 interface TeamInfo {
   name: string;
@@ -32,9 +31,33 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   const [team1ImageLoaded, setTeam1ImageLoaded] = useState(false);
   const [team2ImageLoaded, setTeam2ImageLoaded] = useState(false);
   
-  // Use the provided image URLs directly
-  const team1ImageUrl = match.team1.flagUrl;
-  const team2ImageUrl = match.team2.flagUrl;
+  // Get team background colors based on team shortname
+  const getTeamBgColor = (shortName: string) => {
+    switch(shortName) {
+      case 'MI':
+        return 'bg-blue-500';
+      case 'KKR':
+        return 'bg-purple-700';
+      case 'RCB':
+        return 'bg-red-600';
+      case 'CSK':
+        return 'bg-yellow-500';
+      case 'GT':
+        return 'bg-blue-600';
+      case 'LSG':
+        return 'bg-sky-600';
+      case 'PBKS':
+        return 'bg-red-500';
+      case 'RR':
+        return 'bg-pink-600';
+      case 'DC':
+        return 'bg-blue-400';
+      case 'SRH':
+        return 'bg-orange-500';
+      default:
+        return 'bg-gray-200';
+    }
+  };
   
   return (
     <Card className={cn(
@@ -54,19 +77,25 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             {!team1ImageLoaded && (
-              <Skeleton className="w-8 h-8 rounded-full" />
+              <Skeleton className={cn(
+                "w-10 h-10 rounded-full",
+                getTeamBgColor(match.team1.shortName)
+              )} />
             )}
-            <img 
-              src={team1ImageUrl} 
-              alt={`${match.team1.name} logo`}
-              className={cn(
-                "w-8 h-8 rounded-full object-cover",
-                team1ImageLoaded ? "opacity-100" : "opacity-0"
-              )}
-              onLoad={() => setTeam1ImageLoaded(true)}
-              width={32}
-              height={32}
-            />
+            <div className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center",
+              getTeamBgColor(match.team1.shortName),
+              team1ImageLoaded ? "opacity-100" : "opacity-0"
+            )}>
+              <img 
+                src={match.team1.flagUrl} 
+                alt={`${match.team1.name} logo`}
+                className="w-8 h-8 object-contain"
+                onLoad={() => setTeam1ImageLoaded(true)}
+                width={32}
+                height={32}
+              />
+            </div>
             <span className="font-semibold">{match.team1.shortName}</span>
           </div>
           
@@ -75,19 +104,25 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
           <div className="flex items-center space-x-2">
             <span className="font-semibold">{match.team2.shortName}</span>
             {!team2ImageLoaded && (
-              <Skeleton className="w-8 h-8 rounded-full" />
+              <Skeleton className={cn(
+                "w-10 h-10 rounded-full",
+                getTeamBgColor(match.team2.shortName)
+              )} />
             )}
-            <img 
-              src={team2ImageUrl} 
-              alt={`${match.team2.name} logo`}
-              className={cn(
-                "w-8 h-8 rounded-full object-cover",
-                team2ImageLoaded ? "opacity-100" : "opacity-0"
-              )}
-              onLoad={() => setTeam2ImageLoaded(true)}
-              width={32}
-              height={32}
-            />
+            <div className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center",
+              getTeamBgColor(match.team2.shortName),
+              team2ImageLoaded ? "opacity-100" : "opacity-0"
+            )}>
+              <img 
+                src={match.team2.flagUrl} 
+                alt={`${match.team2.name} logo`}
+                className="w-8 h-8 object-contain"
+                onLoad={() => setTeam2ImageLoaded(true)}
+                width={32}
+                height={32}
+              />
+            </div>
           </div>
         </div>
         
