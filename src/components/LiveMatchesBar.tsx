@@ -154,7 +154,7 @@ const LiveMatchesBar = () => {
             <ExternalLink size={14} />
           </Link>
           <a 
-            href="https://www.cricbuzz.com/live-cricket-scorecard/81030/mi-vs-kkr-12th-match-indian-premier-league-2025" 
+            href="https://www.espncricinfo.com/series/ipl-2025-1449924/mumbai-indians-vs-kolkata-knight-riders-12th-match-1473449/live-cricket-score" 
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded hover:bg-yellow-400 ml-2"

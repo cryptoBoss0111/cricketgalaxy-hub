@@ -12,7 +12,8 @@ const CricbuzzScorecard = ({ matchId }: CricbuzzScorecardProps) => {
   const [embedError, setEmbedError] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const cricbuzzUrl = `https://www.cricbuzz.com/live-cricket-scorecard/${matchId}`;
+  // Using ESPNCricinfo URL instead of Cricbuzz
+  const espnCricinfoUrl = `https://www.espncricinfo.com/series/ipl-2025-1449924/mumbai-indians-vs-kolkata-knight-riders-12th-match-1473449/live-cricket-score`;
   
   // Check if iframe loaded successfully
   useEffect(() => {
@@ -62,14 +63,14 @@ const CricbuzzScorecard = ({ matchId }: CricbuzzScorecardProps) => {
   return (
     <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
       <div className="bg-blue-500 text-white px-4 py-3 flex justify-between items-center">
-        <h2 className="text-lg font-bold">Cricbuzz Live Scorecard</h2>
+        <h2 className="text-lg font-bold">ESPNCricinfo Live Score - MI vs KKR</h2>
         <a 
-          href={cricbuzzUrl}
+          href={espnCricinfoUrl}
           target="_blank" 
           rel="noopener noreferrer"
           className="text-white hover:text-blue-100 flex items-center gap-1"
         >
-          <span>Open in Cricbuzz</span>
+          <span>Open in ESPNCricinfo</span>
           <ExternalLink size={16} />
         </a>
       </div>
@@ -85,28 +86,28 @@ const CricbuzzScorecard = ({ matchId }: CricbuzzScorecardProps) => {
           <AlertTriangle size={48} className="text-amber-500 mb-4" />
           <h3 className="text-xl font-bold mb-2">Embedding Not Allowed</h3>
           <p className="text-gray-600 mb-6">
-            Cricbuzz doesn't allow their content to be embedded on other websites.
-            Please use the link below to view the scorecard directly on Cricbuzz.
+            ESPNCricinfo doesn't allow their content to be embedded on other websites.
+            Please use the link below to view the scorecard directly on ESPNCricinfo.
           </p>
           <Button 
             variant="accent"
-            onClick={() => window.open(cricbuzzUrl, '_blank')}
+            onClick={() => window.open(espnCricinfoUrl, '_blank')}
             className="flex items-center gap-2"
           >
-            View on Cricbuzz
+            View on ESPNCricinfo
             <ExternalLink size={16} />
           </Button>
         </div>
       ) : (
         <iframe
           ref={iframeRef}
-          src={cricbuzzUrl}
+          src={espnCricinfoUrl}
           width="100%"
           height="600px"
           style={{ display: isLoading ? 'none' : 'block' }}
           sandbox="allow-same-origin allow-scripts"
           referrerPolicy="no-referrer"
-          title="Cricbuzz Scorecard"
+          title="ESPNCricinfo Live Score"
         />
       )}
     </div>
