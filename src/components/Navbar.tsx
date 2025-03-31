@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { Menu, X, Search, MessageSquare } from 'lucide-react';
@@ -21,10 +20,8 @@ const navLinks: NavLinkItem[] = [
   { label: 'Match Previews', path: '/match-previews' },
   { label: 'Match Reviews', path: '/match-reviews' },
   { label: 'Fantasy Tips', path: '/fantasy-tips' },
-  { label: 'Player Profiles', path: '/player-profiles' },
   { label: 'IPL 2025', path: '/ipl-2025' },
-  { label: 'Women\'s Cricket', path: '/womens-cricket' },
-  { label: 'World Cup & ICC', path: '/world-cup' }
+  { label: 'IPL Teams', path: '/ipl-teams' }
 ];
 
 export const Navbar = () => {

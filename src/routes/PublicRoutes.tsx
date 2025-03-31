@@ -6,6 +6,7 @@ import CricketNewsPage from "@/pages/cricket-news";
 import ArticleDetail from "@/pages/ArticleDetail";
 import FantasyTipsPage from "@/pages/fantasy-tips";
 import IPL2025Page from "@/pages/ipl-2025";
+import IPLTeamsPage from "@/pages/ipl-teams";
 import DCvsSRHArticle from "@/pages/ArticleDetail/DCvsSRHArticle";
 import MIvsKKRArticle from "@/pages/ArticleDetail/MIvsKKRArticle";
 import GTvsMIArticle from "@/pages/article-detail/GTvsMIArticle";
@@ -30,6 +31,7 @@ export const PublicRoutes = () => {
       <Route path="/article/srh-vs-lsg" element={<SRHvsLSGArticle />} />
       <Route path="/fantasy-tips" element={<FantasyTipsPage />} />
       <Route path="/ipl-2025" element={<IPL2025Page />} />
+      <Route path="/ipl-teams" element={<IPLTeamsPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
