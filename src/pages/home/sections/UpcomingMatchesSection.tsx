@@ -44,32 +44,50 @@ export const UpcomingMatchesSection: React.FC = () => {
     {
       id: 'match-13',
       team1: {
-        name: 'Chennai Super Kings',
-        shortName: 'CSK'
+        name: 'Lucknow Super Giants',
+        shortName: 'LSG'
       },
       team2: {
-        name: 'Royal Challengers Bangalore',
-        shortName: 'RCB'
+        name: 'Punjab Kings',
+        shortName: 'PBKS'
       },
       matchType: 'IPL 2025',
-      venue: 'M.A. Chidambaram Stadium, Chennai',
-      date: 'April 2, 2025',
-      time: '7:30 PM IST'
+      venue: 'BRSABV Ekana Cricket Stadium, Lucknow',
+      date: 'April 1, 2025',
+      time: '7:30 PM IST',
+      details: 'LSG will host PBKS in what promises to be a competitive encounter'
     },
     {
       id: 'match-14',
       team1: {
+        name: 'Royal Challengers Bengaluru',
+        shortName: 'RCB'
+      },
+      team2: {
+        name: 'Gujarat Titans',
+        shortName: 'GT'
+      },
+      matchType: 'IPL 2025',
+      venue: 'M. Chinnaswamy Stadium, Bengaluru',
+      date: 'April 2, 2025',
+      time: '7:30 PM IST',
+      details: 'RCB, playing at their home ground, will face GT'
+    },
+    {
+      id: 'match-15',
+      team1: {
+        name: 'Rajasthan Royals',
+        shortName: 'RR'
+      },
+      team2: {
         name: 'Delhi Capitals',
         shortName: 'DC'
       },
-      team2: {
-        name: 'Sunrisers Hyderabad',
-        shortName: 'SRH'
-      },
       matchType: 'IPL 2025',
-      venue: 'Arun Jaitley Stadium, Delhi',
-      date: 'April 4, 2025',
-      time: '7:30 PM IST'
+      venue: 'Sawai Mansingh Stadium, Jaipur',
+      date: 'April 3, 2025',
+      time: '7:30 PM IST',
+      details: 'RR will take on DC in Jaipur'
     }
   ];
 
