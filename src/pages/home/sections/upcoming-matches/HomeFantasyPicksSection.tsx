@@ -26,6 +26,11 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
       return 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop';
     }
     
+    if (url.startsWith('/')) {
+      // Ensure local URLs are properly formatted
+      return url;
+    }
+    
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
@@ -46,7 +51,7 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
       case 'poor':
         return 'text-red-600 dark:text-red-400';
       default:
-        return 'text-gray-600 dark:text-gray-400';
+        return 'text-gray-500 dark:text-gray-400';
     }
   };
 
@@ -54,82 +59,87 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
   const allPicks = [...picks];
   const hasSkYadav = picks.some(p => p.player === "Suryakumar Yadav");
   
-  if (!hasSkYadav && allPicks.length > 0) {
+  if (!hasSkYadav) {
     allPicks.unshift({
       id: "sk-yadav-home",
       player: "Suryakumar Yadav",
       team: "Mumbai Indians",
       role: "Batsman",
       form: "Excellent",
-      imageUrl: "/lovable-uploads/8fddb4c1-d745-4902-ae9c-7a7e51dea885.png", // Updated with the latest image
+      imageUrl: "/lovable-uploads/8fddb4c1-d745-4902-ae9c-7a7e51dea885.png", 
       stats: "65(31), 43(29), 72(37)"
     });
   }
 
+  console.log("Fantasy picks to render:", allPicks); // Log all picks to help debug
+
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <Trophy className="text-cricket-accent h-6 w-6 dark:text-white" />
-          <h2 className="text-2xl font-heading font-bold dark:text-white">Fantasy Picks</h2>
+    <div className="mb-8 py-8 bg-white dark:bg-cricket-dark">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <Trophy className="text-cricket-accent h-6 w-6 dark:text-white" />
+            <h2 className="text-2xl font-heading font-bold dark:text-white">Fantasy Picks</h2>
+          </div>
+          
+          <div className="bg-cricket-accent/20 px-4 py-2 rounded-full text-cricket-accent font-medium text-sm dark:bg-cricket-accent/40 dark:text-white">
+            MI vs KKR
+          </div>
         </div>
         
-        <div className="bg-cricket-accent/20 px-4 py-2 rounded-full text-cricket-accent font-medium text-sm dark:bg-cricket-accent/40 dark:text-white">
-          MI vs KKR
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {allPicks.map((player, index) => {
+            console.log(`Rendering player ${index}:`, player); // Log each player
+            return (
+            <div 
+              key={player.id} 
+              className="bg-white p-5 rounded-lg shadow-sm border hover:shadow-md transition-300 dark:bg-cricket-dark dark:border-gray-700 dark:text-white"
+            >
+              <div className="flex items-center mb-4">
+                <img 
+                  src={processImageUrl(player.imageUrl)} 
+                  alt={player.player}
+                  className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-gray-200 dark:border-gray-700"
+                  onError={(e) => {
+                    console.log("Image failed to load:", player.imageUrl);
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop';
+                  }}
+                />
+                <div>
+                  <h3 className="font-semibold text-lg dark:text-white">{player.player}</h3>
+                  <p className="text-gray-500 text-sm dark:text-gray-400">{player.team}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-gray-400">Role:</span>
+                  <span className="font-medium dark:text-white">{player.role}</span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-gray-400">Form:</span>
+                  <span className={cn("font-medium", getFormColorClass(player.form))}>
+                    {player.form}
+                  </span>
+                </div>
+                
+                <div className="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <div className="text-gray-500 dark:text-gray-400 mb-1">Recent Performance:</div>
+                  <div className="font-medium dark:text-white">{player.stats}</div>
+                </div>
+              </div>
+            </div>
+          )})}
         </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {allPicks.map((player, index) => (
-          <div 
-            key={player.id} 
-            className="bg-white p-5 rounded-lg shadow-sm border hover:shadow-md transition-300 dark:bg-cricket-dark dark:border-gray-700 dark:text-white"
-          >
-            <div className="flex items-center mb-4">
-              <img 
-                src={processImageUrl(player.imageUrl)} 
-                alt={player.player}
-                className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-gray-200 dark:border-gray-700"
-                onError={(e) => {
-                  console.log("Image failed to load:", player.imageUrl);
-                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop';
-                }}
-                crossOrigin="anonymous"
-              />
-              <div>
-                <h3 className="font-semibold text-lg dark:text-white">{player.player}</h3>
-                <p className="text-gray-500 text-sm dark:text-gray-400">{player.team}</p>
-              </div>
-            </div>
-            
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Role:</span>
-                <span className="font-medium dark:text-white">{player.role}</span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Form:</span>
-                <span className={cn("font-medium", getFormColorClass(player.form))}>
-                  {player.form}
-                </span>
-              </div>
-              
-              <div className="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
-                <div className="text-gray-500 dark:text-gray-400 mb-1">Recent Performance:</div>
-                <div className="font-medium dark:text-white">{player.stats}</div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="text-center mt-6">
-        <Button variant="accent" asChild>
-          <Link to="/fantasy-tips">
-            View Complete Fantasy Guide
-          </Link>
-        </Button>
+        
+        <div className="text-center mt-6">
+          <Button variant="accent" asChild>
+            <Link to="/fantasy-tips">
+              View Complete Fantasy Guide
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

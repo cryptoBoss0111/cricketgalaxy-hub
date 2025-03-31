@@ -10,7 +10,7 @@ import { UpcomingMatchesSection } from './sections/UpcomingMatchesSection';
 import { TrendingPlayersSection } from './sections/TrendingPlayersSection';
 import { QuickStatsSection } from './sections/QuickStatsSection';
 import { FanPollSection } from './sections/FanPollSection';
-import FantasyPicksSection from '@/components/FantasyPicksSection';
+import HomeFantasyPicksSection from './sections/upcoming-matches/HomeFantasyPicksSection';
 import { useTheme } from '@/components/ThemeProvider';
 
 const HomePage = () => {
@@ -69,7 +69,17 @@ const HomePage = () => {
           </div>
         </section>
         
-        <FantasyPicksSection />
+        <HomeFantasyPicksSection picks={[
+          {
+            id: "sk-yadav-home",
+            player: "Suryakumar Yadav",
+            team: "Mumbai Indians",
+            role: "Batsman",
+            form: "Excellent",
+            imageUrl: "/lovable-uploads/8fddb4c1-d745-4902-ae9c-7a7e51dea885.png",
+            stats: "65(31), 43(29), 72(37)"
+          }
+        ]} />
         
         <Footer />
       </main>
