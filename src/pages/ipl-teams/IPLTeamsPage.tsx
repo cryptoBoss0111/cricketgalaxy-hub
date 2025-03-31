@@ -154,7 +154,7 @@ const IPLTeamsPage = () => {
   return (
     <>
       <Helmet>
-        <title>IPL Teams - Indian Premier League Teams | CricketExpress</title>
+        <title>IPL Teams 2025 - Indian Premier League Teams | CricketExpress</title>
         <meta 
           name="description" 
           content="Explore all IPL teams including Chennai Super Kings, Mumbai Indians, Royal Challengers Bangalore, and more. Get team information, achievements, and updates." 
@@ -165,7 +165,7 @@ const IPLTeamsPage = () => {
 
       <div className="bg-gradient-to-r from-cricket-accent to-cricket-secondary py-16 px-4 text-white">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold font-heading mb-4">IPL Teams</h1>
+          <h1 className="text-4xl md:text-5xl font-bold font-heading mb-4">IPL Teams 2025</h1>
           <p className="text-xl max-w-2xl mx-auto">
             All about your favorite Indian Premier League cricket teams
           </p>
