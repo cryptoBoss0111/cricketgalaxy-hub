@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
@@ -97,13 +98,13 @@ const HomePage = () => {
             stats: "23(15), 1/32, 31(22), 0/29"
           },
           {
-            id: "ar-russell-home",
-            player: "Andre Russell",
+            id: "sn-narine-home",
+            player: "Sunil Narine",
             team: "Kolkata Knight Riders",
             role: "All-Rounder",
-            form: "Excellent",
-            imageUrl: "/lovable-uploads/5f09742b-2608-4ef2-b57b-7cabaab57f6a.png",
-            stats: "42(19), 2/26, 38(16), 3/31"
+            form: "Good",
+            imageUrl: "/lovable-uploads/1e95e00e-b311-4ab0-89d3-cb051ab0e846.png",
+            stats: "28(14), 2/24, 19(11), 1/32"
           }
         ]} />
         
