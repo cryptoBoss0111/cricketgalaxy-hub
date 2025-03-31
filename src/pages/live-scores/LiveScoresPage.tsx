@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { RefreshCw } from 'lucide-react';
 
 const LiveScoresPage = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +59,7 @@ const LiveScoresPage = () => {
     <div className="min-h-screen bg-cricket-dark">
       <Helmet>
         <title>Live Scores | CricketExpress</title>
-        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';" />
+        <meta httpEquiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';" />
       </Helmet>
       
       <div className="container mx-auto py-6 px-4">
@@ -70,7 +70,7 @@ const LiveScoresPage = () => {
             onClick={loadWidget}
             className="flex items-center gap-2"
           >
-            {isLoading && <ReloadIcon className="h-4 w-4 animate-spin" />}
+            {isLoading && <RefreshCw className="h-4 w-4 animate-spin" />}
             Refresh Scores
           </Button>
         </div>
