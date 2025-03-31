@@ -75,19 +75,12 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
               "w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mb-2",
               getTeamBgColor(match.team1.shortName)
             )}>
-              <div className="w-full h-full flex items-center justify-center">
-                <img 
-                  src={match.team1.flagUrl} 
-                  alt={`${match.team1.name} logo`}
-                  className="w-16 h-16 object-contain"
-                  loading="eager"
-                  onError={(e) => {
-                    console.error(`Failed to load image: ${match.team1.name} logo`);
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = match.team1.shortName;
-                  }}
-                />
-              </div>
+              <img 
+                src={match.team1.flagUrl} 
+                alt={`${match.team1.name} logo`}
+                className="w-16 h-16 object-contain"
+                loading="eager"
+              />
             </div>
             <span className="font-bold text-lg text-center">{match.team1.shortName}</span>
             <span className="text-xs text-gray-500">{match.team1.name}</span>
@@ -105,19 +98,12 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
               "w-20 h-20 rounded-full flex items-center justify-center overflow-hidden mb-2",
               getTeamBgColor(match.team2.shortName)
             )}>
-              <div className="w-full h-full flex items-center justify-center">
-                <img 
-                  src={match.team2.flagUrl} 
-                  alt={`${match.team2.name} logo`}
-                  className="w-16 h-16 object-contain"
-                  loading="eager"
-                  onError={(e) => {
-                    console.error(`Failed to load image: ${match.team2.name} logo`);
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = match.team2.shortName;
-                  }}
-                />
-              </div>
+              <img 
+                src={match.team2.flagUrl} 
+                alt={`${match.team2.name} logo`}
+                className="w-16 h-16 object-contain"
+                loading="eager"
+              />
             </div>
             <span className="font-bold text-lg text-center">{match.team2.shortName}</span>
             <span className="text-xs text-gray-500">{match.team2.name}</span>
