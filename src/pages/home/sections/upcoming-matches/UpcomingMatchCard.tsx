@@ -20,6 +20,7 @@ export interface UpcomingMatch {
   venue: string;
   date: string;
   time: string;
+  details?: string;
 }
 
 interface UpcomingMatchCardProps {
@@ -33,9 +34,9 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   const [team1ImageError, setTeam1ImageError] = useState(false);
   const [team2ImageError, setTeam2ImageError] = useState(false);
   
-  // Use team flag URLs directly
-  const team1FlagUrl = match.team1.flagUrl;
-  const team2FlagUrl = match.team2.flagUrl;
+  // Force reload images to fix caching issues
+  const team1FlagUrl = `${match.team1.flagUrl}?v=${Date.now()}`;
+  const team2FlagUrl = `${match.team2.flagUrl}?v=${Date.now()}`;
   
   // Preload images for better performance
   useEffect(() => {
@@ -44,11 +45,17 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
     
     img1.src = team1FlagUrl;
     img1.onload = () => setTeam1ImageLoaded(true);
-    img1.onerror = () => setTeam1ImageError(true);
+    img1.onerror = () => {
+      console.error(`Failed to load team1 image: ${team1FlagUrl}`);
+      setTeam1ImageError(true);
+    };
     
     img2.src = team2FlagUrl;
     img2.onload = () => setTeam2ImageLoaded(true);
-    img2.onerror = () => setTeam2ImageError(true);
+    img2.onerror = () => {
+      console.error(`Failed to load team2 image: ${team2FlagUrl}`);
+      setTeam2ImageError(true);
+    };
     
     return () => {
       img1.onload = null;
@@ -57,6 +64,12 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
       img2.onerror = null;
     };
   }, [team1FlagUrl, team2FlagUrl]);
+  
+  // Log the actual URLs being used for debugging
+  useEffect(() => {
+    console.log(`Loading team1 image (${match.team1.shortName}): ${team1FlagUrl}`);
+    console.log(`Loading team2 image (${match.team2.shortName}): ${team2FlagUrl}`);
+  }, [match.team1.shortName, match.team2.shortName, team1FlagUrl, team2FlagUrl]);
   
   return (
     <Card className={cn(
@@ -86,8 +99,14 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
                 team1ImageLoaded ? "opacity-100" : "opacity-0",
                 team1ImageError ? "hidden" : "block"
               )}
-              onLoad={() => setTeam1ImageLoaded(true)}
-              onError={() => setTeam1ImageError(true)}
+              onLoad={() => {
+                console.log(`✅ Team1 image loaded: ${team1FlagUrl}`);
+                setTeam1ImageLoaded(true);
+              }}
+              onError={(e) => {
+                console.error(`❌ Failed to load team1 image: ${team1FlagUrl}`);
+                setTeam1ImageError(true);
+              }}
               loading="eager"
               decoding="async"
               width={32}
@@ -111,8 +130,14 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
                 team2ImageLoaded ? "opacity-100" : "opacity-0",
                 team2ImageError ? "hidden" : "block"
               )}
-              onLoad={() => setTeam2ImageLoaded(true)}
-              onError={() => setTeam2ImageError(true)}
+              onLoad={() => {
+                console.log(`✅ Team2 image loaded: ${team2FlagUrl}`);
+                setTeam2ImageLoaded(true);
+              }}
+              onError={() => {
+                console.error(`❌ Failed to load team2 image: ${team2FlagUrl}`);
+                setTeam2ImageError(true);
+              }}
               loading="eager"
               decoding="async"
               width={32}
