@@ -158,7 +158,7 @@ const FantasyTipsPage = () => {
       team: "Kolkata Knight Riders",
       role: "Batsman",
       form: "Average",
-      image_url: "",
+      image_url: "/lovable-uploads/fe2f72a9-f686-42da-bdbe-553aac70e888.png",
       stats: "31(28), 47(31), 22(19)",
       points_prediction: 72,
       match_details: "MI vs KKR",
