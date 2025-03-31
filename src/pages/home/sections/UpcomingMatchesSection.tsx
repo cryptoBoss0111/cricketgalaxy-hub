@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import UpcomingMatchesGrid from './upcoming-matches/UpcomingMatchesGrid';
 import HomeFantasyPicksSection from './upcoming-matches/HomeFantasyPicksSection';
 import { fantasyPicks } from '../data/homeData';
+import { getOptimizedImageUrl } from '@/utils/imageUtils';
 
 // Define the upcoming matches data structure
 interface TeamInfo {
@@ -31,7 +32,7 @@ export const UpcomingMatchesSection: React.FC = () => {
       team1: {
         name: 'Mumbai Indians',
         shortName: 'MI',
-        flagUrl: '/lovable-uploads/19133248-8247-4e8c-8615-f3c5b00d9287.png'
+        flagUrl: getOptimizedImageUrl('', 'MI') // Use the updated MI logo
       },
       team2: {
         name: 'Kolkata Knight Riders',

@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getOptimizedImageUrl } from '@/utils/imageUtils';
 
 interface TeamInfo {
   name: string;
@@ -32,6 +33,31 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   const [team1ImageError, setTeam1ImageError] = useState(false);
   const [team2ImageError, setTeam2ImageError] = useState(false);
   
+  // Get optimized image URLs for teams
+  const team1FlagUrl = getOptimizedImageUrl(match.team1.flagUrl, match.team1.shortName);
+  const team2FlagUrl = getOptimizedImageUrl(match.team2.flagUrl, match.team2.shortName);
+  
+  // Preload images for better performance
+  useEffect(() => {
+    const img1 = new Image();
+    const img2 = new Image();
+    
+    img1.src = team1FlagUrl;
+    img1.onload = () => setTeam1ImageLoaded(true);
+    img1.onerror = () => setTeam1ImageError(true);
+    
+    img2.src = team2FlagUrl;
+    img2.onload = () => setTeam2ImageLoaded(true);
+    img2.onerror = () => setTeam2ImageError(true);
+    
+    return () => {
+      img1.onload = null;
+      img1.onerror = null;
+      img2.onload = null;
+      img2.onerror = null;
+    };
+  }, [team1FlagUrl, team2FlagUrl]);
+  
   return (
     <Card className={cn(
       "hover:shadow-md transition-all duration-300 animate-fade-in",
@@ -53,7 +79,7 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
               <Skeleton className="w-8 h-8 rounded-full" />
             )}
             <img 
-              src={match.team1.flagUrl} 
+              src={team1FlagUrl} 
               alt={match.team1.name}
               className={cn(
                 "w-8 h-8 rounded-full object-cover",
@@ -78,7 +104,7 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
               <Skeleton className="w-8 h-8 rounded-full" />
             )}
             <img 
-              src={match.team2.flagUrl} 
+              src={team2FlagUrl} 
               alt={match.team2.name}
               className={cn(
                 "w-8 h-8 rounded-full object-cover",
