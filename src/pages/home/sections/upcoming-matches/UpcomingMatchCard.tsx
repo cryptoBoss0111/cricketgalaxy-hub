@@ -60,61 +60,59 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
     <Card className="h-full overflow-hidden hover:shadow-md transition-all duration-300 border">
       <CardContent className="p-0 flex flex-col h-full">
         {/* Header with match type and date */}
-        <div className="flex items-center justify-between p-3 border-b">
-          <Badge variant="outline" className="text-xs bg-gray-100 text-gray-700 hover:bg-gray-200">
-            {match.matchType}
-          </Badge>
-          <span className="text-xs text-gray-500 font-medium">{match.date}</span>
+        <div className="flex items-center justify-between p-3 bg-gray-50 border-b">
+          <div className="text-xs font-medium text-gray-700">{match.matchType}</div>
+          <div className="text-xs text-gray-500 font-medium">{match.date}</div>
         </div>
         
         {/* Teams Section */}
-        <div className="flex justify-between items-center p-4">
+        <div className="flex justify-between items-center p-5">
           {/* Team 1 */}
           <div className="flex flex-col items-center">
             <div className={cn(
-              "w-14 h-14 rounded-full flex items-center justify-center mb-2",
+              "w-16 h-16 rounded-full flex items-center justify-center mb-2",
               getTeamBgColor(match.team1.shortName)
             )}>
-              <span className="text-white font-bold text-xl">{match.team1.shortName}</span>
+              <span className="text-white font-bold text-2xl">{match.team1.shortName}</span>
             </div>
-            <span className="text-xs text-gray-500 max-w-[80px] text-center truncate">{match.team1.name}</span>
+            <span className="text-xs text-gray-600 max-w-[90px] text-center truncate">{match.team1.name}</span>
           </div>
           
           {/* VS */}
           <div className="flex flex-col items-center px-2">
-            <span className="text-lg font-semibold text-gray-700 mb-1">VS</span>
+            <span className="text-lg font-semibold text-gray-700 mb-2">VS</span>
             <div className="w-8 h-0.5 bg-gray-300"></div>
           </div>
           
           {/* Team 2 */}
           <div className="flex flex-col items-center">
             <div className={cn(
-              "w-14 h-14 rounded-full flex items-center justify-center mb-2",
+              "w-16 h-16 rounded-full flex items-center justify-center mb-2",
               getTeamBgColor(match.team2.shortName)
             )}>
-              <span className="text-white font-bold text-xl">{match.team2.shortName}</span>
+              <span className="text-white font-bold text-2xl">{match.team2.shortName}</span>
             </div>
-            <span className="text-xs text-gray-500 max-w-[80px] text-center truncate">{match.team2.name}</span>
+            <span className="text-xs text-gray-600 max-w-[90px] text-center truncate">{match.team2.name}</span>
           </div>
         </div>
         
         {/* Time */}
-        <div className="px-4 py-2 text-center">
+        <div className="px-4 py-3 text-center border-t border-gray-100">
           <span className="text-sm font-medium">{match.time}</span>
         </div>
         
         {/* Match Details */}
         {match.details && (
-          <div className="px-4 py-2 text-center text-gray-600 flex-grow">
+          <div className="px-4 py-3 text-center text-gray-600 flex-grow border-t border-gray-100">
             <p className="text-xs line-clamp-2">{match.details}</p>
           </div>
         )}
         
         {/* Footer with venue */}
-        <div className="bg-gray-50 p-3 text-sm text-gray-600 rounded-b-lg border-t mt-auto">
-          <div className="flex items-start">
-            <MapPin className="h-4 w-4 mr-1 flex-shrink-0 text-gray-500 mt-0.5" />
-            <span className="line-clamp-1 text-xs">{match.venue}</span>
+        <div className="bg-white p-3 text-xs text-gray-600 border-t mt-auto">
+          <div className="flex items-center">
+            <MapPin className="h-4 w-4 mr-1 flex-shrink-0 text-gray-500" />
+            <span className="line-clamp-1">{match.venue}</span>
           </div>
         </div>
       </CardContent>

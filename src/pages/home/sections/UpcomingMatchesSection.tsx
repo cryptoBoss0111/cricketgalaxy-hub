@@ -23,7 +23,7 @@ interface UpcomingMatch {
 }
 
 export const UpcomingMatchesSection: React.FC = () => {
-  // Define multiple upcoming matches
+  // Define only the first 3 upcoming matches
   const upcomingMatches: UpcomingMatch[] = [
     {
       id: 'match-12',
@@ -72,22 +72,6 @@ export const UpcomingMatchesSection: React.FC = () => {
       date: 'April 2, 2025',
       time: '7:30 PM IST',
       details: 'RCB, playing at their home ground, will face GT'
-    },
-    {
-      id: 'match-15',
-      team1: {
-        name: 'Rajasthan Royals',
-        shortName: 'RR'
-      },
-      team2: {
-        name: 'Delhi Capitals',
-        shortName: 'DC'
-      },
-      matchType: 'IPL 2025',
-      venue: 'Sawai Mansingh Stadium, Jaipur',
-      date: 'April 3, 2025',
-      time: '7:30 PM IST',
-      details: 'RR will take on DC in Jaipur'
     }
   ];
 
