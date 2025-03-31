@@ -20,6 +20,7 @@ import SettingsManager from "@/admin/SettingsManager";
 import Analytics from "@/admin/Analytics";
 import FreeWarContestManager from "@/admin/FreeWarContestManager";
 import QuickBlogPage from "@/admin/QuickBlogPage";
+import MobileNavbar from "@/components/MobileNavbar";
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
         {/* 404 Route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <MobileNavbar />
       <Toaster />
     </>
   );

@@ -11,10 +11,12 @@ import { TrendingPlayersSection } from './sections/TrendingPlayersSection';
 import { QuickStatsSection } from './sections/QuickStatsSection';
 import { FanPollSection } from './sections/FanPollSection';
 import { useTheme } from '@/components/ThemeProvider';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const HomePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { theme } = useTheme();
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -44,7 +46,7 @@ const HomePage = () => {
   }
   
   return (
-    <div className="dark">
+    <div className={`dark ${isMobile ? "pb-16" : ""}`}>
       <LiveMatchesBar />
       <Navbar />
       <main>
