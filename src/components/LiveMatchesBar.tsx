@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import IPLLiveScoreWidget from './IPLLiveScoreWidget';
 
 interface TeamInfo {
   name: string;
@@ -25,6 +26,7 @@ const LiveMatchesBar = () => {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showWidget, setShowWidget] = useState(false);
 
   // Function to fetch live matches using ESPNCricinfo
   const fetchLiveMatches = async () => {
@@ -153,17 +155,23 @@ const LiveMatchesBar = () => {
             <span className="text-xs md:text-sm font-medium">Full Scores</span>
             <ExternalLink size={14} />
           </Link>
-          <a 
-            href="https://www.espncricinfo.com/series/ipl-2025-1449924/mumbai-indians-vs-kolkata-knight-riders-12th-match-1473449/live-cricket-score" 
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded hover:bg-yellow-400 ml-2"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-1 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded hover:bg-yellow-400"
+            onClick={() => setShowWidget(!showWidget)}
           >
             <span>MI vs KKR</span>
-            <ExternalLink size={12} />
-          </a>
+            {!showWidget && <ExternalLink size={12} />}
+          </Button>
         </div>
       </div>
+
+      {showWidget && (
+        <div className="absolute top-12 right-4 z-50 w-80 animate-in fade-in slide-in-from-top-5 duration-300">
+          <IPLLiveScoreWidget />
+        </div>
+      )}
 
       <style>{`
         .marquee {

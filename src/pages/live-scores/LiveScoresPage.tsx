@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { toast } from '@/hooks/use-toast';
 import CricbuzzScorecard from '@/components/CricbuzzScorecard';
 import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
+import IPLLiveScoreWidget from '@/components/IPLLiveScoreWidget';
 
 interface Match {
   id: string;
@@ -198,6 +198,12 @@ const LiveScoresPage = () => {
               Refresh Scores
             </Button>
           </div>
+        </div>
+        
+        {/* Featured Match Widget */}
+        <div className="mb-6 max-w-md mx-auto">
+          <h2 className="text-xl font-bold text-white mb-4">Featured IPL Match</h2>
+          <IPLLiveScoreWidget />
         </div>
         
         {/* Cricbuzz Scorecard */}
