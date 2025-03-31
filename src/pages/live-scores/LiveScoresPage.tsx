@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
@@ -207,7 +206,11 @@ const LiveScoresPage = () => {
                 {showESPNWidget ? 'Hide Scorecard' : 'Show Scorecard'}
               </Button>
             </div>
-            <ESPNScoreEmbed height="480px" className="bg-white rounded-lg shadow-md" />
+            <ESPNScoreEmbed 
+              height="480px" 
+              className="bg-white rounded-lg shadow-md" 
+              matchId={espnMatchId}
+            />
             <div className="mt-2 text-xs text-gray-300 flex items-center">
               <Info className="h-3 w-3 mr-1" />
               <span>Scores powered by ESPNCricinfo</span>

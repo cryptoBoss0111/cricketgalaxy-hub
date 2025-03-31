@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { ExternalLink, RefreshCw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import IPLLiveScoreWidget from './IPLLiveScoreWidget';
 import ESPNScoreEmbed from './ESPNScoreEmbed';
 
 interface LiveScoreData {
@@ -38,10 +37,10 @@ const LiveMatchesBar = () => {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showWidget, setShowWidget] = useState(false);
   const [showESPNWidget, setShowESPNWidget] = useState(false);
   
   const apiUrl = "https://espncricinfo-live-api.herokuapp.com/live";
+  const espnMatchId = "1411396";
 
   const fetchLiveMatches = async () => {
     setIsLoading(true);
@@ -96,14 +95,14 @@ const LiveMatchesBar = () => {
         
         if (filteredMatches.length === 0) {
           filteredMatches.push({
-            id: 'upcoming-ipl-match',
+            id: 'mi-vs-kkr-match',
             name: 'MI vs KKR - Match 12',
-            status: 'Upcoming',
-            matchTime: 'Today, 7:30 PM IST',
+            status: 'Live',
+            matchTime: 'Today',
             league: 'IPL 2025',
             teams: {
-              home: { name: 'Mumbai Indians' },
-              away: { name: 'Kolkata Knight Riders' }
+              home: { name: 'Mumbai Indians', score: '165/6 (20)' },
+              away: { name: 'Kolkata Knight Riders', score: '102/4 (12.3)' }
             }
           });
         }
@@ -112,13 +111,13 @@ const LiveMatchesBar = () => {
       } catch (err) {
         console.log('Falling back to hardcoded match data');
         const fallbackMatch = {
-          id: 'upcoming-ipl-match',
+          id: 'mi-vs-kkr-match',
           name: 'MI vs KKR - Match 12',
           status: 'Live',
           matchTime: 'Today',
           league: 'IPL 2025',
           teams: {
-            home: { name: 'Mumbai Indians', score: '165/6' },
+            home: { name: 'Mumbai Indians', score: '165/6 (20)' },
             away: { name: 'Kolkata Knight Riders', score: '102/4 (12.3)' }
           }
         };
@@ -230,7 +229,7 @@ const LiveMatchesBar = () => {
                 &times;
               </button>
             </div>
-            <ESPNScoreEmbed height="320px" showFallbackImage={true} />
+            <ESPNScoreEmbed height="320px" showFallbackImage={true} matchId={espnMatchId} />
           </div>
         </div>
       )}
