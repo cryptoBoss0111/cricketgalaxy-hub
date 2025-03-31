@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Info } from 'lucide-react';
+import { RefreshCw, Info, ExternalLink } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import CricbuzzScorecard from '@/components/CricbuzzScorecard';
 import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
 import IPLLiveScoreWidget from '@/components/IPLLiveScoreWidget';
+import ESPNScoreEmbed from '@/components/ESPNScoreEmbed';
 
 interface Match {
   id: string;
@@ -34,18 +35,17 @@ const LiveScoresPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [filterIPL, setFilterIPL] = useState<boolean>(true);
-  const [showCricbuzz, setShowCricbuzz] = useState<boolean>(true);
+  const [showCricbuzz, setShowCricbuzz] = useState<boolean>(false);
+  const [showESPNWidget, setShowESPNWidget] = useState<boolean>(true);
   
-  // Cricbuzz Match ID for IPL 2025 MI vs KKR
   const cricbuzzMatchId = "81030";
+  const espnMatchId = "1411396";
 
-  // Function to fetch live matches data from ESPNCricinfo
   const fetchLiveScores = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Using a cors proxy to access ESPN data
       const response = await fetch('https://corsproxy.io/?https://www.espncricinfo.com/matches/engine/match/live.json');
       
       if (!response.ok) {
@@ -55,10 +55,8 @@ const LiveScoresPage = () => {
       const data = await response.json();
       console.log('LiveScoresPage ESPNCricinfo API response:', data);
       
-      // Process matches from the API response
       const formattedMatches: Match[] = [];
       
-      // Parse ESPN data format
       if (data && data.matches && Array.isArray(data.matches)) {
         data.matches.forEach((match: any) => {
           formattedMatches.push({
@@ -99,19 +97,16 @@ const LiveScoresPage = () => {
     }
   };
 
-  // Fetch scores on component mount
   useEffect(() => {
     fetchLiveScores();
     
-    // Set up auto-refresh every 2 minutes
     const interval = setInterval(() => {
       fetchLiveScores();
-    }, 120000); // 2 minutes in milliseconds
+    }, 120000);
     
     return () => clearInterval(interval);
   }, []);
 
-  // Filter matches based on IPL preference
   const filteredMatches = filterIPL
     ? matches.filter(match => match.league && match.league.toLowerCase().includes('ipl 2025'))
     : matches;
@@ -200,13 +195,39 @@ const LiveScoresPage = () => {
           </div>
         </div>
         
-        {/* Featured Match Widget */}
+        {showESPNWidget && (
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">Live Scorecard - ESPNCricinfo</h2>
+              <Button
+                variant="outline"
+                onClick={() => setShowESPNWidget(!showESPNWidget)}
+              >
+                {showESPNWidget ? 'Hide Scorecard' : 'Show Scorecard'}
+              </Button>
+            </div>
+            <ESPNScoreEmbed matchId={espnMatchId} height="480px" className="bg-white rounded-lg shadow-md" />
+            <div className="mt-2 text-xs text-gray-300 flex items-center">
+              <Info className="h-3 w-3 mr-1" />
+              <span>Scores powered by ESPNCricinfo</span>
+              <a 
+                href="https://www.espncricinfo.com/live-cricket-score" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="ml-auto flex items-center text-cricket-accent hover:text-cricket-accent/80"
+              >
+                <span>View all scores</span>
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </a>
+            </div>
+          </div>
+        )}
+        
         <div className="mb-6 max-w-md mx-auto">
           <h2 className="text-xl font-bold text-white mb-4">Featured IPL Match</h2>
           <IPLLiveScoreWidget />
         </div>
         
-        {/* Cricbuzz Scorecard */}
         {showCricbuzz && (
           <div className="mb-6">
             <div className="flex justify-between items-center mb-4">

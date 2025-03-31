@@ -1,10 +1,10 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, RefreshCw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import IPLLiveScoreWidget from './IPLLiveScoreWidget';
+import ESPNScoreEmbed from './ESPNScoreEmbed';
 
 interface TeamInfo {
   name: string;
@@ -28,13 +28,13 @@ const LiveMatchesBar = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showWidget, setShowWidget] = useState(false);
+  const [showESPNWidget, setShowESPNWidget] = useState(false);
+  const espnMatchId = "1411396";
 
-  // Function to fetch live matches using ESPNCricinfo
   const fetchLiveMatches = async () => {
     setIsLoading(true);
     
     try {
-      // Using a cors proxy to access ESPN data
       const response = await fetch('https://corsproxy.io/?https://www.espncricinfo.com/matches/engine/match/live.json');
       
       if (!response.ok) {
@@ -44,13 +44,10 @@ const LiveMatchesBar = () => {
       const data = await response.json();
       console.log('ESPNCricinfo API response:', data);
       
-      // Process the matches from the API response
       const liveMatches: LiveMatch[] = [];
       
-      // Parse ESPN data format
       if (data && data.matches && Array.isArray(data.matches)) {
         data.matches.forEach((match: any) => {
-          // Check if it's an IPL match
           const isIPLMatch = match.series_name && match.series_name.toLowerCase().includes('ipl');
           
           if (match.live_state === 'live' || isIPLMatch) {
@@ -75,15 +72,12 @@ const LiveMatchesBar = () => {
         });
       }
       
-      // Filter to prioritize IPL matches if available
       const iplMatches = liveMatches.filter(match => 
         match.league && match.league.toLowerCase().includes('ipl 2025')
       );
       
-      // Use IPL matches if available, otherwise use all matches
       const filteredMatches = iplMatches.length > 0 ? iplMatches : liveMatches;
       
-      // If no matches are available, add a placeholder upcoming match
       if (filteredMatches.length === 0) {
         filteredMatches.push({
           id: 'upcoming-ipl-match',
@@ -113,19 +107,16 @@ const LiveMatchesBar = () => {
     }
   };
 
-  // Initial fetch
   useEffect(() => {
     fetchLiveMatches();
     
-    // Refresh every 2 minutes
     const interval = setInterval(() => {
       fetchLiveMatches();
-    }, 120000); // 2 minutes in milliseconds
+    }, 120000);
     
     return () => clearInterval(interval);
   }, []);
 
-  // If there are no live matches, don't render the bar
   if (!isLoading && (matches.length === 0 || error)) {
     return null;
   }
@@ -185,17 +176,29 @@ const LiveMatchesBar = () => {
             variant="ghost"
             size="sm"
             className="flex items-center gap-1 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded hover:bg-yellow-400"
-            onClick={() => setShowWidget(!showWidget)}
+            onClick={() => setShowESPNWidget(!showESPNWidget)}
           >
-            <span>MI vs KKR</span>
-            {!showWidget && <ExternalLink size={12} />}
+            <span>Live Score</span>
+            {!showESPNWidget && <ExternalLink size={12} />}
           </Button>
         </div>
       </div>
 
-      {showWidget && (
-        <div className="absolute top-12 right-4 z-50 w-80 animate-in fade-in slide-in-from-top-5 duration-300">
-          <IPLLiveScoreWidget />
+      {showESPNWidget && (
+        <div className="absolute top-12 right-4 z-50 w-96 animate-in fade-in slide-in-from-top-5 duration-300">
+          <div className="bg-white rounded-lg shadow-xl overflow-hidden">
+            <div className="p-2 bg-blue-600 text-white flex justify-between items-center">
+              <span className="font-medium">Live Cricket Score</span>
+              <button 
+                className="text-white/80 hover:text-white" 
+                onClick={() => setShowESPNWidget(false)}
+              >
+                <span className="sr-only">Close</span>
+                &times;
+              </button>
+            </div>
+            <ESPNScoreEmbed matchId={espnMatchId} height="320px" />
+          </div>
         </div>
       )}
 
