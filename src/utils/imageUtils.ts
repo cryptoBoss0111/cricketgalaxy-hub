@@ -2,7 +2,7 @@
 
 // List of known local images for quicker reference
 const knownImages: Record<string, string> = {
-  'MI': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Updated Mumbai Indians logo with the new image
+  'MI': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png', // Updated Mumbai Indians logo with the newly uploaded image
   'CSK': '/lovable-uploads/412c16d3-2e56-4ea0-b086-deed0e90d189.png',
   'RR': '/lovable-uploads/e61767b2-868d-47bc-8eb7-911d51239eb1.png',
   'KKR': '/lovable-uploads/46dae9e8-7caf-4b10-b557-c735f3a51161.png', // Updated KKR logo
@@ -14,21 +14,24 @@ const knownImages: Record<string, string> = {
 
 // Map of image IDs to local paths for better performance
 const imageIdMap: Record<string, string> = {
-  // New Mumbai Indians logo
-  '7c6b5fbe-264b-4ddb-8a13-3ad8757b5556': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png',
-  'd032bae5-4076-4cc1-adb8-e2ad1ac0906a': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Previous MI logo ID points to new logo
-  '5822342e-1583-4231-8d81-afed50615136': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Previous MI logo ID points to new logo
-  '24add757-3d73-4ffc-b77f-51c845609433': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Alternate MI logo
-  '19133248-8247-4e8c-8615-f3c5b00d9287': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Previous MI logo ID points to new logo
-  '95836242-efe5-4dab-864c-1d7c3d183fd1': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Previous MI logo ID points to new logo
-  '65c4f6b7-ff25-4841-bce7-30bc76245b41': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Previous MI logo ID points to new logo
-  'ecc2d92f-2f5b-47a3-ae69-17dc0df384cd': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Updated MI logo
-  '2a4ce6cf-adb0-4f0a-9c8a-3353432db175': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Previous MI logo ID points to new logo
-  '1d4a5e68-72f5-4f46-9b46-071be8fdd0fa': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Previous MI logo ID points to new logo
-  'f23e809f-871c-487b-b60f-cb1c0614fc56': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Older MI logo ID points to new logo
-  '0e340cba-e05f-473c-a8f1-8cdefe533c00': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Direct MI logo ID
-  '5b7f4438-0859-4c69-a3ee-5dc05d2cd4bf': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Previous MI logo ID points to new logo
-  '051d2143-4908-4260-975a-746c1c9bd80d': '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png', // Direct MI logo ID
+  // New Mumbai Indians logo (latest uploaded)
+  '1718f29d-1883-4a28-8d2e-297f47801e7e': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  
+  // Previous Mumbai Indians logo IDs point to new logo
+  '7c6b5fbe-264b-4ddb-8a13-3ad8757b5556': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  'd032bae5-4076-4cc1-adb8-e2ad1ac0906a': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  '5822342e-1583-4231-8d81-afed50615136': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  '24add757-3d73-4ffc-b77f-51c845609433': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  '19133248-8247-4e8c-8615-f3c5b00d9287': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  '95836242-efe5-4dab-864c-1d7c3d183fd1': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  '65c4f6b7-ff25-4841-bce7-30bc76245b41': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  'ecc2d92f-2f5b-47a3-ae69-17dc0df384cd': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  '2a4ce6cf-adb0-4f0a-9c8a-3353432db175': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  '1d4a5e68-72f5-4f46-9b46-071be8fdd0fa': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  'f23e809f-871c-487b-b60f-cb1c0614fc56': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  '0e340cba-e05f-473c-a8f1-8cdefe533c00': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  '5b7f4438-0859-4c69-a3ee-5dc05d2cd4bf': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
+  '051d2143-4908-4260-975a-746c1c9bd80d': '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png',
   
   // KKR and other team logos
   'ce55e622-ee4f-4402-a770-0dc4c874de64': '/lovable-uploads/46dae9e8-7caf-4b10-b557-c735f3a51161.png', // Updated KKR logo
@@ -48,7 +51,7 @@ const imageIdMap: Record<string, string> = {
 export const getOptimizedImageUrl = (url: string, teamShortName?: string): string => {
   // Hardcoded direct returns for MI and KKR to ensure they always work
   if (teamShortName === 'MI') {
-    return '/lovable-uploads/7c6b5fbe-264b-4ddb-8a13-3ad8757b5556.png';
+    return '/lovable-uploads/1718f29d-1883-4a28-8d2e-297f47801e7e.png';
   }
   
   if (teamShortName === 'KKR') {

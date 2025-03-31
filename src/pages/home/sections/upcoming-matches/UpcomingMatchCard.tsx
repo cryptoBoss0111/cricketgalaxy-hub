@@ -3,7 +3,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Clock } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 interface TeamInfo {
   name: string;
@@ -125,15 +125,11 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
           </div>
         )}
         
-        {/* Footer with venue and time */}
+        {/* Footer with venue */}
         <div className="bg-gray-50 p-4 text-sm text-gray-600 rounded-b-lg border-t">
-          <div className="flex items-start mb-2">
+          <div className="flex items-start">
             <MapPin className="h-4 w-4 mr-2 flex-shrink-0 text-gray-500" />
             <span className="line-clamp-2">{match.venue}</span>
-          </div>
-          <div className="flex items-start">
-            <Clock className="h-4 w-4 mr-2 flex-shrink-0 text-gray-500" />
-            <span>{match.time}</span>
           </div>
         </div>
       </CardContent>
