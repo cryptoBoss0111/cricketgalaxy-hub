@@ -158,7 +158,8 @@ const LiveMatchesBar = () => {
         </Link>
       </div>
 
-      <style jsx>{`
+      <style>
+        {`
         .marquee {
           width: 100%;
           overflow: hidden;
@@ -174,7 +175,8 @@ const LiveMatchesBar = () => {
           from { transform: translateX(100%); }
           to { transform: translateX(-100%); }
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
