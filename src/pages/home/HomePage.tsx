@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
@@ -89,6 +88,15 @@ const HomePage = () => {
             stats: "65(31), 43(29), 72(37)"
           },
           {
+            id: "hp-pandya-home",
+            player: "Hardik Pandya",
+            team: "Mumbai Indians",
+            role: "All-Rounder",
+            form: "Average",
+            imageUrl: "/lovable-uploads/cdd2468f-c245-4e98-b13a-bb4fecb899e6.png",
+            stats: "23(15), 1/32, 31(22), 0/29"
+          },
+          {
             id: "ar-russell-home",
             player: "Andre Russell",
             team: "Kolkata Knight Riders",
@@ -96,15 +104,6 @@ const HomePage = () => {
             form: "Excellent",
             imageUrl: "/lovable-uploads/5f09742b-2608-4ef2-b57b-7cabaab57f6a.png",
             stats: "42(19), 2/26, 38(16), 3/31"
-          },
-          {
-            id: "qdk-home",
-            player: "Quinton de Kock",
-            team: "Kolkata Knight Riders",
-            role: "Wicketkeeper",
-            form: "Excellent",
-            imageUrl: "/lovable-uploads/50e4858d-9918-404c-b823-b3552013fd2b.png",
-            stats: "97*, 45(32), 63(41)"
           }
         ]} />
         

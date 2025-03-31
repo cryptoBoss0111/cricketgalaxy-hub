@@ -106,7 +106,7 @@ const FantasyTipsPage = () => {
       team: "Mumbai Indians",
       role: "All-Rounder",
       form: "Average",
-      image_url: "",
+      image_url: "/lovable-uploads/cdd2468f-c245-4e98-b13a-bb4fecb899e6.png",
       stats: "23(15), 1/32, 31(22), 0/29",
       points_prediction: 78,
       match_details: "MI vs KKR",
