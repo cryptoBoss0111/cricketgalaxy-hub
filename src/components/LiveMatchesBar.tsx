@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 // Types for the Cricket API response
 interface MatchData {
@@ -22,6 +23,7 @@ interface ApiResponse {
   info: {
     hitsToday: number;
   };
+  message?: string;
 }
 
 const API_KEY = "f948889f-9691-4345-8d1e-ad455e012bb5";
@@ -30,27 +32,46 @@ const API_ENDPOINT = "https://api.cricapi.com/v1/cricScore";
 const LiveMatchesBar = () => {
   const [liveMatches, setLiveMatches] = useState<MatchData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Function to fetch live IPL matches
   const fetchLiveMatches = async () => {
     setIsLoading(true);
+    setError(null);
     
     try {
+      console.log("LiveMatchesBar: Fetching from API:", `${API_ENDPOINT}?apikey=${API_KEY}`);
+      
       const response = await fetch(`${API_ENDPOINT}?apikey=${API_KEY}`);
       const data: ApiResponse = await response.json();
       
+      console.log("LiveMatchesBar API Response:", data);
+      
       if (data.status === 'success') {
-        // Filter for IPL matches that are live
-        const liveIplMatches = data.data.filter(match => 
-          match.series.includes("Indian Premier League") && 
-          match.ms === 'live'
-        );
-        
-        setLiveMatches(liveIplMatches);
+        if (!data.data || !Array.isArray(data.data)) {
+          console.error("Invalid API response format:", data);
+          setError('Invalid API response format');
+          setLiveMatches([]);
+        } else {
+          // Filter for IPL matches that are live
+          const liveIplMatches = data.data.filter(match => 
+            match.series && match.series.includes("Indian Premier League") && 
+            match.ms === 'live'
+          );
+          
+          console.log("LiveMatchesBar filtered IPL matches:", liveIplMatches);
+          setLiveMatches(liveIplMatches);
+        }
+      } else {
+        console.error("API returned failure status:", data);
+        setError(data.message || 'API returned failure status');
+        setLiveMatches([]);
       }
     } catch (error) {
       console.error("Error fetching live matches:", error);
+      setError('Failed to fetch live matches');
+      setLiveMatches([]);
     } finally {
       setIsLoading(false);
     }
@@ -99,8 +120,8 @@ const LiveMatchesBar = () => {
     return scoreText;
   };
 
-  // If no live matches, don't show the bar
-  if (!isLoading && liveMatches.length === 0) {
+  // If error or no live matches, don't show the bar
+  if ((!isLoading && liveMatches.length === 0) || error) {
     return null;
   }
 

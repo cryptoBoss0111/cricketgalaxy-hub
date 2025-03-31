@@ -44,6 +44,7 @@ const LiveScoresPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [apiHits, setApiHits] = useState<number>(0);
+  const [apiResponse, setApiResponse] = useState<any>(null); // For debugging
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to fetch live scores from Cricket API
@@ -52,43 +53,61 @@ const LiveScoresPage = () => {
     setError(null);
     
     try {
+      console.log("Fetching from API:", `${API_ENDPOINT}?apikey=${API_KEY}`);
+      
       const response = await fetch(`${API_ENDPOINT}?apikey=${API_KEY}`);
-      const data: ApiResponse = await response.json();
+      const data = await response.json();
+      
+      // Store the raw response for debugging
+      setApiResponse(data);
+      console.log("API Response:", data);
       
       if (data.status === 'failure') {
-        setError('API returned failure status. Please try again later.');
+        setError(`API returned failure status: ${data.message || 'Unknown error'}`);
         toast({
           title: "Error fetching scores",
-          description: "There was a problem fetching the latest scores. Please try again.",
+          description: `API Error: ${data.message || 'Unknown error'}`,
+          variant: "destructive"
+        });
+      } else if (!data.data || !Array.isArray(data.data)) {
+        setError('Invalid API response format. Expected an array of matches.');
+        toast({
+          title: "Error parsing scores",
+          description: "Received invalid data format from API",
           variant: "destructive"
         });
       } else {
         // Filter to show only IPL matches
         const iplMatches = data.data.filter(match => 
-          match.series.includes("Indian Premier League")
+          match.series && match.series.includes("Indian Premier League")
         );
+        
+        console.log("Filtered IPL Matches:", iplMatches);
         
         setMatches(iplMatches);
         setLastUpdated(new Date());
-        setApiHits(data.info.hitsToday);
         
-        // Adjust refresh interval if approaching the API limit
-        if (data.info.hitsToday > 450) {
-          // Slow down to 5 minutes if close to the limit
-          resetRefreshInterval(300000); // 5 minutes
-          toast({
-            title: "API Usage High",
-            description: "Approaching daily limit. Updates slowed to once every 5 minutes.",
-            duration: 5000,
-          });
+        if (data.info) {
+          setApiHits(data.info.hitsToday);
+          
+          // Adjust refresh interval if approaching the API limit
+          if (data.info.hitsToday > 450) {
+            // Slow down to 5 minutes if close to the limit
+            resetRefreshInterval(300000); // 5 minutes
+            toast({
+              title: "API Usage High",
+              description: "Approaching daily limit. Updates slowed to once every 5 minutes.",
+              duration: 5000,
+            });
+          }
         }
       }
     } catch (err) {
       console.error("Error fetching live scores:", err);
-      setError('Failed to fetch live scores. Please check your connection and try again.');
+      setError(`Failed to fetch live scores: ${err instanceof Error ? err.message : 'Unknown error'}`);
       toast({
-        title: "Error",
-        description: "Failed to fetch live scores. Please try again later.",
+        title: "Connection Error",
+        description: "Failed to connect to the cricket scores API. Please try again later.",
         variant: "destructive"
       });
     } finally {
@@ -181,6 +200,14 @@ const LiveScoresPage = () => {
             <CardContent className="pt-6">
               <div className="text-center text-red-600">
                 <p>{error}</p>
+                <div className="mt-4 p-3 bg-gray-50 rounded text-left text-xs font-mono overflow-auto max-h-48">
+                  <p className="font-medium mb-1">API Response Debug:</p>
+                  {apiResponse ? (
+                    <pre>{JSON.stringify(apiResponse, null, 2)}</pre>
+                  ) : (
+                    <p>No response data available</p>
+                  )}
+                </div>
                 <Button variant="outline" onClick={() => fetchLiveScores()} className="mt-4">
                   Try Again
                 </Button>
@@ -207,10 +234,18 @@ const LiveScoresPage = () => {
               <Card className="col-span-full bg-white">
                 <CardContent className="pt-6">
                   <div className="text-center">
-                    <p>No IPL 2025 matches currently live.</p>
+                    <p>No IPL 2025 matches currently found.</p>
                     <p className="text-gray-500 text-sm mt-2">
                       Check back later for upcoming matches or results.
                     </p>
+                    <div className="mt-4 p-3 bg-gray-50 rounded text-left text-xs font-mono overflow-auto max-h-48">
+                      <p className="font-medium mb-1">API Response:</p>
+                      {apiResponse ? (
+                        <pre>{JSON.stringify(apiResponse, null, 2)}</pre>
+                      ) : (
+                        <p>No response data available</p>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
