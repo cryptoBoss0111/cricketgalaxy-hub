@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MapPin, Clock } from 'lucide-react';
 
 interface TeamInfo {
   name: string;
@@ -61,7 +62,7 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
   
   return (
     <Card className={cn(
-      "hover:shadow-md transition-all duration-300 animate-fade-in",
+      "hover:shadow-md transition-all duration-300 animate-fade-in overflow-hidden",
       index === 0 ? "animate-delay-100" : "",
       index === 1 ? "animate-delay-200" : "",
       index === 2 ? "animate-delay-300" : ""
@@ -74,65 +75,68 @@ const UpcomingMatchCard: React.FC<UpcomingMatchCardProps> = ({ match, index }) =
           <span className="text-xs text-gray-500">{match.date}</span>
         </div>
         
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between mb-4 px-2">
+          <div className="flex flex-col items-center space-y-2">
             {!team1ImageLoaded && (
               <Skeleton className={cn(
-                "w-10 h-10 rounded-full",
+                "w-12 h-12 rounded-full",
                 getTeamBgColor(match.team1.shortName)
               )} />
             )}
             <div className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center",
+              "w-12 h-12 rounded-full flex items-center justify-center overflow-hidden",
               getTeamBgColor(match.team1.shortName),
               team1ImageLoaded ? "opacity-100" : "opacity-0"
             )}>
               <img 
                 src={match.team1.flagUrl} 
                 alt={`${match.team1.name} logo`}
-                className="w-8 h-8 object-contain"
+                className="w-10 h-10 object-contain"
                 onLoad={() => setTeam1ImageLoaded(true)}
-                width={32}
-                height={32}
+                width={40}
+                height={40}
               />
             </div>
-            <span className="font-semibold">{match.team1.shortName}</span>
+            <span className="font-semibold text-sm">{match.team1.shortName}</span>
           </div>
           
-          <span className="text-sm text-gray-500">vs</span>
+          <div className="flex flex-col items-center">
+            <span className="text-sm text-gray-600 font-medium mb-2">vs</span>
+            <div className="w-6 h-0.5 bg-gray-200"></div>
+          </div>
           
-          <div className="flex items-center space-x-2">
-            <span className="font-semibold">{match.team2.shortName}</span>
+          <div className="flex flex-col items-center space-y-2">
             {!team2ImageLoaded && (
               <Skeleton className={cn(
-                "w-10 h-10 rounded-full",
+                "w-12 h-12 rounded-full",
                 getTeamBgColor(match.team2.shortName)
               )} />
             )}
             <div className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center",
+              "w-12 h-12 rounded-full flex items-center justify-center overflow-hidden",
               getTeamBgColor(match.team2.shortName),
               team2ImageLoaded ? "opacity-100" : "opacity-0"
             )}>
               <img 
                 src={match.team2.flagUrl} 
                 alt={`${match.team2.name} logo`}
-                className="w-8 h-8 object-contain"
+                className="w-10 h-10 object-contain"
                 onLoad={() => setTeam2ImageLoaded(true)}
-                width={32}
-                height={32}
+                width={40}
+                height={40}
               />
             </div>
+            <span className="font-semibold text-sm">{match.team2.shortName}</span>
           </div>
         </div>
         
-        <div className="text-xs text-gray-500 flex flex-col space-y-1">
+        <div className="text-xs text-gray-500 flex flex-col space-y-2 mt-4 border-t pt-3">
           <div className="flex items-start">
-            <span className="mr-2">🏟️</span>
-            <span>{match.venue}</span>
+            <MapPin className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+            <span className="line-clamp-2">{match.venue}</span>
           </div>
           <div className="flex items-start">
-            <span className="mr-2">⏰</span>
+            <Clock className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
             <span>{match.time}</span>
           </div>
         </div>
