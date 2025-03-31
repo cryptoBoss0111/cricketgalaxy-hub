@@ -1,12 +1,14 @@
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ESPNScoreEmbedProps {
   matchId?: string;
   width?: string;
   height?: string;
   className?: string;
+  showFallbackImage?: boolean;
 }
 
 const ESPNScoreEmbed = ({
@@ -14,9 +16,15 @@ const ESPNScoreEmbed = ({
   width = "100%",
   height = "480px",
   className = "",
+  showFallbackImage = true,
 }: ESPNScoreEmbedProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  
+  // Direct ESPNCricinfo URL - if iframe embedding doesn't work, we'll redirect here
+  const directUrl = `https://www.espncricinfo.com/series/ipl-2025-1449924/live-cricket-score`;
+  
+  // Match-specific widget URL
   const embedUrl = `https://www.espncricinfo.com/scores/widget/cricket/${matchId}`;
 
   // Handle iframe load events
@@ -57,13 +65,28 @@ const ESPNScoreEmbed = ({
           <p className="text-sm text-yellow-600 text-center mt-1">
             This might be due to content restrictions or your browser's security settings.
           </p>
+          
+          {showFallbackImage && (
+            <div className="my-4 max-w-full">
+              <img 
+                src="https://www.cricbuzz.com/api/html/cricket-scorecard/82383" 
+                alt="Scorecard Snapshot" 
+                className="max-w-full h-auto border rounded-lg shadow-sm"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
           <a 
-            href="https://www.espncricinfo.com/live-cricket-score" 
+            href={directUrl}
             target="_blank" 
             rel="noopener noreferrer"
-            className="mt-4 text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-2.5"
+            className="mt-4 text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-2.5 flex items-center"
           >
-            View Scores on ESPNcricinfo
+            <span>View Scores on ESPNcricinfo</span>
+            <ExternalLink className="ml-2 h-4 w-4" />
           </a>
         </div>
       ) : (
