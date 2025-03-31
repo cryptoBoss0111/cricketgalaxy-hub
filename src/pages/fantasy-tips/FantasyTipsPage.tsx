@@ -145,7 +145,7 @@ const FantasyTipsPage = () => {
       team: "Mumbai Indians",
       role: "Batsman",
       form: "Good",
-      image_url: "",
+      image_url: "/lovable-uploads/143884fc-6b7b-4af4-b860-2122a3ebcd67.png",
       stats: "41(27), 56(38), 37(22)",
       points_prediction: 80,
       match_details: "MI vs KKR",

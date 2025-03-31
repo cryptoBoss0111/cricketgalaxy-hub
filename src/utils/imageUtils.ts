@@ -1,3 +1,4 @@
+
 // Define a utility to optimize and improve image loading across the site
 
 // List of known local images for quicker reference
@@ -44,7 +45,8 @@ const imageIdMap: Record<string, string> = {
   '95f7655d-a0d9-48a3-a64c-a8f362d04b31': "/lovable-uploads/95f7655d-a0d9-48a3-a64c-a8f362d04b31.png",
   'e61767b2-868d-47bc-8eb7-911d51239eb1': "/lovable-uploads/e61767b2-868d-47bc-8eb7-911d51239eb1.png",
   '1e95e00e-b311-4ab0-89d3-cb051ab0e846': "/lovable-uploads/1e95e00e-b311-4ab0-89d3-cb051ab0e846.png", // Sunil Narine image
-  '5bb2ea7d-70ca-49f6-9f96-1002a5b7b550': "/lovable-uploads/5bb2ea7d-70ca-49f6-9f96-1002a5b7b550.png" // Varun Chakravarthy image
+  '5bb2ea7d-70ca-49f6-9f96-1002a5b7b550': "/lovable-uploads/5bb2ea7d-70ca-49f6-9f96-1002a5b7b550.png", // Varun Chakravarthy image
+  '143884fc-6b7b-4af4-b860-2122a3ebcd67': "/lovable-uploads/143884fc-6b7b-4af4-b860-2122a3ebcd67.png" // Tilak Varma image
 };
 
 /**
