@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -297,7 +296,7 @@ const FantasyTipsPage = () => {
                   <SelectValue placeholder="Filter by match" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Matches</SelectItem>
+                  <SelectItem value="all">All Matches</SelectItem>
                   {matches.map((match) => (
                     <SelectItem key={match.id} value={match.id}>
                       {match.team1} vs {match.team2}
