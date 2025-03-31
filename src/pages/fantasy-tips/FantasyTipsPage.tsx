@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -167,15 +168,15 @@ const FantasyTipsPage = () => {
     },
     {
       id: "pick-11",
-      player_name: "Shubman Gill",
-      team: "Gujarat Titans",
-      role: "Batsman",
+      player_name: "Jasprit Bumrah",
+      team: "Mumbai Indians",
+      role: "Bowler",
       form: "Excellent",
-      image_url: "/lovable-uploads/3a3641a5-0c32-4ac8-8867-0a4cb144760d.png",
-      stats: "92(58), 57(42), 104(63)",
-      points_prediction: 98,
-      match_details: "GT vs RCB",
-      selection_reason: "Gill has been in tremendous form, scoring centuries and consistently delivering high scores. He's the key batsman for Gujarat Titans.",
+      image_url: "/lovable-uploads/4c55a560-556b-4890-b1d3-7375ad7a8f23.png",
+      stats: "3/21, 2/17, 4/24",
+      points_prediction: 96,
+      match_details: "MI vs KKR",
+      selection_reason: "Bumrah is MI's pace spearhead with deadly yorkers and variations. He's consistently among the top fantasy point earners with 26 wickets in 17 matches against KKR.",
       created_at: new Date().toISOString(),
     }
   ];
