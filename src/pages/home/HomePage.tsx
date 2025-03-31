@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
@@ -46,7 +45,7 @@ const HomePage = () => {
   }
   
   return (
-    <div className={`dark ${isMobile ? "pb-16" : ""}`}>
+    <div className={`dark ${isMobile ? "pb-20" : ""}`}>
       <LiveMatchesBar />
       <Navbar />
       <main>
