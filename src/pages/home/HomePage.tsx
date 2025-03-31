@@ -76,8 +76,17 @@ const HomePage = () => {
             team: "Mumbai Indians",
             role: "Batsman",
             form: "Excellent",
-            imageUrl: "/lovable-uploads/8fddb4c1-d745-4902-ae9c-7a7e51dea885.png",
+            imageUrl: "/lovable-uploads/611356be-0c40-46ec-9995-1e3b95eab3e4.png",
             stats: "65(31), 43(29), 72(37)"
+          },
+          {
+            id: "ar-russell-home",
+            player: "Andre Russell",
+            team: "Kolkata Knight Riders",
+            role: "All-Rounder",
+            form: "Excellent",
+            imageUrl: "/lovable-uploads/5f09742b-2608-4ef2-b57b-7cabaab57f6a.png",
+            stats: "42(19), 2/26, 38(16), 3/31"
           }
         ]} />
         

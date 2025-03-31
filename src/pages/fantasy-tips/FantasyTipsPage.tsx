@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -56,7 +55,7 @@ const FantasyTipsPage = () => {
       team: "Kolkata Knight Riders",
       role: "All-Rounder",
       form: "Excellent",
-      image_url: "",
+      image_url: "/lovable-uploads/5f09742b-2608-4ef2-b57b-7cabaab57f6a.png",
       stats: "42(19), 2/26, 38(16), 3/31",
       points_prediction: 90,
       match_details: "MI vs KKR",
