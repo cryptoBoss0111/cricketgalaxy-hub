@@ -31,7 +31,7 @@ export const UpcomingMatchesSection: React.FC = () => {
       team1: {
         name: 'Mumbai Indians',
         shortName: 'MI',
-        flagUrl: '/lovable-uploads/5822342e-1583-4231-8d81-afed50615136.png' // Using the new MI logo you provided
+        flagUrl: '/lovable-uploads/d032bae5-4076-4cc1-adb8-e2ad1ac0906a.png' // Using the new MI logo you provided
       },
       team2: {
         name: 'Kolkata Knight Riders',
