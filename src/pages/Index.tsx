@@ -11,7 +11,6 @@ import { TrendingPlayersSection } from '@/pages/home/sections/TrendingPlayersSec
 import { UpcomingMatchesSection } from '@/pages/home/sections/UpcomingMatchesSection';
 import { QuickStatsSection } from '@/pages/home/sections/QuickStatsSection';
 import { FanPollSection } from '@/pages/home/sections/FanPollSection';
-import HomeFantasyPicksSection from '@/pages/home/sections/upcoming-matches/HomeFantasyPicksSection';
 import Chatbot from '@/components/Chatbot';
 import Footer from '@/components/Footer';
 import { useTheme } from '@/components/ThemeProvider';
@@ -78,44 +77,6 @@ const Index = () => {
             <div className="md:col-span-2 space-y-12">
               <TopStoriesSection />
               <UpcomingMatchesSection />
-              <HomeFantasyPicksSection picks={[
-                {
-                  id: "sg-gill-home",
-                  player: "Shubman Gill",
-                  team: "Gujarat Titans",
-                  role: "Batsman",
-                  form: "Excellent",
-                  imageUrl: "/lovable-uploads/2b9b3d5f-ead2-46a4-b348-f15346af1401.png",
-                  stats: "92(58), 57(42), 104(63)"
-                },
-                {
-                  id: "sk-yadav-home",
-                  player: "Suryakumar Yadav",
-                  team: "Mumbai Indians",
-                  role: "Batsman",
-                  form: "Excellent",
-                  imageUrl: "/lovable-uploads/611356be-0c40-46ec-9995-1e3b95eab3e4.png",
-                  stats: "65(31), 43(29), 72(37)"
-                },
-                {
-                  id: "ar-russell-home",
-                  player: "Andre Russell",
-                  team: "Kolkata Knight Riders",
-                  role: "All-Rounder",
-                  form: "Excellent",
-                  imageUrl: "/lovable-uploads/5f09742b-2608-4ef2-b57b-7cabaab57f6a.png",
-                  stats: "42(19), 2/26, 38(16), 3/31"
-                },
-                {
-                  id: "t-boult-home",
-                  player: "Trent Boult",
-                  team: "Mumbai Indians",
-                  role: "Bowler",
-                  form: "Good",
-                  imageUrl: "/lovable-uploads/df73abd6-8fc7-4ccd-8357-07d5db3d6520.png",
-                  stats: "3/27, 2/31, 1/26"
-                }
-              ]} />
             </div>
             
             {/* Sidebar - 1/3 width */}
