@@ -38,69 +38,85 @@ const HomeFantasyPicksSection: React.FC<HomeFantasyPicksSectionProps> = ({ picks
   const getFormColorClass = (form: string) => {
     switch(form.toLowerCase()) {
       case 'excellent':
-        return 'text-green-600';
+        return 'text-green-600 dark:text-green-400';
       case 'good':
-        return 'text-blue-600';
+        return 'text-blue-600 dark:text-blue-400';
       case 'average':
-        return 'text-yellow-600';
+        return 'text-yellow-600 dark:text-yellow-400';
       case 'poor':
-        return 'text-red-600';
+        return 'text-red-600 dark:text-red-400';
       default:
-        return 'text-gray-600';
+        return 'text-gray-600 dark:text-gray-400';
     }
   };
+
+  // Add Suryakumar Yadav as first pick if not already in the list
+  const allPicks = [...picks];
+  const hasSkYadav = picks.some(p => p.player === "Suryakumar Yadav");
+  
+  if (!hasSkYadav && allPicks.length > 0) {
+    allPicks.unshift({
+      id: "sk-yadav-home",
+      player: "Suryakumar Yadav",
+      team: "Mumbai Indians",
+      role: "Batsman",
+      form: "Good",
+      imageUrl: "/lovable-uploads/611356be-0c40-46ec-9995-1e3b95eab3e4.png",
+      stats: "65(31), 43(29), 72(37)"
+    });
+  }
 
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <Trophy className="text-cricket-accent h-6 w-6" />
-          <h2 className="text-2xl font-heading font-bold">Fantasy Picks</h2>
+          <Trophy className="text-cricket-accent h-6 w-6 dark:text-white" />
+          <h2 className="text-2xl font-heading font-bold dark:text-white">Fantasy Picks</h2>
         </div>
         
-        <div className="bg-cricket-accent/20 px-4 py-2 rounded-full text-cricket-accent font-medium text-sm">
+        <div className="bg-cricket-accent/20 px-4 py-2 rounded-full text-cricket-accent font-medium text-sm dark:bg-cricket-accent/40 dark:text-white">
           MI vs KKR
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {picks.map((player, index) => (
+        {allPicks.map((player, index) => (
           <div 
             key={player.id} 
-            className="bg-white p-5 rounded-lg shadow-sm border hover:shadow-md transition-300"
+            className="bg-white p-5 rounded-lg shadow-sm border hover:shadow-md transition-300 dark:bg-cricket-dark dark:border-gray-700 dark:text-white"
           >
             <div className="flex items-center mb-4">
               <img 
                 src={processImageUrl(player.imageUrl)} 
                 alt={player.player}
-                className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-gray-200"
+                className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-gray-200 dark:border-gray-700"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop';
                 }}
                 crossOrigin="anonymous"
               />
               <div>
-                <h3 className="font-semibold text-lg">{player.player}</h3>
-                <p className="text-gray-500 text-sm">{player.team}</p>
+                <h3 className="font-semibold text-lg dark:text-white">{player.player}</h3>
+                <p className="text-gray-500 text-sm dark:text-gray-400">{player.team}</p>
               </div>
             </div>
             
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">Role:</span>
-                <span className="font-medium">{player.role}</span>
+                <span className="text-gray-500 dark:text-gray-400">Role:</span>
+                <span className="font-medium dark:text-white">{player.role}</span>
               </div>
               
               <div className="flex justify-between">
-                <span className="text-gray-500">Form:</span>
+                <span className="text-gray-500 dark:text-gray-400">Form:</span>
                 <span className={cn("font-medium", getFormColorClass(player.form))}>
                   {player.form}
                 </span>
               </div>
               
-              <div className="mt-3 pt-2 border-t border-gray-100">
-                <div className="text-gray-500 mb-1">Recent Performance:</div>
-                <div className="font-medium">{player.stats}</div>
+              <div className="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <div className="text-gray-500 dark:text-gray-400 mb-1">Recent Performance:</div>
+                <div className="font-medium dark:text-white">{player.stats}</div>
               </div>
             </div>
           </div>
