@@ -1,76 +1,101 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 
-const LiveMatchesBar = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasMatches, setHasMatches] = useState(false);
-  const matchesContainerRef = useRef<HTMLDivElement>(null);
+interface TeamInfo {
+  name: string;
+  score?: string;
+}
 
-  // Function to load mini ticker widget
-  const loadMiniTicker = async () => {
-    if (matchesContainerRef.current) {
-      // Clear any existing content
-      matchesContainerRef.current.innerHTML = '';
-      setIsLoading(true);
+interface LiveMatch {
+  id: string;
+  name: string;
+  status: string;
+  teams: {
+    home: TeamInfo;
+    away: TeamInfo;
+  };
+}
+
+const LiveMatchesBar = () => {
+  const [matches, setMatches] = useState<LiveMatch[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Function to fetch live matches using RapidAPI Cricket API
+  const fetchLiveMatches = async () => {
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch('https://cricket-api-free-data.p.rapidapi.com/cricket-livescores', {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Key': '43b772b4d8msh6d5dd68873fbb6cp173b08jsn80bc23c85703',
+          'X-RapidAPI-Host': 'cricket-api-free-data.p.rapidapi.com'
+        }
+      });
       
-      try {
-        // Create and append the mini ticker scripts
-        const configScript = document.createElement('script');
-        configScript.text = 'app="www.cricwaves.com"; mo="mo_2"; nt="n"; wi ="w_1"; co ="2"; ad="1";';
-        
-        const widgetScript = document.createElement('script');
-        widgetScript.src = '//www.cricwaves.com/cricket/widgets/script/livescore.js';
-        widgetScript.type = 'text/javascript';
-        
-        // Add load event listener
-        widgetScript.onload = () => {
-          console.log("CricWaves mini ticker loaded");
-          setIsLoading(false);
-          
-          // Check if we have actual matches after a short delay
-          setTimeout(() => {
-            const tickerContent = matchesContainerRef.current?.querySelector('.crkt_scr_wrp');
-            setHasMatches(!!tickerContent && tickerContent.children.length > 0);
-          }, 1000);
-        };
-        
-        widgetScript.onerror = (error) => {
-          console.error("Error loading CricWaves mini ticker:", error);
-          setIsLoading(false);
-          toast({
-            title: "Error loading live scores",
-            description: "Could not load the live scores ticker",
-            variant: "destructive"
-          });
-        };
-        
-        // Append scripts
-        matchesContainerRef.current.appendChild(configScript);
-        matchesContainerRef.current.appendChild(widgetScript);
-      } catch (error) {
-        console.error("Error setting up mini ticker:", error);
-        setIsLoading(false);
-        setHasMatches(false);
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
       }
+      
+      const data = await response.json();
+      console.log('LiveMatchesBar API response:', data);
+      
+      // Check if we have valid data structure
+      if (!data || !Array.isArray(data)) {
+        throw new Error('Invalid response format from API');
+      }
+      
+      // Format the matches for display
+      const formattedMatches: LiveMatch[] = data.map((match: any) => ({
+        id: match.id || `match-${Math.random().toString(36).substr(2, 9)}`,
+        name: match.name || 'Unknown Match',
+        status: match.status || 'No status available',
+        teams: {
+          home: {
+            name: match.teams?.home?.name || 'Home Team',
+            score: match.teams?.home?.score || ''
+          },
+          away: {
+            name: match.teams?.away?.name || 'Away Team',
+            score: match.teams?.away?.score || ''
+          }
+        }
+      }));
+      
+      // Filter for live matches (adjust based on actual API response structure)
+      const liveMatches = formattedMatches.filter(match => 
+        match.status.toLowerCase().includes('progress') || 
+        match.status.toLowerCase().includes('live')
+      );
+      
+      setMatches(liveMatches);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error fetching live matches:', err);
+      setError(`Failed to fetch live matches: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setIsLoading(false);
     }
   };
 
-  // Load initially
+  // Initial fetch
   useEffect(() => {
-    loadMiniTicker();
+    fetchLiveMatches();
     
-    // Refresh every 5 minutes
-    const interval = setInterval(loadMiniTicker, 300000);
+    // Refresh every 2 minutes
+    const interval = setInterval(() => {
+      fetchLiveMatches();
+    }, 120000); // 2 minutes in milliseconds
     
     return () => clearInterval(interval);
   }, []);
 
-  // If nothing to show, don't render the bar
-  if (!isLoading && !hasMatches) {
+  // If there are no live matches, don't render the bar
+  if (!isLoading && (matches.length === 0 || error)) {
     return null;
   }
 
@@ -82,13 +107,30 @@ const LiveMatchesBar = () => {
             variant="ghost" 
             size="icon" 
             className="h-6 w-6 text-white hover:text-blue-200"
-            onClick={loadMiniTicker}
+            onClick={fetchLiveMatches}
+            disabled={isLoading}
           >
             <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
           </Button>
           
-          <div ref={matchesContainerRef} className="mini-ticker overflow-hidden w-full">
-            {isLoading && <div className="text-sm">Loading live scores...</div>}
+          <div className="overflow-hidden w-full whitespace-nowrap">
+            {isLoading ? (
+              <div className="text-sm">Loading live scores...</div>
+            ) : (
+              <div className="marquee">
+                <div className="marquee-content flex gap-4">
+                  {matches.map((match) => (
+                    <div key={match.id} className="flex items-center gap-2">
+                      <span className="font-medium">{match.name}:</span>
+                      <span>
+                        {match.teams.home.name} {match.teams.home.score || ''} vs {match.teams.away.name} {match.teams.away.score || ''}
+                      </span>
+                      <span className="text-blue-200">|</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <Link to="/live-scores" className="flex items-center gap-1 text-white hover:text-blue-100 whitespace-nowrap ml-2">
@@ -96,6 +138,24 @@ const LiveMatchesBar = () => {
           <ExternalLink size={14} />
         </Link>
       </div>
+
+      <style jsx>{`
+        .marquee {
+          width: 100%;
+          overflow: hidden;
+        }
+        
+        .marquee-content {
+          display: inline-block;
+          white-space: nowrap;
+          animation: marquee 30s linear infinite;
+        }
+        
+        @keyframes marquee {
+          from { transform: translateX(100%); }
+          to { transform: translateX(-100%); }
+        }
+      `}</style>
     </div>
   );
 };
