@@ -4,6 +4,7 @@ import { ExternalLink, RefreshCw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import ESPNScoreEmbed from './ESPNScoreEmbed';
+import CricTimesEmbed from './CricTimesEmbed';
 
 interface LiveScoreData {
   status: string;
@@ -38,6 +39,7 @@ const LiveMatchesBar = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showESPNWidget, setShowESPNWidget] = useState(false);
+  const [showCricTimesWidget, setShowCricTimesWidget] = useState(false);
   
   const apiUrl = "https://espncricinfo-live-api.herokuapp.com/live";
   const espnMatchId = "1411396";
@@ -204,15 +206,26 @@ const LiveMatchesBar = () => {
             <span className="text-xs md:text-sm font-medium">Full Scores</span>
             <ExternalLink size={14} />
           </Link>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex items-center gap-1 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded hover:bg-yellow-400"
-            onClick={() => setShowESPNWidget(!showESPNWidget)}
-          >
-            <span>Live Score</span>
-            {!showESPNWidget && <ExternalLink size={12} />}
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded hover:bg-yellow-400"
+              onClick={() => setShowCricTimesWidget(!showCricTimesWidget)}
+            >
+              <span>CricTimes</span>
+              {!showCricTimesWidget && <ExternalLink size={12} />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded hover:bg-green-400"
+              onClick={() => setShowESPNWidget(!showESPNWidget)}
+            >
+              <span>ESPNCricinfo</span>
+              {!showESPNWidget && <ExternalLink size={12} />}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -220,7 +233,7 @@ const LiveMatchesBar = () => {
         <div className="absolute top-12 right-4 z-50 w-96 animate-in fade-in slide-in-from-top-5 duration-300">
           <div className="bg-white rounded-lg shadow-xl overflow-hidden">
             <div className="p-2 bg-blue-600 text-white flex justify-between items-center">
-              <span className="font-medium">Live Cricket Score</span>
+              <span className="font-medium">Live Cricket Score - ESPNCricinfo</span>
               <button 
                 className="text-white/80 hover:text-white" 
                 onClick={() => setShowESPNWidget(false)}
@@ -230,6 +243,24 @@ const LiveMatchesBar = () => {
               </button>
             </div>
             <ESPNScoreEmbed height="320px" showFallbackImage={true} matchId={espnMatchId} />
+          </div>
+        </div>
+      )}
+
+      {showCricTimesWidget && (
+        <div className="absolute top-12 right-4 z-50 w-96 animate-in fade-in slide-in-from-top-5 duration-300">
+          <div className="bg-white rounded-lg shadow-xl overflow-hidden">
+            <div className="p-2 bg-yellow-500 text-black flex justify-between items-center">
+              <span className="font-medium">Live Cricket Score - CricTimes</span>
+              <button 
+                className="text-black/80 hover:text-black" 
+                onClick={() => setShowCricTimesWidget(false)}
+              >
+                <span className="sr-only">Close</span>
+                &times;
+              </button>
+            </div>
+            <CricTimesEmbed height="320px" />
           </div>
         </div>
       )}
