@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CricTimesEmbed from './CricTimesEmbed';
@@ -17,21 +16,15 @@ const LiveMatchesBar = () => {
         </div>
         
         <div className="flex items-center gap-2 whitespace-nowrap ml-2">
-          <Link to="/live-scores" className="flex items-center gap-1 text-white hover:text-blue-100">
-            <span className="text-xs md:text-sm font-medium">Full Scores</span>
-            <ExternalLink size={14} />
-          </Link>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded hover:bg-yellow-400"
-              onClick={() => setShowCricTimesWidget(!showCricTimesWidget)}
-            >
-              <span>CricTimes</span>
-              {!showCricTimesWidget && <ExternalLink size={12} />}
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-1 bg-yellow-500 text-black text-xs px-2 py-0.5 rounded hover:bg-yellow-400"
+            onClick={() => setShowCricTimesWidget(!showCricTimesWidget)}
+          >
+            <span>CricTimes</span>
+            {!showCricTimesWidget && <ExternalLink size={12} />}
+          </Button>
         </div>
       </div>
 
