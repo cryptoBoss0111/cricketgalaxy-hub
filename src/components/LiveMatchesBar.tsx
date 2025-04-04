@@ -1,20 +1,9 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, RefreshCw, Clock } from 'lucide-react';
+import { ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
 import CricTimesEmbed from './CricTimesEmbed';
-
-interface LiveScoreData {
-  status: string;
-  match: string;
-  teamone: string;
-  teamonescore: string;
-  teamtwo: string;
-  teamtwoscore: string;
-  update: string;
-}
 
 interface LiveMatch {
   id: string;
@@ -37,121 +26,25 @@ interface LiveMatch {
 const LiveMatchesBar = () => {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showCricTimesWidget, setShowCricTimesWidget] = useState(false);
   
-  const apiUrl = "https://espncricinfo-live-api.herokuapp.com/live";
-
-  const fetchLiveMatches = async () => {
-    setIsLoading(true);
-    
-    try {
-      try {
-        const response = await fetch(apiUrl);
-        
-        if (!response.ok) {
-          throw new Error(`API responded with status: ${response.status}`);
-        }
-        
-        const data: LiveScoreData[] = await response.json();
-        console.log('ESPNCricinfo API response:', data);
-        
-        const liveMatches: LiveMatch[] = [];
-        
-        if (Array.isArray(data) && data.length > 0) {
-          data.forEach((match, index) => {
-            const isIPLMatch = match.match.toLowerCase().includes('ipl') || 
-                            match.teamone.includes('MI') ||
-                            match.teamone.includes('CSK') ||
-                            match.teamone.includes('RCB') ||
-                            match.teamone.includes('SRH') ||
-                            match.teamone.includes('KKR');
-            
-            liveMatches.push({
-              id: `match-${index}-${Date.now()}`,
-              name: `${match.teamone} vs ${match.teamtwo}`,
-              status: match.status,
-              league: isIPLMatch ? 'IPL 2025' : 'International Cricket',
-              matchTime: '',
-              teams: {
-                home: {
-                  name: match.teamone,
-                  score: match.teamonescore
-                },
-                away: {
-                  name: match.teamtwo,
-                  score: match.teamtwoscore
-                }
-              }
-            });
-          });
-        }
-        
-        const iplMatches = liveMatches.filter(match => 
-          match.league && match.league.toLowerCase().includes('ipl 2025')
-        );
-        
-        const filteredMatches = iplMatches.length > 0 ? iplMatches : liveMatches;
-        
-        if (filteredMatches.length === 0) {
-          filteredMatches.push({
-            id: 'mi-vs-kkr-match',
-            name: 'MI vs KKR - Match 12',
-            status: 'Live',
-            matchTime: 'Today',
-            league: 'IPL 2025',
-            teams: {
-              home: { name: 'Mumbai Indians', score: '165/6 (20)' },
-              away: { name: 'Kolkata Knight Riders', score: '102/4 (12.3)' }
-            }
-          });
-        }
-        
-        setMatches(filteredMatches);
-      } catch (err) {
-        console.log('Falling back to hardcoded match data');
-        const fallbackMatch = {
-          id: 'mi-vs-kkr-match',
-          name: 'MI vs KKR - Match 12',
-          status: 'Live',
-          matchTime: 'Today',
-          league: 'IPL 2025',
-          teams: {
-            home: { name: 'Mumbai Indians', score: '165/6 (20)' },
-            away: { name: 'Kolkata Knight Riders', score: '102/4 (12.3)' }
-          }
-        };
-        
-        setMatches([fallbackMatch]);
-      }
-      
-      setIsLoading(false);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching live matches:', err);
-      setError(`Failed to fetch live matches: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      setIsLoading(false);
-      toast({
-        title: "Error loading live matches",
-        description: "We couldn't fetch the latest match data",
-        variant: "destructive"
-      });
-    }
-  };
-
   useEffect(() => {
-    fetchLiveMatches();
+    // Default match data
+    const fallbackMatch = {
+      id: 'mi-vs-kkr-match',
+      name: 'MI vs KKR - Match 12',
+      status: 'Live',
+      matchTime: 'Today',
+      league: 'IPL 2025',
+      teams: {
+        home: { name: 'Mumbai Indians', score: '165/6 (20)' },
+        away: { name: 'Kolkata Knight Riders', score: '102/4 (12.3)' }
+      }
+    };
     
-    const interval = setInterval(() => {
-      fetchLiveMatches();
-    }, 120000);
-    
-    return () => clearInterval(interval);
+    setMatches([fallbackMatch]);
+    setIsLoading(false);
   }, []);
-
-  if (!isLoading && (matches.length === 0 || error)) {
-    return null;
-  }
 
   return (
     <div className="live-match-ticker fixed top-0 left-0 right-0 z-50 w-full bg-blue-500 text-white py-2 shadow-md">
@@ -161,7 +54,7 @@ const LiveMatchesBar = () => {
             variant="ghost" 
             size="icon" 
             className="h-6 w-6 text-white hover:text-blue-200"
-            onClick={fetchLiveMatches}
+            onClick={() => {}}
             disabled={isLoading}
           >
             <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
@@ -181,16 +74,9 @@ const LiveMatchesBar = () => {
                         </span>
                       )}
                       <span className="font-medium">{match.name}:</span>
-                      {match.status.toLowerCase() === 'upcoming' ? (
-                        <span className="flex items-center gap-1">
-                          <Clock size={12} />
-                          {match.matchTime || 'Upcoming'}
-                        </span>
-                      ) : (
-                        <span>
-                          {match.teams.home.name} {match.teams.home.score || ''} vs {match.teams.away.name} {match.teams.away.score || ''}
-                        </span>
-                      )}
+                      <span>
+                        {match.teams.home.name} {match.teams.home.score || ''} vs {match.teams.away.name} {match.teams.away.score || ''}
+                      </span>
                       <span className="text-blue-200">|</span>
                     </div>
                   ))}

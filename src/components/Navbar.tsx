@@ -59,7 +59,8 @@ export const Navbar = () => {
     )}>
       <div className="flex items-center justify-center bg-blue-600 py-1 px-4 text-white text-sm">
         <BarChart2 size={16} className="mr-2" />
-        <Link to="/live-scores" className="hover:underline font-medium">
+        <Link to="/live-scores" className="hover:underline font-medium flex items-center">
+          <span className="animate-pulse-subtle mr-1">🔴</span>
           See Live Scores of IPL 2025 Latest Match Here
         </Link>
       </div>
