@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Menu, X, Search, MessageSquare, BarChart2 } from 'lucide-react';
+import { Menu, X, Search, MessageSquare, BarChart2, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +62,7 @@ export const Navbar = () => {
         <Link to="/live-scores" className="hover:underline font-medium flex items-center">
           <span className="animate-pulse-subtle mr-1">🔴</span>
           See Live Scores of IPL 2025 Latest Match Here
+          <ExternalLink size={12} className="ml-1" />
         </Link>
       </div>
       
