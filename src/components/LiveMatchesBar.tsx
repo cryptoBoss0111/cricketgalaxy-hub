@@ -1,9 +1,9 @@
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, RefreshCw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import ESPNScoreEmbed from './ESPNScoreEmbed';
 import CricTimesEmbed from './CricTimesEmbed';
 
 interface LiveScoreData {
@@ -38,11 +38,9 @@ const LiveMatchesBar = () => {
   const [matches, setMatches] = useState<LiveMatch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showESPNWidget, setShowESPNWidget] = useState(false);
   const [showCricTimesWidget, setShowCricTimesWidget] = useState(false);
   
   const apiUrl = "https://espncricinfo-live-api.herokuapp.com/live";
-  const espnMatchId = "1411396";
 
   const fetchLiveMatches = async () => {
     setIsLoading(true);
@@ -216,36 +214,9 @@ const LiveMatchesBar = () => {
               <span>CricTimes</span>
               {!showCricTimesWidget && <ExternalLink size={12} />}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded hover:bg-green-400"
-              onClick={() => setShowESPNWidget(!showESPNWidget)}
-            >
-              <span>ESPNCricinfo</span>
-              {!showESPNWidget && <ExternalLink size={12} />}
-            </Button>
           </div>
         </div>
       </div>
-
-      {showESPNWidget && (
-        <div className="absolute top-12 right-4 z-50 w-96 animate-in fade-in slide-in-from-top-5 duration-300">
-          <div className="bg-white rounded-lg shadow-xl overflow-hidden">
-            <div className="p-2 bg-blue-600 text-white flex justify-between items-center">
-              <span className="font-medium">Live Cricket Score - ESPNCricinfo</span>
-              <button 
-                className="text-white/80 hover:text-white" 
-                onClick={() => setShowESPNWidget(false)}
-              >
-                <span className="sr-only">Close</span>
-                &times;
-              </button>
-            </div>
-            <ESPNScoreEmbed height="320px" showFallbackImage={true} matchId={espnMatchId} />
-          </div>
-        </div>
-      )}
 
       {showCricTimesWidget && (
         <div className="absolute top-12 right-4 z-50 w-96 animate-in fade-in slide-in-from-top-5 duration-300">

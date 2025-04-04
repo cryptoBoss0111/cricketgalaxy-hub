@@ -10,7 +10,6 @@ const CricTimesEmbed = ({ height = "460px", className = "" }: CricTimesEmbedProp
   const containerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Only execute this code in the browser, not during SSR
     if (containerRef.current) {
       const iframe = document.createElement('iframe');
       iframe.src = "https://cwidget.crictimes.org/?b=d9d9d9&sb=434343&c=cccccc&a=434343&bo=434343&dc=000000&db=ffffff";
@@ -36,7 +35,6 @@ const CricTimesEmbed = ({ height = "460px", className = "" }: CricTimesEmbedProp
     <div 
       ref={containerRef} 
       className={`crictimes-embed ${className}`} 
-      id="score-frame"
       aria-label="Live Cricket Scores"
     >
       <a rel="nofollow" href="https://www.crictimes.org/cricket-scores">Live Cricket Scores</a>

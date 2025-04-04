@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Menu, X, Search, MessageSquare } from 'lucide-react';
+import { Menu, X, Search, MessageSquare, BarChart2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,6 +57,13 @@ export const Navbar = () => {
       "sticky top-12 left-0 right-0 z-40 bg-cricket-dark text-white transition-all duration-300",
       isScrolled ? "shadow-md" : "shadow-sm"
     )}>
+      <div className="flex items-center justify-center bg-blue-600 py-1 px-4 text-white text-sm">
+        <BarChart2 size={16} className="mr-2" />
+        <Link to="/live-scores" className="hover:underline font-medium">
+          See Live Scores of IPL 2025 Latest Match Here
+        </Link>
+      </div>
+      
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">

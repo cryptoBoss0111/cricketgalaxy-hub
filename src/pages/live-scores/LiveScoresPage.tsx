@@ -1,13 +1,12 @@
+
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Info, ExternalLink } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import CricbuzzScorecard from '@/components/CricbuzzScorecard';
 import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
 import IPLLiveScoreWidget from '@/components/IPLLiveScoreWidget';
-import ESPNScoreEmbed from '@/components/ESPNScoreEmbed';
 import CricTimesEmbed from '@/components/CricTimesEmbed';
 
 interface Match {
@@ -36,13 +35,7 @@ const LiveScoresPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
   const [filterIPL, setFilterIPL] = useState<boolean>(true);
-  const [showCricbuzz, setShowCricbuzz] = useState<boolean>(false);
-  const [showESPNWidget, setShowESPNWidget] = useState<boolean>(false);
-  const [showCricTimesWidget, setShowCricTimesWidget] = useState<boolean>(true);
   
-  const cricbuzzMatchId = "81030";
-  const espnMatchId = "1411396";
-
   const fetchLiveScores = async () => {
     setIsLoading(true);
     setError(null);
@@ -200,115 +193,42 @@ const LiveScoresPage = () => {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-white">Live Cricket Scores</h2>
-            <Button
-              variant="outline"
-              onClick={() => setShowCricTimesWidget(!showCricTimesWidget)}
-            >
-              {showCricTimesWidget ? 'Hide Scores' : 'Show Scores'}
-            </Button>
           </div>
           
-          {showCricTimesWidget && (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <CricTimesEmbed height="460px" />
-              <div className="p-2 bg-gray-100 text-xs text-gray-600 flex items-center">
-                <Info className="h-3 w-3 mr-1" />
-                <span>Scores powered by CricTimes</span>
-                <a 
-                  href="https://www.crictimes.org/cricket-scores" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="ml-auto flex items-center text-blue-600 hover:text-blue-800"
-                >
-                  <span>View on CricTimes</span>
-                  <ExternalLink className="h-3 w-3 ml-1" />
-                </a>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {showESPNWidget && (
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-white">Live Scorecard - ESPNCricinfo</h2>
-              <Button
-                variant="outline"
-                onClick={() => setShowESPNWidget(!showESPNWidget)}
-              >
-                {showESPNWidget ? 'Hide Scorecard' : 'Show Scorecard'}
-              </Button>
-            </div>
-            <ESPNScoreEmbed 
-              height="480px" 
-              className="bg-white rounded-lg shadow-md" 
-              matchId={espnMatchId}
-            />
-            <div className="mt-2 text-xs text-gray-300 flex items-center">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <CricTimesEmbed height="460px" />
+            <div className="p-2 bg-gray-100 text-xs text-gray-600 flex items-center">
               <Info className="h-3 w-3 mr-1" />
-              <span>Scores powered by ESPNCricinfo</span>
+              <span>Scores powered by CricTimes</span>
               <a 
-                href="https://www.espncricinfo.com/live-cricket-score" 
+                href="https://www.crictimes.org/cricket-scores" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="ml-auto flex items-center text-cricket-accent hover:text-cricket-accent/80"
+                className="ml-auto flex items-center text-blue-600 hover:text-blue-800"
               >
-                <span>View all scores</span>
+                <span>View on CricTimes</span>
                 <ExternalLink className="h-3 w-3 ml-1" />
               </a>
             </div>
           </div>
-        )}
+        </div>
         
         <div className="mb-6 max-w-md mx-auto">
           <h2 className="text-xl font-bold text-white mb-4">Featured IPL Match</h2>
           <IPLLiveScoreWidget />
         </div>
         
-        {showCricbuzz && (
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-white">Live Scorecard - MI vs KKR</h2>
-              <Button
-                variant="outline"
-                onClick={() => setShowCricbuzz(!showCricbuzz)}
-              >
-                {showCricbuzz ? 'Hide Scorecard' : 'Show Scorecard'}
-              </Button>
-            </div>
-            <CricbuzzScorecard matchId={cricbuzzMatchId} />
-          </div>
-        )}
-        
         <div className="bg-white p-4 rounded-lg shadow-md mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">
               {filterIPL ? 'IPL 2025 Matches' : 'All Cricket Matches'}
             </h2>
-            <div className="flex gap-2">
-              <Button
-                variant={filterIPL ? "accent" : "outline"}
-                onClick={() => setFilterIPL(!filterIPL)}
-              >
-                {filterIPL ? 'Show All Matches' : 'Show IPL Only'}
-              </Button>
-              {!showESPNWidget && (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowESPNWidget(true)}
-                >
-                  Show ESPNCricinfo
-                </Button>
-              )}
-              {!showCricbuzz && (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowCricbuzz(true)}
-                >
-                  Show Cricbuzz
-                </Button>
-              )}
-            </div>
+            <Button
+              variant={filterIPL ? "accent" : "outline"}
+              onClick={() => setFilterIPL(!filterIPL)}
+            >
+              {filterIPL ? 'Show All Matches' : 'Show IPL Only'}
+            </Button>
           </div>
           
           {isLoading ? (
@@ -347,8 +267,8 @@ const LiveScoresPage = () => {
             with special focus on IPL 2025 matches.
           </p>
           <p>
-            Live scores are powered by multiple sources including CricTimes, ESPNCricinfo, and Cricbuzz
-            to ensure you always have access to the most accurate and up-to-date cricket scores.
+            Live scores are powered by CricTimes to ensure you always have access to the most 
+            accurate and up-to-date cricket scores.
           </p>
         </div>
       </div>
