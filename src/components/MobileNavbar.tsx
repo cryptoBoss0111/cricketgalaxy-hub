@@ -1,6 +1,6 @@
 
 import { NavLink } from 'react-router-dom';
-import { Home, FileText, Trophy, UsersRound, Star, Video } from 'lucide-react';
+import { Home, FileText, Trophy, UsersRound } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
