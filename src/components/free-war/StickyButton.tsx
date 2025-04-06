@@ -25,15 +25,15 @@ const StickyButton = ({ onClick }: StickyButtonProps) => {
   };
   
   return (
-    <div className="fixed bottom-6 right-6 z-50 group">
+    <div className="fixed bottom-16 right-3 z-40 group md:bottom-6 md:right-6 md:z-50">
       <div className="absolute inset-0 bg-orange-500 rounded-full opacity-75 animate-pulse scale-110"></div>
       <Button
         variant="accent"
-        size="lg"
+        size="sm"
         onClick={handleClick}
-        className="relative shadow-lg px-6 py-6 h-auto rounded-full font-semibold bg-gradient-to-r from-orange-500 to-orange-400 border-2 border-white hover:scale-105 transition-all duration-200 hover:brightness-110"
+        className="relative shadow-lg px-3 py-1 h-auto rounded-full font-medium bg-gradient-to-r from-orange-500 to-orange-400 border border-white hover:scale-105 transition-all duration-200 hover:brightness-110 text-xs"
       >
-        <BadgeDollarSign className="mr-2 h-5 w-5" />
+        <BadgeDollarSign className="mr-1 h-3 w-3" />
         Earn Now
       </Button>
     </div>
