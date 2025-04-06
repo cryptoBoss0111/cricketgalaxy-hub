@@ -46,21 +46,21 @@ const MobileNavbar = () => {
             to={item.path}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center py-2 px-1 w-full",
+                "flex flex-col items-center py-1.5 px-1 w-full",
                 isActive 
                   ? "text-blue-500 border-t-2 border-blue-500" 
                   : "text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400"
               )
             }
           >
-            <item.icon size={16} />
-            <span className="text-xs mt-0.5">{item.label}</span>
+            <item.icon size={14} />
+            <span className="text-[10px] mt-0.5">{item.label}</span>
           </NavLink>
         ))}
       </div>
       
       {/* Indicator line at bottom of screen */}
-      <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-500 w-full opacity-75"></div>
+      <div className="h-0.5 bg-gradient-to-r from-blue-400 to-blue-500 w-full opacity-75"></div>
     </div>
   );
 };

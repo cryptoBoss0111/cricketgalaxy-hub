@@ -54,26 +54,26 @@ export const Navbar = () => {
 
   return (
     <header className={cn(
-      "sticky top-12 left-0 right-0 z-40 bg-cricket-dark text-white transition-all duration-300",
+      "sticky top-6 left-0 right-0 z-40 bg-cricket-dark text-white transition-all duration-300",
       isScrolled ? "shadow-md" : "shadow-sm"
     )}>
-      <div className="flex items-center justify-center bg-blue-600 py-1 px-4 text-white text-sm">
-        <BarChart2 size={16} className="mr-2" />
-        <Link to="/live-scores" className="hover:underline font-medium flex items-center">
+      <div className="flex items-center justify-center bg-blue-600 py-0.5 px-2 text-white text-xs">
+        <BarChart2 size={12} className="mr-1" />
+        <Link to="/live-scores" className="hover:underline font-medium flex items-center truncate">
           <span className="animate-pulse-subtle mr-1">🔴</span>
           See Live Scores of IPL 2025 Latest Match Here
-          <ExternalLink size={12} className="ml-1" />
+          <ExternalLink size={10} className="ml-1" />
         </Link>
       </div>
       
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+      <div className="container mx-auto px-2">
+        <div className="flex h-12 md:h-16 items-center justify-between">
           <div className="flex items-center">
             <Link to="/" className="flex flex-col items-center">
-              <div className="text-xs text-cricket-accent font-medium mb-0.5">
+              <div className="text-[10px] md:text-xs text-cricket-accent font-medium mb-0">
                 Namaste 🙏🏻
               </div>
-              <span className="text-2xl font-heading font-bold bg-gradient-to-r from-cricket-accent to-cricket-secondary bg-clip-text text-transparent">
+              <span className="text-xl md:text-2xl font-heading font-bold bg-gradient-to-r from-cricket-accent to-cricket-secondary bg-clip-text text-transparent">
                 CricketExpress
               </span>
             </Link>
@@ -96,7 +96,7 @@ export const Navbar = () => {
             ))}
           </nav>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <form onSubmit={handleSearch} className="hidden md:flex items-center relative">
               <Input
                 type="search"
@@ -120,17 +120,17 @@ export const Navbar = () => {
                 variant="ghost" 
                 size="icon" 
                 onClick={toggleChatbot}
-                className="relative"
+                className="relative p-1 h-8 w-8"
               >
-                <MessageSquare size={20} />
+                <MessageSquare size={18} />
                 <span className="absolute -top-1 -right-1 h-2 w-2 bg-cricket-accent rounded-full animate-pulse-subtle"></span>
               </Button>
             </div>
 
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
-                  <Menu size={20} />
+                <Button variant="ghost" size="icon" className="lg:hidden p-1 h-8 w-8">
+                  <Menu size={18} />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px]">

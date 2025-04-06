@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { BadgeDollarSign } from 'lucide-react';
 import { useFreeWar } from './FreeWarProvider';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface StickyButtonProps {
   onClick: () => void;
@@ -12,6 +13,10 @@ interface StickyButtonProps {
 const StickyButton = ({ onClick }: StickyButtonProps) => {
   const { toast } = useToast();
   const { showPopup } = useFreeWar();
+  const isMobile = useIsMobile();
+  
+  // Don't render on mobile
+  if (isMobile) return null;
   
   const handleClick = () => {
     toast({
@@ -25,15 +30,15 @@ const StickyButton = ({ onClick }: StickyButtonProps) => {
   };
   
   return (
-    <div className="fixed bottom-16 right-3 z-40 group md:bottom-6 md:right-6 md:z-50">
+    <div className="fixed bottom-6 right-6 z-50 group hidden md:block">
       <div className="absolute inset-0 bg-orange-500 rounded-full opacity-75 animate-pulse scale-110"></div>
       <Button
         variant="accent"
         size="sm"
         onClick={handleClick}
-        className="relative shadow-lg px-3 py-1 h-auto rounded-full font-medium bg-gradient-to-r from-orange-500 to-orange-400 border border-white hover:scale-105 transition-all duration-200 hover:brightness-110 text-xs"
+        className="relative shadow-lg px-4 py-2 h-auto rounded-full font-medium bg-gradient-to-r from-orange-500 to-orange-400 border border-white hover:scale-105 transition-all duration-200 hover:brightness-110"
       >
-        <BadgeDollarSign className="mr-1 h-3 w-3" />
+        <BadgeDollarSign className="mr-2 h-4 w-4" />
         Earn Now
       </Button>
     </div>
