@@ -26,14 +26,14 @@ const MobileNavbar = () => {
       path: "/ipl-2025"
     },
     {
-      label: "Videos",
-      icon: Video,
-      path: "/videos"
-    },
-    {
       label: "News",
       icon: FileText,
       path: "/cricket-news"
+    },
+    {
+      label: "Teams",
+      icon: UsersRound,
+      path: "/ipl-teams"
     }
   ];
 
@@ -46,15 +46,15 @@ const MobileNavbar = () => {
             to={item.path}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center py-3 px-1 w-full",
+                "flex flex-col items-center py-2 px-1 w-full",
                 isActive 
                   ? "text-blue-500 border-t-2 border-blue-500" 
                   : "text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400"
               )
             }
           >
-            <item.icon size={18} />
-            <span className="text-xs mt-1">{item.label}</span>
+            <item.icon size={16} />
+            <span className="text-xs mt-0.5">{item.label}</span>
           </NavLink>
         ))}
       </div>
