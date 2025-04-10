@@ -11,7 +11,7 @@ import NotFound from '@/pages/NotFound';
 import FantasyTipsPage from '@/pages/fantasy-tips';
 
 // Admin Routes
-import AdminRoutes from '@/routes/AdminRoutes';
+import { AdminRoutes } from '@/routes/AdminRoutes';
 
 // Article detail pages
 import GTvsMIArticle from '@/pages/article-detail/GTvsMIArticle';

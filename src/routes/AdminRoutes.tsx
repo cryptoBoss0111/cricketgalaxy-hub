@@ -1,4 +1,5 @@
-import { Navigate } from "react-router-dom";
+
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import AdminDashboard from "@/admin/Dashboard";
 import ArticlesList from "@/admin/ArticlesList";
@@ -35,5 +36,27 @@ export const AdminProtectedRoute = ({ children }: { children: React.ReactNode })
   return <>{children}</>;
 };
 
-// Keep the AdminRoutes export for backwards compatibility
-export const AdminRoutes = () => null;
+// AdminRoutes component
+export const AdminRoutes = () => {
+  return (
+    <AdminProtectedRoute>
+      <Routes>
+        <Route path="/" element={<AdminDashboard />} />
+        <Route path="/articles" element={<ArticlesList />} />
+        <Route path="/articles/new" element={<ArticleForm />} />
+        <Route path="/articles/edit/:id" element={<ArticleForm />} />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/navigation" element={<NavigationManager />} />
+        <Route path="/top-stories" element={<TopStoriesManager />} />
+        <Route path="/fan-polls" element={<FanPollManager />} />
+        <Route path="/hero-slider" element={<HeroSliderManager />} />
+        <Route path="/fantasy-picks" element={<FantasyPicksManager />} />
+        <Route path="/matches" element={<MatchesManager />} />
+        <Route path="/player-profiles" element={<PlayerProfilesManager />} />
+        <Route path="/media-library" element={<MediaLibraryManager />} />
+        <Route path="/settings" element={<SettingsManager />} />
+        <Route path="/free-war-contest" element={<FreeWarContestManager />} />
+      </Routes>
+    </AdminProtectedRoute>
+  );
+};
