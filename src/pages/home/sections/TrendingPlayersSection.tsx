@@ -14,9 +14,9 @@ export const TrendingPlayersSection = () => {
           <h2 className="text-2xl font-heading font-bold dark:text-white">Trending Players</h2>
         </div>
         
-        <Button variant="accent" asChild className="text-white">
+        <Button variant="accent" asChild size="sm" className="text-white">
           <Link to="/player-profiles" className="flex items-center">
-            More Player Profiles <ArrowRight className="ml-1 h-4 w-4" />
+            More <ArrowRight className="ml-1 h-4 w-4" />
           </Link>
         </Button>
       </div>
