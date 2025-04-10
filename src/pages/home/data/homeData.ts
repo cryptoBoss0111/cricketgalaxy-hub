@@ -125,6 +125,14 @@ export const upcomingMatches = [
   }
 ];
 
+// Quick Stats Data
+export const quickStats = [
+  { label: 'Most Runs (IPL 2024)', value: 'Virat Kohli', detail: '765 runs' },
+  { label: 'Most Wickets (IPL 2024)', value: 'Jasprit Bumrah', detail: '27 wickets' },
+  { label: 'Highest Score (Test 2024)', value: 'Joe Root', detail: '254 vs India' },
+  { label: 'Fastest Century (T20I)', value: 'Nicholas Pooran', detail: '35 balls' }
+];
+
 // Fantasy Picks Data
 export const fantasyPicks = [
   {
@@ -154,12 +162,4 @@ export const fantasyPicks = [
     imageUrl: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=120&auto=format&fit=crop',
     stats: 'Recent: 92(58), 57(42), 104(63)'
   }
-];
-
-// Quick Stats Data
-export const quickStats = [
-  { label: 'Most Runs (IPL 2024)', value: 'Virat Kohli', detail: '765 runs' },
-  { label: 'Most Wickets (IPL 2024)', value: 'Jasprit Bumrah', detail: '27 wickets' },
-  { label: 'Highest Score (Test 2024)', value: 'Joe Root', detail: '254 vs India' },
-  { label: 'Fastest Century (T20I)', value: 'Nicholas Pooran', detail: '35 balls' }
 ];
