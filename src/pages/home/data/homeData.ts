@@ -1,4 +1,3 @@
-
 // Top Stories Data
 export const topStories = [
   {
@@ -95,33 +94,33 @@ export const trendingPlayers = [
   { id: '6', name: 'Swastik Chikara', imageUrl: 'https://images.unsplash.com/photo-1578432014316-48b448d79d57?q=80&w=120&auto=format&fit=crop' }
 ];
 
-// Upcoming Matches Data
+// Upcoming Matches Data - Updated with the latest matches
 export const upcomingMatches = [
   {
     id: '1',
-    team1: { name: 'India', shortName: 'IND', flagUrl: 'https://images.unsplash.com/photo-1527675005063-dd2e8f0e507b?q=80&w=60&auto=format&fit=crop' },
-    team2: { name: 'Australia', shortName: 'AUS', flagUrl: 'https://images.unsplash.com/photo-1608023874495-3f19c37e2cd1?q=80&w=60&auto=format&fit=crop' },
-    matchType: 'ODI',
-    venue: 'Sydney Cricket Ground',
-    date: 'Mar 25, 2025',
-    time: '09:00 AM IST'
+    team1: { name: 'Chennai Super Kings', shortName: 'CSK', flagUrl: 'https://images.unsplash.com/photo-1624721243291-741a7244fe46?q=80&w=60&auto=format&fit=crop' },
+    team2: { name: 'Kolkata Knight Riders', shortName: 'KKR', flagUrl: 'https://images.unsplash.com/photo-1608023874495-3f19c37e2cd1?q=80&w=60&auto=format&fit=crop' },
+    matchType: 'IPL 2025',
+    venue: 'MA Chidambaram Stadium, Chennai',
+    date: 'April 11, 2025',
+    time: '07:30 PM IST'
   },
   {
     id: '2',
-    team1: { name: 'England', shortName: 'ENG', flagUrl: 'https://images.unsplash.com/photo-1589959864842-ba9ba575a429?q=80&w=60&auto=format&fit=crop' },
-    team2: { name: 'West Indies', shortName: 'WI', flagUrl: 'https://images.unsplash.com/photo-1572207292573-47fc49c9d247?q=80&w=60&auto=format&fit=crop' },
-    matchType: 'Test',
-    venue: 'Lord\'s, London',
-    date: 'Mar 27, 2025',
-    time: '03:30 PM IST'
+    team1: { name: 'Lucknow Super Giants', shortName: 'LSG', flagUrl: 'https://images.unsplash.com/photo-1589959864842-ba9ba575a429?q=80&w=60&auto=format&fit=crop' },
+    team2: { name: 'Gujarat Titans', shortName: 'GT', flagUrl: 'https://images.unsplash.com/photo-1572207292573-47fc49c9d247?q=80&w=60&auto=format&fit=crop' },
+    matchType: 'IPL 2025',
+    venue: 'BRSABV Ekana Cricket Stadium, Lucknow',
+    date: 'April 12, 2025',
+    time: '07:30 PM IST'
   },
   {
     id: '3',
-    team1: { name: 'Chennai Super Kings', shortName: 'CSK', flagUrl: 'https://images.unsplash.com/photo-1624721243291-741a7244fe46?q=80&w=60&auto=format&fit=crop' },
-    team2: { name: 'Mumbai Indians', shortName: 'MI', flagUrl: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=60&auto=format&fit=crop' },
-    matchType: 'IPL',
-    venue: 'M.A. Chidambaram Stadium, Chennai',
-    date: 'Apr 2, 2025',
+    team1: { name: 'Sunrisers Hyderabad', shortName: 'SRH', flagUrl: 'https://images.unsplash.com/photo-1624721243291-741a7244fe46?q=80&w=60&auto=format&fit=crop' },
+    team2: { name: 'Punjab Kings', shortName: 'PBKS', flagUrl: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=60&auto=format&fit=crop' },
+    matchType: 'IPL 2025',
+    venue: 'Rajiv Gandhi International Stadium, Hyderabad',
+    date: 'April 13, 2025',
     time: '07:30 PM IST'
   }
 ];

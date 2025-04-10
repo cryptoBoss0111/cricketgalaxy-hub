@@ -21,51 +21,51 @@ interface UpcomingMatch {
 }
 
 export const UpcomingMatchesSection: React.FC = () => {
-  // Define only the first 3 upcoming matches
+  // Updated upcoming matches with latest schedule
   const upcomingMatches: UpcomingMatch[] = [
     {
-      id: 'match-12',
+      id: 'match-25',
       team1: {
-        name: 'Mumbai Indians',
-        shortName: 'MI'
+        name: 'Chennai Super Kings',
+        shortName: 'CSK'
       },
       team2: {
         name: 'Kolkata Knight Riders',
         shortName: 'KKR'
       },
       matchType: 'IPL 2025',
-      venue: 'Wankhede Stadium, Mumbai',
-      date: 'March 31, 2025',
+      venue: 'MA Chidambaram Stadium, Chennai',
+      date: 'April 11, 2025',
       time: '7:30 PM IST'
     },
     {
-      id: 'match-13',
+      id: 'match-26',
       team1: {
         name: 'Lucknow Super Giants',
         shortName: 'LSG'
-      },
-      team2: {
-        name: 'Punjab Kings',
-        shortName: 'PBKS'
-      },
-      matchType: 'IPL 2025',
-      venue: 'BRSABV Ekana Stadium, Lucknow',
-      date: 'April 1, 2025',
-      time: '7:30 PM IST'
-    },
-    {
-      id: 'match-14',
-      team1: {
-        name: 'Royal Challengers Bengaluru',
-        shortName: 'RCB'
       },
       team2: {
         name: 'Gujarat Titans',
         shortName: 'GT'
       },
       matchType: 'IPL 2025',
-      venue: 'M. Chinnaswamy Stadium, Bengaluru',
-      date: 'April 2, 2025',
+      venue: 'BRSABV Ekana Cricket Stadium, Lucknow',
+      date: 'April 12, 2025',
+      time: '7:30 PM IST'
+    },
+    {
+      id: 'match-27',
+      team1: {
+        name: 'Sunrisers Hyderabad',
+        shortName: 'SRH'
+      },
+      team2: {
+        name: 'Punjab Kings',
+        shortName: 'PBKS'
+      },
+      matchType: 'IPL 2025',
+      venue: 'Rajiv Gandhi International Stadium, Hyderabad',
+      date: 'April 13, 2025',
       time: '7:30 PM IST'
     }
   ];
