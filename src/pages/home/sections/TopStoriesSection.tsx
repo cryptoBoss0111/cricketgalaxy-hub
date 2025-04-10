@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, ChevronRight } from 'lucide-react';
@@ -28,10 +29,10 @@ export const TopStoriesSection = () => {
         setIsLoading(true);
         
         const selectedArticles = [
+          mockNewsArticles.find(article => article.id === 'rcb-vs-dc'),
           mockNewsArticles.find(article => article.id === 'gt-vs-mi'),
           mockNewsArticles.find(article => article.id === 'csk-vs-rcb'),
-          mockNewsArticles.find(article => article.id === 'rr-vs-csk'),
-          mockNewsArticles.find(article => article.id === 'kkr-vs-rcb')
+          mockNewsArticles.find(article => article.id === 'rr-vs-csk')
         ].filter(Boolean);
         
         const formattedStories: TopStory[] = selectedArticles.map((article) => {
@@ -41,8 +42,8 @@ export const TopStoriesSection = () => {
             id: article.id,
             title: article.title,
             excerpt: article.excerpt || 'Read this exciting article...',
-            imageUrl: article.id === 'gt-vs-mi' 
-              ? '/lovable-uploads/7bfe4d81-c107-492c-aa9b-1a87d574aa20.png' 
+            imageUrl: article.id === 'rcb-vs-dc' 
+              ? '/lovable-uploads/8ec5d63f-24a2-4a4d-a9f6-6cf819b80504.png' 
               : (article.imageUrl || getRandomIplImage()),
             category: article.category,
             author: article.author || 'CricketExpress Staff',

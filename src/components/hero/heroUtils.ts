@@ -23,17 +23,17 @@ export const getCategoryUrl = (category: string): string => {
 export const fetchHeroSliderArticles = async (): Promise<HeroArticle[]> => {
   try {
     // Use mock news articles as the source for hero slider
-    // Prioritizing the new articles (GT vs MI, CSK vs RCB, RR vs CSK) in the hero slider
+    // Prioritizing the new articles (RCB vs DC, GT vs MI, CSK vs RCB, RR vs CSK) in the hero slider
     const prioritizedArticles = mockNewsArticles
-      .filter(article => article.id === "gt-vs-mi" || article.id === "csk-vs-rcb" || article.id === "rr-vs-csk" || article.id === "dc-vs-srh" || article.id === "mi-vs-kkr")
+      .filter(article => article.id === "rcb-vs-dc" || article.id === "gt-vs-mi" || article.id === "csk-vs-rcb" || article.id === "rr-vs-csk" || article.id === "dc-vs-srh")
       .sort((a, b) => {
         // Specific ordering for the hero slider
         const orderPriority: Record<string, number> = {
-          "rr-vs-csk": 1, // Making the new RR vs CSK article the first in the slider
-          "gt-vs-mi": 2,
-          "csk-vs-rcb": 3,
-          "dc-vs-srh": 4,
-          "mi-vs-kkr": 5
+          "rcb-vs-dc": 1, // Making the new RCB vs DC article the first in the slider
+          "rr-vs-csk": 2,
+          "gt-vs-mi": 3,
+          "csk-vs-rcb": 4,
+          "dc-vs-srh": 5
         };
         return (orderPriority[a.id] || 99) - (orderPriority[b.id] || 99);
       });
@@ -102,6 +102,15 @@ export const fetchHeroSliderArticles = async (): Promise<HeroArticle[]> => {
 // Mock data for fallback when no hero articles are found
 export const getMockHeroArticles = (): HeroArticle[] => [
   {
+    id: 'rcb-vs-dc',
+    title: "Royal Challengers Bengaluru vs. Delhi Capitals – RCB's Bengaluru Bash Tonight!",
+    excerpt: "What's good, bro? Today, April 10, 2025, IPL 2025's top story is Match 24—Royal Challengers Bengaluru (RCB) vs. Delhi Capitals (DC) at M Chinnaswamy Stadium, kicking off at 7:30 PM IST.",
+    category: 'IPL 2025',
+    imageUrl: "/lovable-uploads/8ec5d63f-24a2-4a4d-a9f6-6cf819b80504.png",
+    date: 'April 10, 2025',
+    isFeaturedPick: true
+  },
+  {
     id: 'rr-vs-csk',
     title: "Rajasthan Royals vs. Chennai Super Kings – Guwahati's Double-Header Heat!",
     excerpt: "Yo, squad! March 30, 2025, was a double-header day, and the evening top story—Match 11—saw Rajasthan Royals (RR) vs. Chennai Super Kings (CSK) in Guwahati. Barsapara Stadium was electric, and this clash was pure vibes.",
@@ -117,15 +126,6 @@ export const getMockHeroArticles = (): HeroArticle[] => [
     category: 'IPL 2025',
     imageUrl: "/lovable-uploads/ba068302-d7ba-4cdd-9735-cc9aac148031.png",
     date: 'March 29, 2025',
-    isFeaturedPick: true
-  },
-  {
-    id: 'csk-vs-rcb',
-    title: "Chennai Super Kings vs. Royal Challengers Bengaluru – Chepauk's Classic Clash!",
-    excerpt: "What's good, fam? On March 28, 2025, IPL 2025 gave us a top story for the books—Chennai Super Kings (CSK) vs. Royal Challengers Bengaluru (RCB) at Chepauk. Match 8 was a rivalry reload, with CSK defending home turf and RCB riding a 2-0 streak.",
-    category: 'IPL 2025',
-    imageUrl: "/lovable-uploads/8dca24c4-f648-4d13-b9d7-5227f02fc2ff.png",
-    date: 'March 28, 2025',
     isFeaturedPick: true
   }
 ];

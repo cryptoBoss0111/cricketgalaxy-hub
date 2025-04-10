@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import ArticleCard from '@/components/article-card';
 import { getRandomIplImage } from '@/utils/imageUtils';
+import Footer from '@/components/Footer';
 
 const IPL2025Page = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -18,6 +19,15 @@ const IPL2025Page = () => {
   
   // Updated articles with reliable image sources
   const articles = [
+    {
+      id: "rcb-vs-dc",
+      title: "Royal Challengers Bengaluru vs. Delhi Capitals – RCB's Bengaluru Bash Tonight!",
+      excerpt: "What's good, bro? Today, April 10, 2025, IPL 2025's top story is Match 24—Royal Challengers Bengaluru (RCB) vs. Delhi Capitals (DC) at M Chinnaswamy Stadium, kicking off at 7:30 PM IST.",
+      imageUrl: "/lovable-uploads/8ec5d63f-24a2-4a4d-a9f6-6cf819b80504.png",
+      category: "IPL 2025",
+      author: "CricketExpress Team",
+      date: "April 10, 2025"
+    },
     {
       id: "dc-vs-srh",
       title: "Today's IPL Banger: Delhi Capitals vs. Sunrisers Hyderabad – DC Owned the Night!",
@@ -97,6 +107,8 @@ const IPL2025Page = () => {
           ))}
         </div>
       </div>
+      
+      <Footer />
     </>
   );
 };

@@ -1,60 +1,86 @@
+import { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
+import Index from '@/pages/Index';
+import { HomePage } from '@/pages/Home';
+import IPL2025Page from '@/pages/ipl-2025';
+import LiveScoresPage from '@/pages/live-scores';
+import IPLTeamsPage from '@/pages/ipl-teams';
+import CricketNewsPage from '@/pages/cricket-news';
+import NotFound from '@/pages/NotFound';
+import FantasyTipsPage from '@/pages/fantasy-tips';
 
-import { Routes, Route, Navigate } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-import { AdminProtectedRoute } from "@/routes/AdminRoutes";
-import { PublicRoutes } from "@/routes/PublicRoutes";
-import NotFound from "@/pages/NotFound";
-import AdminLogin from "@/admin/AdminLogin";
-import AdminDashboard from "@/admin/Dashboard";
-import ArticlesList from "@/admin/ArticlesList";
-import ArticleForm from "@/admin/ArticleForm";
-import TopStoriesManager from "@/admin/TopStoriesManager";
-import HeroSliderManager from "@/admin/HeroSliderManager";
-import FanPollManager from "@/admin/FanPollManager";
-import FantasyPicksManager from "@/admin/FantasyPicksManager";
-import NavigationManager from "@/admin/NavigationManager";
-import MediaLibraryManager from "@/admin/MediaLibraryManager";
-import MatchesManager from "@/admin/MatchesManager";
-import PlayerProfilesManager from "@/admin/PlayerProfilesManager";
-import SettingsManager from "@/admin/SettingsManager";
-import Analytics from "@/admin/Analytics";
-import FreeWarContestManager from "@/admin/FreeWarContestManager";
-import QuickBlogPage from "@/admin/QuickBlogPage";
-import MobileNavbar from "@/components/MobileNavbar";
+// Admin Routes
+import AdminRoutes from '@/routes/AdminRoutes';
+
+// Article detail pages
+import GTvsMIArticle from '@/pages/article-detail/GTvsMIArticle';
+import CSKvsRCBArticle from '@/pages/article-detail/CSKvsRCBArticle';
+import RRvsCSKArticle from '@/pages/article-detail/RRvsCSKArticle';
+import KKRvsRCBArticle from '@/pages/article-detail/KKRvsRCBArticle';
+import SRHvsLSGArticle from '@/pages/article-detail/SRHvsLSGArticle';
+import DCvsSRHArticle from '@/pages/ArticleDetail/DCvsSRHArticle';
+import MIvsKKRArticle from '@/pages/ArticleDetail/MIvsKKRArticle';
+import RCBvsDCArticle from '@/pages/article-detail/RCBvsDCArticle';
 
 function App() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  useEffect(() => {
+    // Check local storage for theme preference on initial load
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme === 'dark') {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      setIsDarkMode(false);
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+  
+  useEffect(() => {
+    // Update the data-theme attribute on the root element
+    if (isDarkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+  
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
   return (
-    <>
+    <div className="app">
       <Routes>
-        {/* Public Routes */}
-        <Route path="/*" element={<PublicRoutes />} />
+        <Route path="/" element={<Index />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/ipl-2025" element={<IPL2025Page />} />
+        <Route path="/live-scores" element={<LiveScoresPage />} />
+        <Route path="/ipl-teams" element={<IPLTeamsPage />} />
+        <Route path="/cricket-news" element={<CricketNewsPage />} />
+        <Route path="/fantasy-tips" element={<FantasyTipsPage />} />
+        
+        {/* Article detail pages */}
+        <Route path="/article/rcb-vs-dc" element={<RCBvsDCArticle />} />
+        <Route path="/article/gt-vs-mi" element={<GTvsMIArticle />} />
+        <Route path="/article/csk-vs-rcb" element={<CSKvsRCBArticle />} />
+        <Route path="/article/rr-vs-csk" element={<RRvsCSKArticle />} />
+        <Route path="/article/kkr-vs-rcb" element={<KKRvsRCBArticle />} />
+        <Route path="/article/srh-vs-lsg" element={<SRHvsLSGArticle />} />
+        <Route path="/article/dc-vs-srh" element={<DCvsSRHArticle />} />
+        <Route path="/article/mi-vs-kkr" element={<MIvsKKRArticle />} />
         
         {/* Admin Routes */}
-        <Route path="/admin" element={<Navigate to="/admin/dashboard" />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
-        <Route path="/admin/articles" element={<AdminProtectedRoute><ArticlesList /></AdminProtectedRoute>} />
-        <Route path="/admin/articles/new" element={<AdminProtectedRoute><ArticleForm /></AdminProtectedRoute>} />
-        <Route path="/admin/articles/:id" element={<AdminProtectedRoute><ArticleForm /></AdminProtectedRoute>} />
-        <Route path="/admin/analytics" element={<AdminProtectedRoute><Analytics /></AdminProtectedRoute>} />
-        <Route path="/admin/navigation" element={<AdminProtectedRoute><NavigationManager /></AdminProtectedRoute>} />
-        <Route path="/admin/top-stories" element={<AdminProtectedRoute><TopStoriesManager /></AdminProtectedRoute>} />
-        <Route path="/admin/fan-polls" element={<AdminProtectedRoute><FanPollManager /></AdminProtectedRoute>} />
-        <Route path="/admin/hero-slider" element={<AdminProtectedRoute><HeroSliderManager /></AdminProtectedRoute>} />
-        <Route path="/admin/fantasy-picks" element={<AdminProtectedRoute><FantasyPicksManager /></AdminProtectedRoute>} />
-        <Route path="/admin/matches" element={<AdminProtectedRoute><MatchesManager /></AdminProtectedRoute>} />
-        <Route path="/admin/player-profiles" element={<AdminProtectedRoute><PlayerProfilesManager /></AdminProtectedRoute>} />
-        <Route path="/admin/media" element={<AdminProtectedRoute><MediaLibraryManager /></AdminProtectedRoute>} />
-        <Route path="/admin/settings" element={<AdminProtectedRoute><SettingsManager /></AdminProtectedRoute>} />
-        <Route path="/admin/free-war" element={<AdminProtectedRoute><FreeWarContestManager /></AdminProtectedRoute>} />
-        <Route path="/admin/quick-blog" element={<AdminProtectedRoute><QuickBlogPage /></AdminProtectedRoute>} />
+        <Route path="/admin/*" element={<AdminRoutes />} />
         
-        {/* 404 Route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <MobileNavbar />
       <Toaster />
-    </>
+    </div>
   );
 }
 
