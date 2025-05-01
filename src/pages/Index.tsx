@@ -7,7 +7,6 @@ import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/hero/HeroSection';
 import { TopStoriesSection } from '@/pages/home/sections/TopStoriesSection';
-import { TrendingPlayersSection } from '@/pages/home/sections/TrendingPlayersSection';
 import { UpcomingMatchesSection } from '@/pages/home/sections/UpcomingMatchesSection';
 import { QuickStatsSection } from '@/pages/home/sections/QuickStatsSection';
 import { FanPollSection } from '@/pages/home/sections/FanPollSection';
@@ -110,7 +109,6 @@ const Index = () => {
             
             {/* Sidebar - 1/3 width */}
             <div className="space-y-8">
-              <TrendingPlayersSection />
               <QuickStatsSection />
               <FanPollSection />
             </div>

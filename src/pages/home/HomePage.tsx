@@ -7,7 +7,6 @@ import HeroSection from '@/components/HeroSection';
 import Chatbot from '@/components/Chatbot';
 import { TopStoriesSection } from './sections/TopStoriesSection';
 import { UpcomingMatchesSection } from './sections/UpcomingMatchesSection';
-import { TrendingPlayersSection } from './sections/TrendingPlayersSection';
 import { QuickStatsSection } from './sections/QuickStatsSection';
 import { FanPollSection } from './sections/FanPollSection';
 import { useTheme } from '@/components/ThemeProvider';
@@ -57,9 +56,8 @@ const HomePage = () => {
         <section className="py-12">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-10">
+              <div className="lg:col-span-2">
                 <UpcomingMatchesSection />
-                <TrendingPlayersSection />
               </div>
               
               <div className="space-y-10">
