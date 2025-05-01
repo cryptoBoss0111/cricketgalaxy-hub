@@ -2,7 +2,7 @@
 import { Suspense, lazy } from 'react';
 import { AppProviders } from './routes/AppProviders';
 import PublicRoutes from './routes/PublicRoutes';
-import AdminRoutes from './routes/AdminRoutes';
+import { AdminRoutes } from './routes/AdminRoutes';
 
 import './App.css';
 
