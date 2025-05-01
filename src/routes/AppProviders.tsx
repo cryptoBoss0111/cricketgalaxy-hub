@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import { ChatbotProvider } from '@/contexts/ChatbotContext';
+import { AdminAuthProvider } from '@/contexts/AdminAuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 
@@ -23,11 +24,13 @@ export const AppProviders = ({ children }: { children: React.ReactNode }) => {
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider defaultTheme="dark" storageKey="cricket-express-theme">
-            <ChatbotProvider>
-              {children}
-              <Toaster />
-              <SonnerToaster />
-            </ChatbotProvider>
+            <AdminAuthProvider>
+              <ChatbotProvider>
+                {children}
+                <Toaster />
+                <SonnerToaster />
+              </ChatbotProvider>
+            </AdminAuthProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </HelmetProvider>
