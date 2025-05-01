@@ -15,8 +15,7 @@ import Footer from '@/components/Footer';
 import { useTheme } from '@/components/ThemeProvider';
 
 const Index = () => {
-  const { theme } = useTheme(); // We'll keep this for consistency but won't use it for toggling
-  const [isGenzMode, setIsGenzMode] = useState(false);
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   
   // Effect for loading state
@@ -27,22 +26,6 @@ const Index = () => {
     
     return () => clearTimeout(timer);
   }, []);
-  
-  // Effect to log articles data for debugging image issues
-  useEffect(() => {
-    console.log("Fetching articles from Supabase");
-  }, []);
-  
-  // Toggle Gen Z mode
-  const toggleGenzMode = () => {
-    setIsGenzMode(!isGenzMode);
-    // Always in dark mode when Gen Z is enabled
-    if (!isGenzMode) {
-      document.documentElement.classList.add('genz');
-    } else {
-      document.documentElement.classList.remove('genz');
-    }
-  };
   
   // Loading screen with dark theme
   if (isLoading) {
@@ -66,19 +49,6 @@ const Index = () => {
   
   return (
     <div className="min-h-screen flex flex-col dark bg-cricket-dark">
-      {/* Gen Z Mode Toggle */}
-      <div className="fixed bottom-4 right-4 z-50">
-        <button 
-          onClick={toggleGenzMode}
-          className={`px-4 py-2 rounded-full ${isGenzMode 
-            ? 'bg-neon-green text-genz-dark shadow-neon-green font-poppins font-bold animate-pulse-subtle' 
-            : 'bg-gray-200 text-gray-800'} 
-            transition-all duration-300`}
-        >
-          {isGenzMode ? "Vibin' 🔥" : "Gen Z Mode"}
-        </button>
-      </div>
-      
       <LiveMatchesBar />
       <Navbar />
       
@@ -88,18 +58,6 @@ const Index = () => {
         
         {/* Main Content */}
         <div className="container mx-auto px-4 py-12">
-          {/* Gen Z Title */}
-          {isGenzMode && (
-            <div className="text-center mb-12">
-              <h2 className="font-poppins font-bold text-4xl md:text-5xl mb-3">
-                Cricket <span className="text-neon-purple animate-text-glow">Go Brr</span> 🔥
-              </h2>
-              <p className="text-lg text-gray-300 font-medium">
-                Catch the Vibe & Stay Updated, No Cap!
-              </p>
-            </div>
-          )}
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Main Column - 2/3 width */}
             <div className="md:col-span-2 space-y-12">
