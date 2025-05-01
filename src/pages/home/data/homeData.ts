@@ -1,3 +1,4 @@
+
 // Top Stories Data
 export const topStories = [
   {
@@ -98,30 +99,33 @@ export const trendingPlayers = [
 export const upcomingMatches = [
   {
     id: '1',
-    team1: { name: 'Chennai Super Kings', shortName: 'CSK', flagUrl: 'https://images.unsplash.com/photo-1624721243291-741a7244fe46?q=80&w=60&auto=format&fit=crop' },
-    team2: { name: 'Kolkata Knight Riders', shortName: 'KKR', flagUrl: 'https://images.unsplash.com/photo-1608023874495-3f19c37e2cd1?q=80&w=60&auto=format&fit=crop' },
-    matchType: 'IPL 2025',
-    venue: 'MA Chidambaram Stadium, Chennai',
-    date: 'April 11, 2025',
-    time: '07:30 PM IST'
+    team1: { name: 'Rajasthan Royals', shortName: 'RR', flagUrl: 'https://images.unsplash.com/photo-1624526267942-ab0c6b5b8b46?q=80&w=60&auto=format&fit=crop' },
+    team2: { name: 'Mumbai Indians', shortName: 'MI', flagUrl: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=60&auto=format&fit=crop' },
+    matchType: 'IPL 2025 - Match 50',
+    venue: 'Sawai Mansingh Stadium, Jaipur',
+    date: 'May 1, 2025',
+    time: '07:30 PM IST',
+    details: 'Currently in progress'
   },
   {
     id: '2',
-    team1: { name: 'Lucknow Super Giants', shortName: 'LSG', flagUrl: 'https://images.unsplash.com/photo-1589959864842-ba9ba575a429?q=80&w=60&auto=format&fit=crop' },
-    team2: { name: 'Gujarat Titans', shortName: 'GT', flagUrl: 'https://images.unsplash.com/photo-1572207292573-47fc49c9d247?q=80&w=60&auto=format&fit=crop' },
-    matchType: 'IPL 2025',
-    venue: 'BRSABV Ekana Cricket Stadium, Lucknow',
-    date: 'April 12, 2025',
-    time: '07:30 PM IST'
+    team1: { name: 'Gujarat Titans', shortName: 'GT', flagUrl: 'https://images.unsplash.com/photo-1572207292573-47fc49c9d247?q=80&w=60&auto=format&fit=crop' },
+    team2: { name: 'Sunrisers Hyderabad', shortName: 'SRH', flagUrl: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=60&auto=format&fit=crop' },
+    matchType: 'IPL 2025 - Match 51',
+    venue: 'Narendra Modi Stadium, Ahmedabad',
+    date: 'May 2, 2025',
+    time: '07:30 PM IST',
+    details: 'Scheduled'
   },
   {
     id: '3',
-    team1: { name: 'Sunrisers Hyderabad', shortName: 'SRH', flagUrl: 'https://images.unsplash.com/photo-1624721243291-741a7244fe46?q=80&w=60&auto=format&fit=crop' },
-    team2: { name: 'Punjab Kings', shortName: 'PBKS', flagUrl: 'https://images.unsplash.com/photo-1624971497044-3b338527dc4c?q=80&w=60&auto=format&fit=crop' },
-    matchType: 'IPL 2025',
-    venue: 'Rajiv Gandhi International Stadium, Hyderabad',
-    date: 'April 13, 2025',
-    time: '07:30 PM IST'
+    team1: { name: 'Royal Challengers Bengaluru', shortName: 'RCB', flagUrl: 'https://images.unsplash.com/photo-1624721243291-741a7244fe46?q=80&w=60&auto=format&fit=crop' },
+    team2: { name: 'Chennai Super Kings', shortName: 'CSK', flagUrl: 'https://images.unsplash.com/photo-1608023874495-3f19c37e2cd1?q=80&w=60&auto=format&fit=crop' },
+    matchType: 'IPL 2025 - Match 52',
+    venue: 'M. Chinnaswamy Stadium, Bengaluru',
+    date: 'May 3, 2025',
+    time: '07:30 PM IST',
+    details: 'Scheduled'
   }
 ];
 

@@ -11,7 +11,7 @@ const LiveMatchesBar = () => {
       <div className="container mx-auto px-2 flex justify-between items-center">
         <div className="flex items-center">
           <span className="animate-pulse-subtle mr-1">🔴</span>
-          <span className="text-sm truncate max-w-[180px] md:max-w-full">See Live Scores of IPL 2025</span>
+          <span className="text-sm truncate max-w-[180px] md:max-w-full">LIVE: RR vs MI - Match 50, IPL 2025</span>
         </div>
         
         <div className="flex items-center">
