@@ -1,6 +1,5 @@
 
 import { Helmet } from 'react-helmet-async';
-import LiveMatchesBar from '@/components/LiveMatchesBar';
 import Navbar from '@/components/Navbar';
 import CricTimesEmbed from '@/components/CricTimesEmbed';
 
@@ -11,7 +10,6 @@ const LiveScoresPage = () => {
         <title>Live Scores | CricketExpress</title>
       </Helmet>
       
-      <LiveMatchesBar />
       <Navbar />
       
       <div className="container mx-auto py-6 px-4 mt-12">
